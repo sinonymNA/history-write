@@ -265,7 +265,8 @@ body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--tx); 
         <div id="settings-api-key-wrap">
           <label class="text-xs font-semibold uppercase tracking-wider" style="color:var(--mu)">Claude API Key</label>
           <input type="password" id="api-key-input" placeholder="sk-ant-..." class="hinp mt-2">
-          <p class="text-[11px] mt-1" style="color:var(--fa)">Your Anthropic API key powers AI essay grading. Set it here — your students will use it automatically when they submit essays.</p>
+          <div id="api-key-status" class="text-[11px] mt-1" style="color:var(--fa)"></div>
+          <button type="button" id="set-global-key-btn" onclick="window.app.ui.setGlobalKey()" class="text-[11px] font-semibold mt-2 px-3 py-1.5 rounded-lg transition" style="background:var(--acs);color:var(--ac);border:1px solid var(--bd);cursor:pointer">Set as universal key for all users</button>
         </div>
         <div>
           <label class="text-xs font-semibold uppercase tracking-wider mb-3 block" style="color:var(--mu)">Theme</label>
@@ -2005,8 +2006,18 @@ game: {
 ai: {
   grade: async (type, prompt, essay, structure) => {
     appState._usedMockGrading = false;
-    // Resolve API key: use local key, or fetch teacher's key from the assignment
-    let key = appState.apiKey;
+    // Resolve API key: cached global → local override → teacher's key → Firestore config
+    let key = appState._cachedGlobalKey || appState.apiKey;
+    if (!key) {
+      try {
+        // Check shared config doc first
+        const cfgDoc = await getDoc(doc(db, "config", "apiKey"));
+        if (cfgDoc.exists() && cfgDoc.data().key) {
+          key = cfgDoc.data().key;
+          appState._cachedGlobalKey = key; // cache so we don't re-fetch every submission
+        }
+      } catch(e) { console.warn('Could not fetch global API key', e); }
+    }
     if (!key && appState.activeAssignment?.teacherId) {
       try {
         const teacherDoc = await getDoc(doc(db, "users", appState.activeAssignment.teacherId));
@@ -2087,6 +2098,18 @@ ui: {
     }
     window.app.router.go('student-dash');
   },
+  setGlobalKey: async () => {
+    const key = document.getElementById('api-key-input')?.value.trim();
+    if (!key) return window.app.ui.toast('Enter an API key first.', 'error');
+    if (!key.startsWith('sk-ant-')) return window.app.ui.toast('That doesn\'t look like an Anthropic API key.', 'error');
+    try {
+      await setDoc(doc(db, "config", "apiKey"), { key, setBy: appState.user?.uid || 'unknown', updatedAt: serverTimestamp() });
+      appState._cachedGlobalKey = key;
+      window.app.ui.toast('Universal API key saved! All users will now get real AI grading.', 'success');
+      const status = document.getElementById('api-key-status');
+      if (status) status.innerHTML = '<span style="color:var(--sg)">✓ Universal key is active — all users get AI grading.</span>';
+    } catch(e) { console.error(e); window.app.ui.toast('Error saving key: ' + e.message, 'error'); }
+  },
   updateNav: () => {
     const navOut = document.getElementById('nav-out');
     const navIn = document.getElementById('nav-in');
@@ -2129,6 +2152,18 @@ ui: {
       // API key field — show for teachers only
       const akWrap = document.getElementById('settings-api-key-wrap');
       if (akWrap) akWrap.style.display = appState.userData?.role === 'student' ? 'none' : '';
+      // Check global key status
+      const status = document.getElementById('api-key-status');
+      if (status && appState.userData?.role === 'teacher') {
+        getDoc(doc(db, "config", "apiKey")).then(snap => {
+          if (snap.exists() && snap.data().key) {
+            status.innerHTML = '<span style="color:var(--sg)">✓ Universal key is active — all users get AI grading.</span>';
+            if (!document.getElementById('api-key-input').value) document.getElementById('api-key-input').value = snap.data().key;
+          } else {
+            status.innerHTML = '<span style="color:var(--fa)">No universal key set. Paste your Anthropic key above and click the button below.</span>';
+          }
+        }).catch(() => {});
+      }
       const theme = document.body.getAttribute('data-theme');
       document.querySelector(`input[name="theme"][value="${theme}"]`).checked = true;
     } else { modal.classList.add('hidden'); }
