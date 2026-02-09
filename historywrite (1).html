@@ -260,8 +260,31 @@ const appState = {
   userData: null,
   apiKey: localStorage.getItem('anthropic_key') || '',
   activeAssignment: null,
-  practiceContext: null
+  practiceContext: null,
+  demoMode: false
 };
+
+const DEMO_ASSIGNMENT = {
+  id: 'demo',
+  title: 'Columbian Exchange LEQ (Demo)',
+  type: 'leq',
+  prompt: 'Evaluate the extent to which the Columbian Exchange transformed global economies between 1450 and 1750.',
+  maxAttempts: 99,
+  structure: { kind: 'leq', focusSkills: ['thesis', 'context', 'evidence', 'reasoning'] },
+  demo: true
+};
+
+const DEMO_ESSAY = `The Columbian Exchange fundamentally transformed global economies between 1450 and 1750 because it introduced new crops, established trade networks, and created systems of forced labor that reshaped production across continents.
+
+Before the Columbian Exchange, the economies of the Eastern and Western hemispheres operated largely in isolation from one another. European economies were based primarily on feudal agriculture, while the Americas had developed their own agricultural systems centered around crops like maize and potatoes.
+
+The introduction of New World crops to the Old World significantly boosted population growth and economic output. Potatoes became a staple food across northern Europe, particularly in Ireland and parts of Germany, allowing populations to grow rapidly between the 16th and 18th centuries. Similarly, the introduction of maize to Africa provided new food sources that sustained growing populations.
+
+Silver from the mines of Potosi in modern-day Bolivia became the backbone of global trade. Spanish colonizers used the mita labor system to force indigenous workers to extract massive quantities of silver, which then flowed to Europe and Asia through established trade networks. By the late 1500s, Spanish silver accounted for a large portion of global currency, connecting economies from Manila to Seville.
+
+The Atlantic slave trade emerged as a direct consequence of the Columbian Exchange. European demand for sugar, tobacco, and cotton in the Americas led to the forced migration of millions of Africans. This system of exploitation generated enormous wealth for European colonial powers while devastating African societies and economies.
+
+Overall, the Columbian Exchange had a big impact on the world economy and changed many things for different groups of people across the globe.`;
 
 const LIBRARY_TEMPLATES = [
   { title: "Dar al-Islam SAQ", type: "saq", prompt: "Identify and explain ONE way Islamic states maintained political authority 1200–1450.", maxAttempts: 3 },
@@ -363,6 +386,7 @@ router: {
       'class-detail': () => { root.innerHTML = V.classDetail(params.classData); window.app.teacher.loadClass(params.classData.id); },
       'library': () => root.innerHTML = V.library(),
       'editor': () => { appState.activeAssignment = params.assignment; root.innerHTML = V.editor(params.assignment); window.app.student.initEditor(); },
+      'demo': () => { appState.demoMode = true; const a = DEMO_ASSIGNMENT; appState.activeAssignment = a; localStorage.setItem('draft_demo', DEMO_ESSAY); root.innerHTML = V.editor(a); window.app.student.initEditor(); },
       'results': () => root.innerHTML = V.results(params.submission, params.assignment)
     };
     if (routes[view]) routes[view]();
@@ -387,6 +411,7 @@ views: {
             <button onclick="window.app.router.go('signup')" class="btnP text-base py-3 px-8 shadow-lg">Get Started Free</button>
             <button onclick="window.app.router.go('login')" class="btnG text-base py-3 px-8">Log In</button>
           </div>
+          <button onclick="window.app.router.go('demo')" class="mt-4 text-sm font-medium underline underline-offset-4 transition hover:opacity-80" style="color:var(--ac)">Try a demo essay with instant AI feedback →</button>
         </div>
       </div>
       <div class="py-12 px-4"><div class="max-w-4xl mx-auto grid md:grid-cols-3 gap-6">
@@ -515,7 +540,7 @@ views: {
     return `
     <div class="h-[calc(100vh-56px)] flex pageEnter">
       <div class="w-full md:w-[45%] overflow-y-auto p-6 md:p-8 csc" style="background:var(--card);border-right:1px solid var(--bd)">
-        <button onclick="window.app.router.go('student-dash')" class="mb-5 text-sm flex items-center gap-1" style="color:var(--mu)"><i data-lucide="arrow-left" class="w-4 h-4"></i>Exit</button>
+        <button onclick="window.app.router.go(appState.demoMode && !appState.user ? 'home' : 'student-dash')" class="mb-5 text-sm flex items-center gap-1" style="color:var(--mu)"><i data-lucide="arrow-left" class="w-4 h-4"></i>Exit</button>
         <span class="text-[10px] font-bold fm uppercase px-2 py-1 rounded" style="background:var(--acs);color:var(--ac)">${a.type}</span>
         <h2 class="text-xl font-bold fs mt-3">Prompt</h2>
         <div class="mt-3 p-4 rounded-xl fs text-sm leading-relaxed" style="background:var(--elev);border:1px solid var(--bd)">${a.prompt}</div>
@@ -551,7 +576,10 @@ views: {
     return `
     <div class="h-[calc(100vh-56px)] flex pageEnter">
       <div class="flex-1 overflow-y-auto p-6 md:p-10 csc">
-        <button onclick="window.app.router.go('student-dash')" class="mb-5 text-sm flex items-center gap-1" style="color:var(--mu)"><i data-lucide="arrow-left" class="w-4 h-4"></i>Back</button>
+        <div class="flex items-center gap-3 mb-5">
+          <button onclick="window.app.router.go(appState.demoMode && !appState.user ? 'home' : 'student-dash')" class="text-sm flex items-center gap-1" style="color:var(--mu)"><i data-lucide="arrow-left" class="w-4 h-4"></i>Back</button>
+          ${a.demo ? '<button onclick="window.app.router.go(\'demo\')" class="btnP text-xs py-1.5 px-4">Try Again</button>' : ''}
+        </div>
         <h1 class="text-2xl font-bold fs mb-1">Grading Report</h1>
         <p class="text-xs mb-6" style="color:var(--mu)">${a.title}</p>
         <div class="hcard p-6 md:p-8 fs text-base md:text-lg leading-relaxed" style="white-space:pre-wrap">${html}</div>
@@ -784,15 +812,22 @@ student: {
     if (!txt || txt.length < 50) return window.app.ui.toast('Write at least a solid paragraph before submitting.', 'error');
     window.app.ui.btnLoading('submit-btn', true); window.app.ui.toast('AI is grading your essay…', 'info');
     try {
-      const grading = await window.app.ai.grade(appState.activeAssignment.type, appState.activeAssignment.prompt, txt, appState.activeAssignment.structure);
-      const sub = { assignmentId: appState.activeAssignment.id, studentId: appState.user.uid, studentName: appState.userData.name, essayText: txt, grading, submittedAt: new Date() };
+      const a = appState.activeAssignment;
+      const grading = await window.app.ai.grade(a.type, a.prompt, txt, a.structure);
+      if (a.demo || appState.demoMode) {
+        const sub = { assignmentId: a.id, studentId: 'demo', studentName: 'Demo Student', essayText: txt, grading, submittedAt: new Date() };
+        window.app.ui.btnLoading('submit-btn', false);
+        window.app.router.go('results', { submission: { id: 'demo', ...sub }, assignment: a });
+        return;
+      }
+      const sub = { assignmentId: a.id, studentId: appState.user.uid, studentName: appState.userData.name, essayText: txt, grading, submittedAt: new Date() };
       const docRef = await addDoc(collection(db, 'submissions'), { ...sub, submittedAt: serverTimestamp() });
-      localStorage.removeItem(`draft_${appState.activeAssignment.id}`);
+      localStorage.removeItem(`draft_${a.id}`);
       appState.userData.gamification.xp += grading.score * 15;
-      window.app.game.updateSkillsFromGrading(appState.activeAssignment.type, grading);
+      window.app.game.updateSkillsFromGrading(a.type, grading);
       await updateDoc(doc(db, "users", appState.user.uid), { gamification: appState.userData.gamification });
       window.app.game.checkLevelUp();
-      window.app.router.go('results', { submission: { id: docRef.id, ...sub }, assignment: appState.activeAssignment });
+      window.app.router.go('results', { submission: { id: docRef.id, ...sub }, assignment: a });
     } catch (e) { console.error(e); window.app.ui.toast('Error: ' + e.message, 'error'); window.app.ui.btnLoading('submit-btn', false); }
   }
 },
@@ -1085,7 +1120,7 @@ game: {
 // ═══ AI GRADING ═══
 ai: {
   grade: async (type, prompt, essay, structure) => {
-    if (!appState.apiKey) return window.app.ai.mockGrade(type);
+    if (!appState.apiKey) return window.app.ai.mockGrade(type, essay);
     const rubrics = { saq: { maxScore: 3 }, leq: { maxScore: 6 }, dbq: { maxScore: 7 } };
     const r = rubrics[type];
     try {
@@ -1101,39 +1136,48 @@ ai: {
       const text = data?.content?.[0]?.text || '';
       const match = text.match(/\{[\s\S]*\}/);
       if (match) return JSON.parse(match[0]);
-      return window.app.ai.mockGrade(type);
-    } catch (e) { console.error('AI grading error:', e); return window.app.ai.mockGrade(type); }
+      return window.app.ai.mockGrade(type, essay);
+    } catch (e) { console.error('AI grading error:', e); return window.app.ai.mockGrade(type, essay); }
   },
-  mockGrade: (type) => {
+  mockGrade: (type, essay) => {
     const scores = { saq: 2, leq: 4, dbq: 5 };
     const maxScores = { saq: 3, leq: 6, dbq: 7 };
+    // Extract sentences from the essay for realistic quote highlights
+    const sentences = essay ? essay.replace(/\n+/g, ' ').replace(/([.!?])\s+/g, '$1|||').split('|||').map(s => s.trim()).filter(s => s.length > 20 && s.length < 300) : [];
+    const pick = (idx) => {
+      if (!sentences.length) return '';
+      const s = sentences[Math.min(idx, sentences.length - 1)];
+      if (s.length <= 80) return s;
+      const cut = s.lastIndexOf(' ', 78);
+      return s.substring(0, cut > 30 ? cut : 78);
+    };
     const mockAnnotations = {
       saq: [
-        { quote: "", category: "Identification", status: "success", feedback: "You correctly identified a relevant historical development — nice work recognizing the key factor here!", improvementTip: "" },
-        { quote: "", category: "Description", status: "success", feedback: "Your description is clear and shows strong understanding of the historical context.", improvementTip: "" },
-        { quote: "", category: "Explanation", status: "warning", feedback: "Your explanation is on the right track, but needs a stronger cause-and-effect connection.", improvementTip: "Add a sentence explaining WHY this development occurred — connect the cause directly to the effect using words like 'because' or 'as a result of'." }
+        { quote: pick(0), category: "Identification", status: "success", feedback: "You correctly identified a relevant historical development — nice work recognizing the key factor here!", improvementTip: "" },
+        { quote: pick(1), category: "Description", status: "success", feedback: "Your description is clear and shows strong understanding of the historical context.", improvementTip: "" },
+        { quote: pick(2), category: "Explanation", status: "warning", feedback: "Your explanation is on the right track, but needs a stronger cause-and-effect connection.", improvementTip: "Add a sentence explaining WHY this development occurred — connect the cause directly to the effect using words like 'because' or 'as a result of'." }
       ],
       leq: [
-        { quote: "", category: "Thesis", status: "success", feedback: "Strong thesis! You made a clear, defensible claim with a logical line of reasoning.", improvementTip: "" },
-        { quote: "", category: "Contextualization", status: "success", feedback: "Excellent job setting the broader historical context before diving into your argument.", improvementTip: "" },
-        { quote: "", category: "Evidence", status: "warning", feedback: "You used some evidence, but you need one more specific example with dates and names to earn the full evidence point.", improvementTip: "Add a second specific historical example — include a date, a person's name, or a specific place to make your evidence more concrete." },
-        { quote: "", category: "Evidence", status: "success", feedback: "Good use of evidence to support your argument. The specific details strengthen your case.", improvementTip: "" },
-        { quote: "", category: "Reasoning", status: "warning", feedback: "Your analysis is developing, but you need to more explicitly connect evidence to your thesis.", improvementTip: "After each piece of evidence, add a sentence that directly explains HOW it supports your thesis using comparison, causation, or continuity/change." },
-        { quote: "", category: "Complexity", status: "error", feedback: "The complexity point requires you to go beyond the basic argument — consider counterevidence or connections across time periods.", improvementTip: "Add a paragraph that addresses a counterargument or connects your topic to a different time period or region. Try starting with 'Although...' or 'While some might argue...'." }
+        { quote: pick(0), category: "Thesis", status: "success", feedback: "Strong thesis! You made a clear, defensible claim that addresses the prompt with a logical line of reasoning.", improvementTip: "" },
+        { quote: pick(1), category: "Contextualization", status: "warning", feedback: "You set up some historical context, but it needs to be more specific — mention broader global trends or developments beyond the prompt's focus.", improvementTip: "Add 2-3 sentences of broader context before your argument. Mention a specific global development happening at the same time, like expanding maritime trade or the decline of feudalism." },
+        { quote: pick(2), category: "Evidence (1)", status: "success", feedback: "Great specific evidence! You included dates, names, and concrete details that strengthen your argument.", improvementTip: "" },
+        { quote: pick(3), category: "Evidence (2)", status: "success", feedback: "Excellent use of a second body of evidence with specific historical details. This demonstrates strong content knowledge.", improvementTip: "" },
+        { quote: pick(4), category: "Reasoning", status: "warning", feedback: "You present evidence well, but the analytical reasoning connecting it to your thesis could be more explicit.", improvementTip: "After each evidence paragraph, add a sentence that directly explains HOW this evidence proves your thesis. Use phrases like 'This demonstrates that...' or 'This directly supports the argument that...'." },
+        { quote: pick(sentences.length - 1), category: "Complexity", status: "error", feedback: "Your conclusion restates the argument but doesn't demonstrate complex understanding. The complexity point requires nuance — counterarguments, qualifications, or cross-period connections.", improvementTip: "Replace your conclusion with analysis that complicates your argument. Try: 'Although the Columbian Exchange transformed economies, its effects were uneven — while European powers profited, indigenous and African populations bore devastating costs, suggesting that transformation and exploitation were inseparable.'" }
       ],
       dbq: [
-        { quote: "", category: "Thesis", status: "success", feedback: "Your thesis presents a clear, defensible argument that directly addresses the prompt. Well done!", improvementTip: "" },
-        { quote: "", category: "Contextualization", status: "success", feedback: "Great historical context! You connected the topic to broader trends effectively.", improvementTip: "" },
-        { quote: "", category: "Evidence", status: "success", feedback: "Strong use of document evidence to support your argument.", improvementTip: "" },
-        { quote: "", category: "Evidence", status: "success", feedback: "You used evidence from multiple documents effectively. Nice work integrating sources!", improvementTip: "" },
-        { quote: "", category: "Sourcing", status: "warning", feedback: "You mentioned a document's origin, but need to analyze HOW the source's POV, purpose, or audience affects its reliability.", improvementTip: "Pick one document and explain how the author's point of view or purpose shapes what they wrote. Example: 'As a Spanish official, the author would emphasize... because...'." },
-        { quote: "", category: "Reasoning", status: "warning", feedback: "Your argument groups documents together, but the reasoning connecting them to your thesis could be stronger.", improvementTip: "After discussing a group of documents, add a sentence that explicitly states how they collectively prove your thesis point." },
-        { quote: "", category: "Complexity", status: "error", feedback: "To earn the complexity point, demonstrate nuanced understanding — address counterevidence, qualify your argument, or make connections across periods.", improvementTip: "Try adding: 'However, not all evidence supports this view...' and discuss a document that complicates your argument, then explain why your thesis still holds." }
+        { quote: pick(0), category: "Thesis", status: "success", feedback: "Your thesis presents a clear, defensible argument that directly addresses the prompt. Well done!", improvementTip: "" },
+        { quote: pick(1), category: "Contextualization", status: "success", feedback: "Great historical context! You connected the topic to broader trends effectively.", improvementTip: "" },
+        { quote: pick(2), category: "Evidence (Docs)", status: "success", feedback: "Strong use of document evidence to support your argument.", improvementTip: "" },
+        { quote: pick(3), category: "Evidence (Outside)", status: "success", feedback: "Good use of outside evidence beyond the documents. Nice work integrating additional knowledge!", improvementTip: "" },
+        { quote: pick(4), category: "Sourcing", status: "warning", feedback: "You referenced a source's origin, but need to analyze HOW the author's POV, purpose, or audience shapes the document's meaning.", improvementTip: "Pick one document and explain how the author's point of view or purpose affects what they wrote. Example: 'As a Spanish official writing to the king, the author would emphasize economic success to justify continued colonial policies.'" },
+        { quote: pick(5) || pick(3), category: "Reasoning", status: "warning", feedback: "Your argument groups documents together, but the reasoning connecting them to your thesis could be stronger.", improvementTip: "After discussing a group of documents, add a sentence that explicitly states how they collectively prove your thesis point." },
+        { quote: pick(sentences.length - 1), category: "Complexity", status: "error", feedback: "To earn the complexity point, demonstrate nuanced understanding — address counterevidence, qualify your argument, or make connections across periods.", improvementTip: "Try adding: 'However, not all evidence supports this view...' and discuss a document that complicates your argument, then explain why your thesis still holds." }
       ]
     };
     return {
       score: scores[type] || 3, maxScore: maxScores[type] || 6,
-      generalFeedback: "Nice work on this essay! You're showing solid understanding of the historical content and your writing is well-organized. Focus on strengthening your evidence with more specific details and building stronger analytical connections between your evidence and your argument — you're close to leveling up!",
+      generalFeedback: "Nice work on this essay! You're showing solid understanding of the historical content and your writing is well-organized. Your evidence is a real strength — focus on strengthening your analytical reasoning and adding nuance for the complexity point. You're close to leveling up!",
       annotations: mockAnnotations[type] || mockAnnotations.leq
     };
   }
