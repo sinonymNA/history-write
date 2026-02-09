@@ -544,7 +544,7 @@ router: {
       'class-detail': () => { root.innerHTML = V.classDetail(params.classData); window.app.teacher.loadClass(params.classData.id); },
       'assignment-builder': () => { root.innerHTML = V.assignmentBuilder(params.classData); window.app.teacher.initBuilder(); },
       'assignment-detail': () => { window.app.teacher._lastAssignment = params.assignment; root.innerHTML = V.assignmentDetail(params.assignment, params.classData); window.app.teacher.loadSubmissions(params.assignment); },
-      'library': () => root.innerHTML = V.library(),
+      'library': () => { root.innerHTML = V.library(); window.app.teacher.initLibrary(); },
       'editor': () => { appState.activeAssignment = params.assignment; root.innerHTML = V.editor(params.assignment); window.app.student.initEditor(); },
       'demo': () => { appState.demoMode = true; const a = DEMO_ASSIGNMENT; appState.activeAssignment = a; localStorage.setItem('draft_demo', DEMO_ESSAY); root.innerHTML = V.editor(a); window.app.student.initEditor(); },
       'results': () => { appState._lastViewedAssignment = params.assignment; root.innerHTML = V.results(params.submission, params.assignment); }
@@ -771,19 +771,23 @@ views: {
   library: () => `
     <div class="max-w-5xl mx-auto px-4 py-6 pageEnter">
       <button onclick="window.app.router.go('teacher-dash')" class="mb-6 text-sm flex items-center gap-1" style="color:var(--mu)"><i data-lucide="arrow-left" class="w-4 h-4"></i>Back</button>
-      <h1 class="text-2xl font-bold fs mb-6">Assignment Library</h1>
+      <h1 class="text-2xl font-bold fs mb-2">Assignment Library</h1>
+      <p class="text-sm mb-6" style="color:var(--mu)">Ready-made AP World assignments. Clone one into your class with a single click.</p>
+      <div id="library-classes-bar" class="mb-4 p-3 rounded-xl flex flex-wrap items-center gap-2" style="background:var(--elev);border:1px solid var(--bd)">
+        <span class="text-xs font-bold" style="color:var(--mu)">Clone into:</span>
+        <span class="text-xs" style="color:var(--fa)">Loading classes…</span>
+      </div>
       <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        ${LIBRARY_TEMPLATES.map(t => `<div class="hcard p-5 flex flex-col justify-between"><div class="mb-4"><span class="text-[10px] font-bold fm uppercase px-2 py-1 rounded" style="background:var(--acs);color:var(--ac)">${t.type}</span><h3 class="font-bold mt-2 text-sm">${t.title}</h3><p class="text-xs mt-1 line-clamp-3" style="color:var(--mu)">${t.prompt}</p></div><button onclick="window.app.ui.toast('Clone to class coming soon.','info')" class="btnG text-xs w-full">Clone to Class</button></div>`).join('')}
+        ${LIBRARY_TEMPLATES.map((t, idx) => `<div class="hcard p-5 flex flex-col justify-between"><div class="mb-4"><span class="text-[10px] font-bold fm uppercase px-2 py-1 rounded" style="background:var(--acs);color:var(--ac)">${t.type}</span><h3 class="font-bold mt-2 text-sm">${t.title}</h3><p class="text-xs mt-1 line-clamp-3" style="color:var(--mu)">${t.prompt}</p>${t.sources?.length ? `<p class="text-[10px] mt-1" style="color:var(--fa)">${t.sources.length} document${t.sources.length > 1 ? 's' : ''} attached</p>` : ''}</div><button onclick="window.app.teacher.cloneTemplate(${idx})" class="btnP text-xs w-full">Clone to Class</button></div>`).join('')}
       </div>
     </div>`,
 
   editor: (a) => {
     const draft = localStorage.getItem(`draft_${a.id}`) || '';
     const renderSrc = (s, i) => {
-      const isImg = s.type === 'image' || s.type === 'map' || s.type === 'chart' && /^https?:\/\/.+\.(jpg|jpeg|png|gif|webp|svg)/i.test(s.content);
       const isUrl = /^https?:\/\//i.test(s.content);
       let body;
-      if ((s.type === 'image' || s.type === 'map') || (isUrl && (s.type === 'chart'))) {
+      if (s.type === 'image' || s.type === 'map' || (isUrl && s.type === 'chart')) {
         body = `<img src="${s.content}" alt="${s.label||'Document '+(i+1)}" class="doc-img-preview" onerror="this.outerHTML='<div class=\\'doc-img-error\\'>Image could not be loaded. Check the URL.</div>'">`;
       } else {
         body = `<p class="text-xs leading-relaxed mt-1" style="color:var(--mu);white-space:pre-wrap">${s.content}</p>`;
@@ -835,7 +839,8 @@ views: {
           ${a.demo ? '<button onclick="window.app.router.go(\'demo\')" class="btnP text-xs py-1.5 px-4">Try Again</button>' : ''}
         </div>
         <h1 class="text-2xl font-bold fs mb-1">Grading Report</h1>
-        <p class="text-xs mb-6" style="color:var(--mu)">${a.title}</p>
+        <p class="text-xs mb-3" style="color:var(--mu)">${a.title}</p>
+        ${appState._usedMockGrading ? `<div class="mb-4 p-3 rounded-xl text-xs flex items-start gap-2" style="background:rgba(196,149,40,.08);border:1px solid rgba(196,149,40,.2)"><i data-lucide="info" class="w-4 h-4 flex-shrink-0 mt-0.5" style="color:var(--gd)"></i><div><span class="font-bold" style="color:var(--gd)">Demo Feedback</span><span style="color:var(--mu)"> — No Claude API key is set, so this is sample feedback. Add your API key in <button onclick="window.app.ui.toggleSettings()" class="font-bold underline" style="color:var(--ac)">Settings</button> for real AI grading.</span></div></div>` : ''}
         <div class="hcard p-6 md:p-8 fs text-base md:text-lg leading-relaxed" style="white-space:pre-wrap">${html}</div>
         <div class="mt-4 p-4 rounded-xl text-xs" style="background:var(--elev);border:1px solid var(--bd);color:var(--mu)">
           <div class="hl-legend">
@@ -956,8 +961,11 @@ teacher: {
       const assignIds = snap.docs.map(d => d.id);
       let subCounts = {};
       try {
-        const subSnap = await getDocs(query(collection(db, "submissions"), where("assignmentId", "in", assignIds.slice(0, 10))));
-        subSnap.forEach(s => { const aid = s.data().assignmentId; subCounts[aid] = (subCounts[aid] || 0) + 1; });
+        for (let i = 0; i < assignIds.length; i += 10) {
+          const batch = assignIds.slice(i, i + 10);
+          const subSnap = await getDocs(query(collection(db, "submissions"), where("assignmentId", "in", batch)));
+          subSnap.forEach(s => { const aid = s.data().assignmentId; subCounts[aid] = (subCounts[aid] || 0) + 1; });
+        }
       } catch(e) { console.warn('Could not fetch submission counts', e); }
       // Get current class data from URL context
       el.innerHTML = snap.docs.map(d => {
@@ -982,6 +990,39 @@ teacher: {
       }).join('');
       lucide.createIcons();
     });
+  },
+  _selectedClassId: null,
+  _teacherClasses: [],
+  // ── Library clone ──
+  initLibrary: async () => {
+    try {
+      const snap = await getDocs(query(collection(db, "classes"), where("teacherId", "==", appState.user.uid)));
+      window.app.teacher._teacherClasses = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      const bar = document.getElementById('library-classes-bar');
+      if (!bar) return;
+      if (!snap.docs.length) { bar.innerHTML = `<span class="text-xs" style="color:var(--fa)">No classes yet. <button onclick="window.app.router.go('teacher-dash')" class="font-bold" style="color:var(--ac)">Create one first.</button></span>`; return; }
+      window.app.teacher._selectedClassId = snap.docs[0].id;
+      bar.innerHTML = `<span class="text-xs font-bold" style="color:var(--mu)">Clone into:</span>` +
+        snap.docs.map(d => {
+          const data = d.data();
+          return `<button onclick="window.app.teacher._selectedClassId='${d.id}';document.querySelectorAll('.lib-cls-btn').forEach(b=>b.style.cssText='');this.style.cssText='background:var(--ac);color:#fff;border-color:var(--ac)'" class="lib-cls-btn text-xs px-3 py-1.5 rounded-lg font-semibold transition" style="${d.id === snap.docs[0].id ? 'background:var(--ac);color:#fff;border-color:var(--ac)' : 'border:1px solid var(--bd)'}">${data.name}</button>`;
+        }).join('');
+    } catch(e) { console.error(e); }
+    lucide.createIcons();
+  },
+  cloneTemplate: async (idx) => {
+    const t = LIBRARY_TEMPLATES[idx]; if (!t) return;
+    const classId = window.app.teacher._selectedClassId;
+    if (!classId) return window.app.ui.toast('Select a class first.', 'error');
+    try {
+      let structure = null;
+      if (t.type === 'saq') structure = { kind: 'saq', parts: 3 };
+      else if (t.type === 'leq') structure = { kind: 'leq', focusSkills: ['thesis', 'context', 'evidence', 'reasoning'] };
+      else if (t.type === 'dbq') structure = { kind: 'dbq', sources: (t.sources || []).map(s => ({ type: s.type || 'text', label: s.title || s.label || '', content: s.content || '' })) };
+      await addDoc(collection(db, 'assignments'), { classId, title: t.title, type: t.type, prompt: t.prompt, maxAttempts: t.maxAttempts || 3, teacherId: appState.user.uid, createdAt: serverTimestamp(), submissionsCount: 0, structure });
+      const cls = window.app.teacher._teacherClasses.find(c => c.id === classId);
+      window.app.ui.toast(`"${t.title}" added to ${cls?.name || 'class'}!`, 'success');
+    } catch(e) { console.error(e); window.app.ui.toast('Clone failed: ' + e.message, 'error'); }
   },
   // ── Builder functions ──
   initBuilder: () => {
@@ -1099,7 +1140,11 @@ teacher: {
     if (type === 'dbq' && !window.app.teacher.dbqSources.length) return window.app.ui.toast('DBQ needs at least one document source.', 'error');
     let structure = null;
     if (type === 'saq') structure = { kind: 'saq', parts: parseInt(form.saqParts?.value) || 3 };
-    else if (type === 'leq') structure = { kind: 'leq', focusSkills: Array.from(form.querySelectorAll('input[name="leqSkill"]:checked')).map(i => i.value) };
+    else if (type === 'leq') {
+      const focusSkills = Array.from(form.querySelectorAll('input[name="leqSkill"]:checked')).map(i => i.value);
+      if (!focusSkills.length) return window.app.ui.toast('Select at least one focus skill for this LEQ.', 'error');
+      structure = { kind: 'leq', focusSkills };
+    }
     else if (type === 'dbq') structure = { kind: 'dbq', sources: window.app.teacher.dbqSources.map(s => ({ type: s.type, label: s.label, content: s.content })) };
     try {
       await addDoc(collection(db, 'assignments'), { classId, title, type, prompt, maxAttempts, teacherId: appState.user.uid, createdAt: serverTimestamp(), submissionsCount: 0, structure });
@@ -1351,6 +1396,8 @@ student: {
   submitEssay: async () => {
     const txt = document.getElementById('essay-input')?.value.trim();
     if (!txt || txt.length < 50) return window.app.ui.toast('Write at least a solid paragraph before submitting.', 'error');
+    const words = txt.split(/\s+/).length;
+    if (!appState.demoMode && !confirm(`Submit your essay? (${words} words)\n\nThe AI grader will evaluate your response. This cannot be undone.`)) return;
     window.app.ui.btnLoading('submit-btn', true); window.app.ui.toast('AI is grading your essay…', 'info');
     try {
       const a = appState.activeAssignment;
@@ -1419,7 +1466,7 @@ game: {
           <div class="relative">${renderRing(typePct, 44, color)}<span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700">${icon}</span></div>
           <div><h4 class="text-sm font-bold">${label}</h4><p class="text-[10px]" style="color:var(--mu)">${typePct}% mastered · ${entries.filter(([,v]) => v >= 80).length}/${entries.length} golden</p></div>
         </div>
-        <div class="grid grid-cols-${Math.min(entries.length, 5)} gap-2">
+        <div style="display:grid;grid-template-columns:repeat(${Math.min(entries.length, 5)},1fr);gap:8px">
           ${entries.map(([name, val]) => {
             const plant = val >= 80 ? '🌳' : val >= 60 ? '🌻' : val >= 40 ? '🌿' : val >= 20 ? '🌱' : '🫘';
             const state = val >= 80 ? 'skill-gold' : val >= 40 ? 'skill-grow' : 'skill-seed';
@@ -1957,7 +2004,8 @@ game: {
 // ═══ AI GRADING ═══
 ai: {
   grade: async (type, prompt, essay, structure) => {
-    if (!appState.apiKey) return window.app.ai.mockGrade(type, essay);
+    appState._usedMockGrading = false;
+    if (!appState.apiKey) { appState._usedMockGrading = true; return window.app.ai.mockGrade(type, essay); }
     const rubrics = { saq: { maxScore: 3 }, leq: { maxScore: 6 }, dbq: { maxScore: 7 } };
     const r = rubrics[type];
     try {
