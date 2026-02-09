@@ -159,6 +159,41 @@ body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--tx); 
 .tabBtn { padding:8px 20px; font-size:13px; font-weight:600; border-radius:8px 8px 0 0; border:none; cursor:pointer; font-family:'DM Sans',sans-serif; background:transparent; color:var(--mu); border-bottom:2px solid transparent; transition:all .2s; }
 .tabBtn.on { color:var(--ac); border-bottom-color:var(--ac); background:var(--acs); }
 
+/* Assignment builder */
+.builder-wrap { display:flex; height:calc(100vh - 56px); }
+.builder-form { width:50%; overflow-y:auto; padding:24px 32px; border-right:1px solid var(--bd); }
+.builder-preview { width:50%; overflow-y:auto; background:var(--elev); position:relative; }
+.builder-preview-label { position:sticky; top:0; z-index:5; background:var(--elev); border-bottom:1px solid var(--bd); padding:10px 20px; display:flex; align-items:center; gap:8px; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--mu); }
+.builder-preview-label i { color:var(--ac); }
+.builder-preview-inner { padding:24px 32px; }
+.builder-section { margin-bottom:20px; }
+.builder-section label { display:block; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--mu); margin-bottom:6px; }
+.doc-card { background:var(--card); border:1px solid var(--bd); border-radius:12px; padding:12px; margin-bottom:8px; position:relative; }
+.doc-card-remove { position:absolute; top:8px; right:8px; width:22px; height:22px; border-radius:6px; border:1px solid var(--bd); background:var(--card); cursor:pointer; display:flex; align-items:center; justify-content:center; color:var(--fa); font-size:12px; transition:all .15s; }
+.doc-card-remove:hover { border-color:var(--ac); color:var(--ac); background:var(--acs); }
+.doc-badge { display:inline-flex; align-items:center; gap:4px; font-size:10px; font-weight:700; padding:2px 8px; border-radius:5px; text-transform:uppercase; }
+.doc-badge-text { background:rgba(92,109,179,.1); color:var(--ry); }
+.doc-badge-image { background:rgba(77,128,96,.1); color:var(--sg); }
+.doc-badge-chart { background:rgba(196,149,40,.1); color:var(--gd); }
+.doc-badge-map { background:rgba(212,98,47,.1); color:var(--ac); }
+.doc-img-preview { max-width:100%; border-radius:8px; margin-top:8px; border:1px solid var(--bd); }
+.doc-img-error { padding:20px; text-align:center; border-radius:8px; margin-top:8px; border:2px dashed var(--bd); font-size:12px; color:var(--fa); }
+.preview-prompt { background:var(--card); border:1px solid var(--bd); border-radius:12px; padding:16px; font-family:'Crimson Pro',Georgia,serif; font-size:14px; line-height:1.7; white-space:pre-wrap; }
+.preview-empty { text-align:center; padding:40px 20px; color:var(--fa); }
+.preview-doc { background:var(--card); border:1px solid var(--bd); border-radius:10px; padding:12px; margin-bottom:8px; }
+@media (max-width:768px) {
+  .builder-wrap { flex-direction:column; height:auto; min-height:calc(100vh - 56px); }
+  .builder-form { width:100%; border-right:none; border-bottom:1px solid var(--bd); }
+  .builder-preview { width:100%; min-height:50vh; }
+}
+/* Teacher submission list */
+.sub-row { display:flex; align-items:center; gap:12px; padding:10px 14px; border-radius:10px; cursor:pointer; transition:all .15s; }
+.sub-row:hover { background:var(--acs); }
+.sub-score { min-width:48px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; }
+.sub-score-high { background:rgba(77,128,96,.12); color:var(--sg); }
+.sub-score-mid { background:rgba(196,149,40,.12); color:var(--gd); }
+.sub-score-low { background:rgba(212,98,47,.12); color:var(--ac); }
+
 /* Chrono flash */
 @keyframes flashGreen { 0% { background:rgba(77,128,96,.3); } 100% { background:transparent; } }
 .chronoCorrect { animation:flashGreen .4s ease-out; }
@@ -501,10 +536,12 @@ router: {
       'teacher-dash': () => { root.innerHTML = V.teacherDash(); window.app.teacher.init(); },
       'student-dash': () => { root.innerHTML = V.studentDash(); window.app.student.init(); },
       'class-detail': () => { root.innerHTML = V.classDetail(params.classData); window.app.teacher.loadClass(params.classData.id); },
+      'assignment-builder': () => { root.innerHTML = V.assignmentBuilder(params.classData); window.app.teacher.initBuilder(); },
+      'assignment-detail': () => { root.innerHTML = V.assignmentDetail(params.assignment, params.classData); window.app.teacher.loadSubmissions(params.assignment); },
       'library': () => root.innerHTML = V.library(),
       'editor': () => { appState.activeAssignment = params.assignment; root.innerHTML = V.editor(params.assignment); window.app.student.initEditor(); },
       'demo': () => { appState.demoMode = true; const a = DEMO_ASSIGNMENT; appState.activeAssignment = a; localStorage.setItem('draft_demo', DEMO_ESSAY); root.innerHTML = V.editor(a); window.app.student.initEditor(); },
-      'results': () => root.innerHTML = V.results(params.submission, params.assignment)
+      'results': () => { appState._lastViewedAssignment = params.assignment; root.innerHTML = V.results(params.submission, params.assignment); }
     };
     if (routes[view]) routes[view]();
     lucide.createIcons();
@@ -617,30 +654,106 @@ views: {
     </div>`;
   },
 
-  classDetail: (cls) => `
+  classDetail: (cls) => {
+    window.app.teacher._classDataCache = cls;
+    return `
     <div class="max-w-5xl mx-auto px-4 py-6 pageEnter">
       <button onclick="window.app.router.go('teacher-dash')" class="mb-6 text-sm flex items-center gap-1" style="color:var(--mu)"><i data-lucide="arrow-left" class="w-4 h-4"></i>Back</button>
       <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-        <div><h1 class="text-2xl font-bold fs">${cls.name}</h1><p class="text-sm mt-1 fm" style="color:var(--mu)">Code: <span style="color:var(--ac)" class="font-bold">${cls.code}</span></p></div>
-        <button onclick="window.app.ui.modal('create-assignment','open')" class="btnP text-sm flex items-center gap-2"><i data-lucide="plus" class="w-4 h-4"></i>New Assignment</button>
+        <div><h1 class="text-2xl font-bold fs">${cls.name}</h1><p class="text-sm mt-1 fm" style="color:var(--mu)">Code: <span style="color:var(--ac)" class="font-bold">${cls.code}</span></p><p class="text-xs mt-1" style="color:var(--fa)">${(cls.students||[]).length} student${(cls.students||[]).length===1?'':'s'} enrolled</p></div>
+        <button onclick="window.app.router.go('assignment-builder',{classData:window.app.teacher._classDataCache})" class="btnP text-sm flex items-center gap-2"><i data-lucide="plus" class="w-4 h-4"></i>New Assignment</button>
       </div>
       <div id="assignments-list" class="space-y-3"></div>
-    </div>
-    <div id="create-assignment" class="hidden"><div class="modalBg" onclick="event.target===this&&window.app.ui.closeModal('create-assignment')"><div class="modalBox modalLg">
-      <h3 class="text-lg font-bold mb-4">Create Assignment</h3>
-      <form onsubmit="event.preventDefault();window.app.teacher.createAssignment('${cls.id}')">
-        <div class="grid sm:grid-cols-2 gap-3 mb-3"><input name="title" placeholder="Title" required class="hinp"><select name="type" class="hinp" onchange="window.app.teacher.onTypeChange(this.value)"><option value="saq">SAQ</option><option value="leq">LEQ</option><option value="dbq">DBQ</option></select></div>
-        <textarea name="prompt" rows="3" placeholder="Prompt" required class="hinp mb-3" style="resize:vertical"></textarea>
-        <div id="saq-structure" class="mb-3"><label class="text-xs font-semibold" style="color:var(--mu)">Parts</label><input type="number" name="saqParts" min="1" max="4" value="3" class="hinp mt-1 w-24"></div>
-        <div id="leq-structure" class="mb-3 hidden"><label class="text-xs font-semibold mb-2 block" style="color:var(--mu)">Focus</label><div class="grid grid-cols-2 gap-2 text-xs"><label class="flex items-center gap-2"><input type="checkbox" name="leqSkill" value="thesis" checked>Thesis</label><label class="flex items-center gap-2"><input type="checkbox" name="leqSkill" value="context">Context</label><label class="flex items-center gap-2"><input type="checkbox" name="leqSkill" value="evidence">Evidence</label><label class="flex items-center gap-2"><input type="checkbox" name="leqSkill" value="reasoning">Reasoning</label></div></div>
-        <div id="dbq-structure" class="mb-3 hidden"><label class="text-xs font-semibold mb-2 block" style="color:var(--mu)">DBQ Sources</label>
-          <div class="hcard p-3 mb-2"><div class="grid sm:grid-cols-3 gap-2 mb-2"><select id="dbq-source-type" class="hinp text-xs"><option value="text">Text</option><option value="image">Image</option><option value="chart">Chart</option><option value="map">Map</option></select><input id="dbq-source-label" placeholder="Label" class="hinp text-xs"><input id="dbq-source-content" placeholder="Content/URL" class="hinp text-xs"></div><button type="button" onclick="window.app.teacher.addDbqSource()" class="btnP text-xs py-1.5 px-3">Add Source</button></div>
-          <div id="dbq-sources-list" class="text-xs" style="color:var(--fa)">No sources added.</div>
+    </div>`;
+  },
+
+  assignmentBuilder: (cls) => {
+    window.app.teacher._classDataCache = cls;
+    return `
+    <div class="builder-wrap pageEnter">
+      <div class="builder-form csc">
+        <button onclick="window.app.router.go('class-detail',{classData:window.app.teacher._classDataCache})" class="mb-5 text-sm flex items-center gap-1" style="color:var(--mu)"><i data-lucide="arrow-left" class="w-4 h-4"></i>Back to ${cls.name}</button>
+        <h2 class="text-xl font-bold fs mb-5">Create Assignment</h2>
+        <form id="builder-form" onsubmit="event.preventDefault();window.app.teacher.createAssignment('${cls.id}')">
+          <div class="builder-section">
+            <label>Title</label>
+            <input name="title" placeholder="e.g. Unit 4 LEQ — Maritime Empires" required class="hinp" oninput="window.app.teacher.updatePreview()">
+          </div>
+          <div class="builder-section">
+            <label>Type</label>
+            <select name="type" class="hinp" onchange="window.app.teacher.onTypeChange(this.value);window.app.teacher.updatePreview()">
+              <option value="saq">SAQ — Short Answer</option>
+              <option value="leq">LEQ — Long Essay</option>
+              <option value="dbq">DBQ — Document Based</option>
+            </select>
+          </div>
+          <div class="builder-section">
+            <label>Prompt</label>
+            <textarea name="prompt" rows="5" placeholder="Write the full prompt students will see…" required class="hinp" style="resize:vertical" oninput="window.app.teacher.updatePreview()"></textarea>
+          </div>
+          <div id="saq-structure" class="builder-section">
+            <label>Number of Parts</label>
+            <input type="number" name="saqParts" min="1" max="4" value="3" class="hinp w-24" oninput="window.app.teacher.updatePreview()">
+          </div>
+          <div id="leq-structure" class="builder-section hidden">
+            <label>Focus Skills</label>
+            <div class="grid grid-cols-2 gap-2 text-xs mt-1">
+              <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" name="leqSkill" value="thesis" checked onchange="window.app.teacher.updatePreview()">Thesis</label>
+              <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" name="leqSkill" value="context" onchange="window.app.teacher.updatePreview()">Contextualization</label>
+              <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" name="leqSkill" value="evidence" onchange="window.app.teacher.updatePreview()">Evidence</label>
+              <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" name="leqSkill" value="reasoning" onchange="window.app.teacher.updatePreview()">Reasoning</label>
+            </div>
+          </div>
+          <div id="dbq-structure" class="builder-section hidden">
+            <label>DBQ Documents</label>
+            <div class="hcard p-3 mt-1">
+              <div class="grid sm:grid-cols-3 gap-2 mb-2">
+                <select id="dbq-source-type" class="hinp text-xs">
+                  <option value="text">Text Excerpt</option>
+                  <option value="image">Image (URL)</option>
+                  <option value="chart">Chart / Table</option>
+                  <option value="map">Map</option>
+                </select>
+                <input id="dbq-source-label" placeholder="Label (e.g. Treaty of Tordesillas)" class="hinp text-xs">
+                <input id="dbq-source-content" placeholder="Paste text or image URL" class="hinp text-xs">
+              </div>
+              <div id="dbq-source-image-hint" class="hidden text-[10px] mb-2" style="color:var(--sg)"><i data-lucide="image" class="w-3 h-3 inline"></i> Paste a public image URL (.jpg, .png, .webp, .gif). It will display inline for students.</div>
+              <button type="button" onclick="window.app.teacher.addDbqSource()" class="btnP text-xs py-1.5 px-3">Add Document</button>
+            </div>
+            <div id="dbq-sources-list" class="mt-2 space-y-2"></div>
+          </div>
+          <div class="builder-section">
+            <label>Max Attempts</label>
+            <input name="maxAttempts" type="number" value="3" min="1" max="10" class="hinp w-24">
+          </div>
+          <div class="flex gap-2 mt-4 pt-4" style="border-top:1px solid var(--bd)">
+            <button type="button" onclick="window.app.router.go('class-detail',{classData:window.app.teacher._classDataCache})" class="btnG flex-1">Cancel</button>
+            <button class="btnP flex-1">Create Assignment</button>
+          </div>
+        </form>
+      </div>
+      <div class="builder-preview csc">
+        <div class="builder-preview-label"><i data-lucide="eye" class="w-4 h-4"></i>Student Preview</div>
+        <div class="builder-preview-inner" id="builder-preview-content">
+          <div class="preview-empty"><i data-lucide="pencil-line" class="w-8 h-8 mx-auto mb-3" style="color:var(--bd)"></i><p class="text-sm" style="color:var(--mu)">Start filling in the form to see<br>what students will see.</p></div>
         </div>
-        <input name="maxAttempts" type="number" value="3" class="hinp mb-4 w-full" placeholder="Max attempts">
-        <div class="flex gap-2"><button type="button" onclick="window.app.ui.closeModal('create-assignment')" class="btnG flex-1">Cancel</button><button class="btnP flex-1">Create</button></div>
-      </form>
-    </div></div></div>`,
+      </div>
+    </div>`; },
+
+  assignmentDetail: (assignment, cls) => `
+    <div class="max-w-5xl mx-auto px-4 py-6 pageEnter">
+      <button onclick="window.app.router.go('class-detail',{classData:window.app.teacher._classDataCache})" class="mb-6 text-sm flex items-center gap-1" style="color:var(--mu)"><i data-lucide="arrow-left" class="w-4 h-4"></i>Back to ${cls.name}</button>
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-2">
+        <div>
+          <span class="text-[10px] font-bold fm uppercase px-2 py-1 rounded" style="background:var(--acs);color:var(--ac)">${assignment.type}</span>
+          <h1 class="text-2xl font-bold fs mt-2">${assignment.title}</h1>
+        </div>
+      </div>
+      <div class="mt-3 mb-6 p-4 rounded-xl fs text-sm leading-relaxed" style="background:var(--elev);border:1px solid var(--bd)">${assignment.prompt}</div>
+      ${assignment.structure?.sources?.length ? `<div class="mb-6"><h3 class="text-sm font-bold mb-2">Documents</h3>${assignment.structure.sources.map((s,i) => `<div class="preview-doc">${window.app.teacher.renderDocContent(s,i)}</div>`).join('')}</div>` : ''}
+      <h3 class="text-sm font-bold mb-3">Student Submissions</h3>
+      <div id="submissions-list"><p class="text-sm" style="color:var(--fa)">Loading submissions…</p></div>
+    </div>`,
 
   library: () => `
     <div class="max-w-5xl mx-auto px-4 py-6 pageEnter">
@@ -653,7 +766,18 @@ views: {
 
   editor: (a) => {
     const draft = localStorage.getItem(`draft_${a.id}`) || '';
-    const srcHtml = a.structure?.sources?.length ? `<div class="mt-4"><h3 class="text-sm font-bold mb-2">Documents</h3>${a.structure.sources.map((s, i) => `<div class="p-3 rounded-lg mb-2" style="background:var(--elev);border:1px solid var(--bd)"><div class="text-xs font-bold mb-1" style="color:var(--ac)">Doc ${i + 1}: ${s.label || s.title}</div><p class="text-xs" style="color:var(--mu)">${s.content}</p></div>`).join('')}</div>` : '';
+    const renderSrc = (s, i) => {
+      const isImg = s.type === 'image' || s.type === 'map' || s.type === 'chart' && /^https?:\/\/.+\.(jpg|jpeg|png|gif|webp|svg)/i.test(s.content);
+      const isUrl = /^https?:\/\//i.test(s.content);
+      let body;
+      if ((s.type === 'image' || s.type === 'map') || (isUrl && (s.type === 'chart'))) {
+        body = `<img src="${s.content}" alt="${s.label||'Document '+(i+1)}" class="doc-img-preview" onerror="this.outerHTML='<div class=\\'doc-img-error\\'>Image could not be loaded. Check the URL.</div>'">`;
+      } else {
+        body = `<p class="text-xs leading-relaxed mt-1" style="color:var(--mu);white-space:pre-wrap">${s.content}</p>`;
+      }
+      return `<div class="p-3 rounded-lg mb-2" style="background:var(--elev);border:1px solid var(--bd)"><div class="flex items-center gap-2 mb-1"><span class="doc-badge doc-badge-${s.type}">${s.type}</span><span class="text-xs font-bold" style="color:var(--ac)">Doc ${i + 1}: ${s.label || s.title || ''}</span></div>${body}</div>`;
+    };
+    const srcHtml = a.structure?.sources?.length ? `<div class="mt-4"><h3 class="text-sm font-bold mb-2">Documents</h3>${a.structure.sources.map((s, i) => renderSrc(s, i)).join('')}</div>` : '';
     return `
     <div class="h-[calc(100vh-56px)] flex pageEnter">
       <div class="w-full md:w-[45%] overflow-y-auto p-6 md:p-8 csc" style="background:var(--card);border-right:1px solid var(--bd)">
@@ -694,7 +818,7 @@ views: {
     <div class="h-[calc(100vh-56px)] flex pageEnter">
       <div class="flex-1 overflow-y-auto p-6 md:p-10 csc">
         <div class="flex items-center gap-3 mb-5">
-          <button onclick="window.app.router.go(appState.demoMode && !appState.user ? 'home' : 'student-dash')" class="text-sm flex items-center gap-1" style="color:var(--mu)"><i data-lucide="arrow-left" class="w-4 h-4"></i>Back</button>
+          <button onclick="window.app.ui.resultsBack()" class="text-sm flex items-center gap-1" style="color:var(--mu)"><i data-lucide="arrow-left" class="w-4 h-4"></i>Back</button>
           ${a.demo ? '<button onclick="window.app.router.go(\'demo\')" class="btnP text-xs py-1.5 px-4">Try Again</button>' : ''}
         </div>
         <h1 class="text-2xl font-bold fs mb-1">Grading Report</h1>
@@ -790,6 +914,7 @@ auth: {
 // ═══ TEACHER ═══
 teacher: {
   dbqSources: [],
+  _classDataCache: null,
   init: () => {
     const q2 = query(collection(db, "classes"), where("teacherId", "==", appState.user.uid));
     onSnapshot(q2, snap => {
@@ -797,7 +922,7 @@ teacher: {
       if (snap.empty) { el.innerHTML = `<div class="col-span-3 text-center py-12" style="border:2px dashed var(--bd);border-radius:16px"><p style="color:var(--mu)" class="text-sm mb-1">No classes yet</p><p class="text-xs" style="color:var(--fa)">Click "New Class" to get started.</p></div>`; return; }
       el.innerHTML = snap.docs.map(d => {
         const data = d.data(); const payload = JSON.stringify({ id: d.id, ...data }).replace(/'/g, "&#39;");
-        return `<div class="hcard p-5 cursor-pointer" onclick='window.app.router.go("class-detail",{classData:${payload}})'><h3 class="font-bold">${data.name}</h3><p class="text-xs fm mt-1" style="color:var(--mu)">Code: <span style="color:var(--ac)" class="font-bold">${data.code}</span></p></div>`;
+        return `<div class="hcard p-5 cursor-pointer" onclick='window.app.router.go("class-detail",{classData:${payload}})'><h3 class="font-bold">${data.name}</h3><p class="text-xs fm mt-1" style="color:var(--mu)">Code: <span style="color:var(--ac)" class="font-bold">${data.code}</span></p><p class="text-[11px] mt-1" style="color:var(--fa)">${(data.students||[]).length} student${(data.students||[]).length===1?'':'s'}</p></div>`;
       }).join('');
     });
   },
@@ -809,41 +934,194 @@ teacher: {
   },
   loadClass: (classId) => {
     const q2 = query(collection(db, "assignments"), where("classId", "==", classId));
-    onSnapshot(q2, snap => {
+    onSnapshot(q2, async snap => {
       const el = document.getElementById('assignments-list'); if (!el) return;
-      if (snap.empty) { el.innerHTML = `<p class="text-sm" style="color:var(--mu)">No assignments yet.</p>`; return; }
+      if (snap.empty) { el.innerHTML = `<div class="text-center py-12" style="border:2px dashed var(--bd);border-radius:16px"><i data-lucide="file-text" class="w-8 h-8 mx-auto mb-2" style="color:var(--fa)"></i><p class="text-sm" style="color:var(--mu)">No assignments yet.</p><p class="text-xs" style="color:var(--fa)">Click "New Assignment" to create one.</p></div>`; lucide.createIcons(); return; }
+      // Fetch submission counts per assignment
+      const assignIds = snap.docs.map(d => d.id);
+      let subCounts = {};
+      try {
+        const subSnap = await getDocs(query(collection(db, "submissions"), where("assignmentId", "in", assignIds.slice(0, 10))));
+        subSnap.forEach(s => { const aid = s.data().assignmentId; subCounts[aid] = (subCounts[aid] || 0) + 1; });
+      } catch(e) { console.warn('Could not fetch submission counts', e); }
+      // Get current class data from URL context
       el.innerHTML = snap.docs.map(d => {
         const data = d.data();
-        return `<div class="hcard p-4 flex justify-between items-center"><div><span class="text-[10px] font-bold fm uppercase px-2 py-1 rounded" style="background:var(--acs);color:var(--ac)">${data.type}</span><h4 class="font-bold text-sm mt-1">${data.title}</h4></div><div class="text-xl font-bold" style="color:var(--ac)">${data.submissionsCount || 0}</div></div>`;
+        const count = subCounts[d.id] || 0;
+        const aPayload = JSON.stringify({ id: d.id, ...data }).replace(/'/g, "&#39;");
+        return `<div class="hcard p-4 cursor-pointer" onclick='window.app.router.go("assignment-detail",{assignment:${aPayload},classData:window.app.teacher._classDataCache})'>
+          <div class="flex items-center justify-between">
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2 mb-1">
+                <span class="text-[10px] font-bold fm uppercase px-2 py-1 rounded" style="background:var(--acs);color:var(--ac)">${data.type}</span>
+                <h4 class="font-bold text-sm truncate">${data.title}</h4>
+              </div>
+              <p class="text-xs truncate" style="color:var(--mu)">${data.prompt}</p>
+            </div>
+            <div class="flex items-center gap-3 ml-3">
+              <div class="text-center"><div class="text-lg font-bold" style="color:var(--ac)">${count}</div><div class="text-[10px]" style="color:var(--fa)">submissions</div></div>
+              <i data-lucide="chevron-right" class="w-4 h-4" style="color:var(--fa)"></i>
+            </div>
+          </div>
+        </div>`;
       }).join('');
+      lucide.createIcons();
     });
+  },
+  // ── Builder functions ──
+  initBuilder: () => {
+    window.app.teacher.dbqSources = [];
+    // Show image hint when image type selected
+    const typeSelect = document.getElementById('dbq-source-type');
+    if (typeSelect) {
+      typeSelect.addEventListener('change', () => {
+        const hint = document.getElementById('dbq-source-image-hint');
+        if (hint) hint.classList.toggle('hidden', typeSelect.value === 'text');
+        const placeholder = document.getElementById('dbq-source-content');
+        if (placeholder) placeholder.placeholder = typeSelect.value === 'text' ? 'Paste the text excerpt…' : 'Paste the public image URL…';
+      });
+    }
+    window.app.teacher.updatePreview();
+    lucide.createIcons();
   },
   onTypeChange: (type) => {
     ['saq-structure', 'leq-structure', 'dbq-structure'].forEach(id => document.getElementById(id)?.classList.add('hidden'));
     const map = { saq: 'saq-structure', leq: 'leq-structure', dbq: 'dbq-structure' };
     document.getElementById(map[type])?.classList.remove('hidden');
   },
+  renderDocContent: (s, i) => {
+    const isUrl = /^https?:\/\//i.test(s.content);
+    let body;
+    if (s.type === 'image' || s.type === 'map' || (isUrl && s.type === 'chart')) {
+      body = `<img src="${s.content}" alt="${s.label||'Document '+(i+1)}" class="doc-img-preview" onerror="this.outerHTML='<div class=\\'doc-img-error\\'>Image could not be loaded. Check the URL.</div>'">`;
+    } else {
+      body = `<p class="text-xs leading-relaxed" style="color:var(--mu);white-space:pre-wrap">${s.content}</p>`;
+    }
+    return `<div class="flex items-center gap-2 mb-1"><span class="doc-badge doc-badge-${s.type}">${s.type}</span><span class="text-xs font-bold" style="color:var(--ac)">Doc ${i + 1}: ${s.label || ''}</span></div>${body}`;
+  },
   addDbqSource: () => {
     const type = document.getElementById('dbq-source-type')?.value || 'text';
     const label = document.getElementById('dbq-source-label')?.value.trim();
     const content = document.getElementById('dbq-source-content')?.value.trim();
-    if (!label || !content) return window.app.ui.toast('Need label + content.', 'error');
+    if (!label || !content) return window.app.ui.toast('Need a label and content/URL.', 'error');
+    if ((type === 'image' || type === 'map') && !/^https?:\/\//i.test(content)) return window.app.ui.toast('Image/map sources need a full URL starting with http.', 'error');
     window.app.teacher.dbqSources.push({ id: Date.now(), type, label, content });
-    document.getElementById('dbq-source-label').value = ''; document.getElementById('dbq-source-content').value = '';
+    document.getElementById('dbq-source-label').value = '';
+    document.getElementById('dbq-source-content').value = '';
+    window.app.teacher.renderDbqSourcesList();
+    window.app.teacher.updatePreview();
+    window.app.ui.toast('Document added.', 'success');
+  },
+  removeDbqSource: (id) => {
+    window.app.teacher.dbqSources = window.app.teacher.dbqSources.filter(s => s.id !== id);
+    window.app.teacher.renderDbqSourcesList();
+    window.app.teacher.updatePreview();
+  },
+  renderDbqSourcesList: () => {
     const list = document.getElementById('dbq-sources-list');
-    if (list) list.innerHTML = window.app.teacher.dbqSources.map((s, i) => `<div class="py-1" style="border-bottom:1px solid var(--bd)"><span class="font-semibold">Doc ${i + 1}:</span> ${s.label} <span class="fm" style="color:var(--fa)">(${s.type})</span></div>`).join('');
-    window.app.ui.toast('Source added.', 'success');
+    if (!list) return;
+    if (!window.app.teacher.dbqSources.length) { list.innerHTML = ''; return; }
+    list.innerHTML = window.app.teacher.dbqSources.map((s, i) => {
+      const isUrl = /^https?:\/\//i.test(s.content);
+      const thumb = (s.type === 'image' || s.type === 'map' || (isUrl && s.type === 'chart'))
+        ? `<img src="${s.content}" style="width:48px;height:36px;object-fit:cover;border-radius:6px;border:1px solid var(--bd)" onerror="this.style.display='none'">`
+        : `<div style="width:48px;height:36px;border-radius:6px;background:var(--elev);border:1px solid var(--bd);display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--fa)">TXT</div>`;
+      return `<div class="doc-card">
+        <div class="doc-card-remove" onclick="window.app.teacher.removeDbqSource(${s.id})" title="Remove">&times;</div>
+        <div class="flex items-center gap-3">
+          ${thumb}
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2"><span class="doc-badge doc-badge-${s.type}">${s.type}</span><span class="text-xs font-bold">Doc ${i + 1}</span></div>
+            <p class="text-xs truncate mt-0.5" style="color:var(--mu)">${s.label}</p>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+  },
+  updatePreview: () => {
+    const el = document.getElementById('builder-preview-content');
+    if (!el) return;
+    const form = document.getElementById('builder-form');
+    if (!form) return;
+    const title = form.title?.value?.trim() || '';
+    const type = form.type?.value || 'saq';
+    const prompt = form.prompt?.value?.trim() || '';
+    const typeLabels = { saq: 'SAQ — Short Answer', leq: 'LEQ — Long Essay', dbq: 'DBQ — Document Based' };
+    if (!title && !prompt) {
+      el.innerHTML = `<div class="preview-empty"><i data-lucide="pencil-line" class="w-8 h-8 mx-auto mb-3" style="color:var(--bd)"></i><p class="text-sm" style="color:var(--mu)">Start filling in the form to see<br>what students will see.</p></div>`;
+      lucide.createIcons(); return;
+    }
+    // Build structure info
+    let structInfo = '';
+    if (type === 'saq') {
+      const parts = parseInt(form.saqParts?.value) || 3;
+      structInfo = `<p class="text-xs mt-2" style="color:var(--fa)">This question has ${parts} part${parts > 1 ? 's' : ''} (a${parts >= 2 ? ', b' : ''}${parts >= 3 ? ', c' : ''}${parts >= 4 ? ', d' : ''})</p>`;
+    } else if (type === 'leq') {
+      const skills = Array.from(form.querySelectorAll('input[name="leqSkill"]:checked')).map(i => i.value);
+      if (skills.length) structInfo = `<div class="flex flex-wrap gap-1 mt-2">${skills.map(s => `<span class="text-[10px] px-2 py-0.5 rounded-full font-semibold" style="background:var(--acs);color:var(--ac)">${s}</span>`).join('')}</div>`;
+    }
+    // Build docs for DBQ
+    let docsHtml = '';
+    if (type === 'dbq' && window.app.teacher.dbqSources.length) {
+      docsHtml = `<div class="mt-4"><h3 class="text-sm font-bold mb-2">Documents</h3>${window.app.teacher.dbqSources.map((s, i) => `<div class="preview-doc">${window.app.teacher.renderDocContent(s, i)}</div>`).join('')}</div>`;
+    }
+    el.innerHTML = `
+      <span class="text-[10px] font-bold fm uppercase px-2 py-1 rounded" style="background:var(--acs);color:var(--ac)">${typeLabels[type] || type}</span>
+      <h2 class="text-xl font-bold fs mt-3">${title || '<span style="color:var(--fa)">Untitled Assignment</span>'}</h2>
+      ${structInfo}
+      <h3 class="text-sm font-bold fs mt-4 mb-2">Prompt</h3>
+      <div class="preview-prompt">${prompt || '<span style="color:var(--fa)">No prompt yet…</span>'}</div>
+      ${docsHtml}
+      <div class="mt-6 p-4 rounded-xl" style="border:2px dashed var(--bd)">
+        <p class="text-xs text-center" style="color:var(--fa)"><i data-lucide="pen-tool" class="w-4 h-4 inline mr-1"></i>Student essay textarea will appear here</p>
+      </div>`;
+    lucide.createIcons();
   },
   createAssignment: async (classId) => {
-    const form = document.querySelector('#create-assignment form'); if (!form) return;
+    const form = document.getElementById('builder-form'); if (!form) return;
     const title = form.title.value.trim(), type = form.type.value, prompt = form.prompt.value.trim(), maxAttempts = parseInt(form.maxAttempts.value) || 3;
     if (!title || !prompt) return window.app.ui.toast('Title and prompt required.', 'error');
+    if (type === 'dbq' && !window.app.teacher.dbqSources.length) return window.app.ui.toast('DBQ needs at least one document source.', 'error');
     let structure = null;
     if (type === 'saq') structure = { kind: 'saq', parts: parseInt(form.saqParts?.value) || 3 };
     else if (type === 'leq') structure = { kind: 'leq', focusSkills: Array.from(form.querySelectorAll('input[name="leqSkill"]:checked')).map(i => i.value) };
-    else if (type === 'dbq') structure = { kind: 'dbq', sources: window.app.teacher.dbqSources || [] };
-    await addDoc(collection(db, 'assignments'), { classId, title, type, prompt, maxAttempts, teacherId: appState.user.uid, createdAt: serverTimestamp(), submissionsCount: 0, structure });
-    window.app.ui.closeModal('create-assignment'); window.app.ui.toast('Assignment created!', 'success'); window.app.teacher.dbqSources = [];
+    else if (type === 'dbq') structure = { kind: 'dbq', sources: window.app.teacher.dbqSources.map(s => ({ type: s.type, label: s.label, content: s.content })) };
+    try {
+      await addDoc(collection(db, 'assignments'), { classId, title, type, prompt, maxAttempts, teacherId: appState.user.uid, createdAt: serverTimestamp(), submissionsCount: 0, structure });
+      window.app.ui.toast('Assignment created!', 'success');
+      window.app.teacher.dbqSources = [];
+      // Navigate back to class detail
+      if (window.app.teacher._classDataCache) window.app.router.go('class-detail', { classData: window.app.teacher._classDataCache });
+      else window.app.router.go('teacher-dash');
+    } catch(e) { console.error(e); window.app.ui.toast('Error creating assignment: ' + e.message, 'error'); }
+  },
+  // ── Submission viewing ──
+  loadSubmissions: async (assignment) => {
+    const el = document.getElementById('submissions-list'); if (!el) return;
+    try {
+      const snap = await getDocs(query(collection(db, "submissions"), where("assignmentId", "==", assignment.id)));
+      if (snap.empty) { el.innerHTML = `<div class="text-center py-8" style="border:2px dashed var(--bd);border-radius:12px"><p class="text-sm" style="color:var(--mu)">No submissions yet.</p><p class="text-xs" style="color:var(--fa)">Students will appear here once they submit.</p></div>`; return; }
+      const subs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      subs.sort((a, b) => (b.grading?.score || 0) - (a.grading?.score || 0));
+      el.innerHTML = `<div class="hcard overflow-hidden">${subs.map(sub => {
+        const score = sub.grading?.score ?? '?';
+        const max = sub.grading?.maxScore ?? '?';
+        const pct = max > 0 ? Math.round((score / max) * 100) : 0;
+        const scoreCls = pct >= 70 ? 'sub-score-high' : pct >= 40 ? 'sub-score-mid' : 'sub-score-low';
+        const subPayload = JSON.stringify(sub).replace(/'/g, "&#39;");
+        const aPayload = JSON.stringify(assignment).replace(/'/g, "&#39;");
+        return `<div class="sub-row" onclick='window.app.router.go("results",{submission:${subPayload},assignment:${aPayload}})' style="border-bottom:1px solid var(--bd)">
+          <div class="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold" style="background:var(--acs);color:var(--ac)">${(sub.studentName||'?')[0].toUpperCase()}</div>
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-semibold truncate">${sub.studentName || 'Unknown'}</p>
+            <p class="text-[11px]" style="color:var(--fa)">${sub.submittedAt?.toDate ? sub.submittedAt.toDate().toLocaleDateString() : 'Recently'}</p>
+          </div>
+          <div class="sub-score ${scoreCls}">${score}/${max}</div>
+          <i data-lucide="chevron-right" class="w-4 h-4" style="color:var(--fa)"></i>
+        </div>`;
+      }).join('')}</div>`;
+      lucide.createIcons();
+    } catch(e) { console.error(e); el.innerHTML = `<p class="text-sm" style="color:var(--ac)">Error loading submissions.</p>`; }
   }
 },
 
@@ -1542,7 +1820,7 @@ ai: {
         headers: { 'Content-Type': 'application/json', 'x-api-key': appState.apiKey, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
         body: JSON.stringify({
           model: 'claude-sonnet-4-20250514', max_tokens: 2000,
-          messages: [{ role: 'user', content: 'You are an encouraging AP World History essay grader. Grade this ' + type.toUpperCase() + ' using the 2025 College Board rubric.\n\nPrompt:\n' + prompt + '\n\nEssay:\n' + essay + (structure?.sources ? '\n\nDocuments provided:\n' + structure.sources.map((s,i) => 'Doc ' + (i+1) + ': ' + (s.label||s.title) + ' - ' + s.content).join('\n') : '') + '\n\nGrade using the official AP rubric. For EACH rubric category, find the EXACT quote from the essay that demonstrates that skill (or the best attempt). Be encouraging and specific.\n\nReturn ONLY valid JSON with no extra text:\n{"score":NUMBER,"maxScore":' + r.maxScore + ',"generalFeedback":"2-3 sentence encouraging overview highlighting strengths first, then areas to grow","annotations":[{"quote":"EXACT phrase or sentence copied from the essay (required, 5-80 chars)","category":"Thesis|Contextualization|Evidence|Sourcing|Reasoning|Complexity","status":"success if point earned|warning if close but not quite|error if missing or needs significant work","feedback":"specific encouraging feedback explaining why this earned or missed the point","improvementTip":"for warning/error only: one specific actionable step the student can take to earn this point next time, e.g. Add a date range and name a specific trade route. Empty string for success."}]}' }]
+          messages: [{ role: 'user', content: 'You are an encouraging AP World History essay grader. Grade this ' + type.toUpperCase() + ' using the 2025 College Board rubric.\n\nPrompt:\n' + prompt + '\n\nEssay:\n' + essay + (structure?.sources ? '\n\nDocuments provided:\n' + structure.sources.map((s,i) => 'Doc ' + (i+1) + ' (' + s.type + '): ' + (s.label||s.title) + (s.type === 'image' || s.type === 'map' ? ' [Image: ' + s.content + ']' : ' - ' + s.content)).join('\n') : '') + '\n\nGrade using the official AP rubric. For EACH rubric category, find the EXACT quote from the essay that demonstrates that skill (or the best attempt). Be encouraging and specific.\n\nReturn ONLY valid JSON with no extra text:\n{"score":NUMBER,"maxScore":' + r.maxScore + ',"generalFeedback":"2-3 sentence encouraging overview highlighting strengths first, then areas to grow","annotations":[{"quote":"EXACT phrase or sentence copied from the essay (required, 5-80 chars)","category":"Thesis|Contextualization|Evidence|Sourcing|Reasoning|Complexity","status":"success if point earned|warning if close but not quite|error if missing or needs significant work","feedback":"specific encouraging feedback explaining why this earned or missed the point","improvementTip":"for warning/error only: one specific actionable step the student can take to earn this point next time, e.g. Add a date range and name a specific trade route. Empty string for success."}]}' }]
         })
       });
       const data = await resp.json();
@@ -1598,6 +1876,13 @@ ai: {
 
 // ═══ UI UTILITIES ═══
 ui: {
+  resultsBack: () => {
+    if (appState.demoMode && !appState.user) return window.app.router.go('home');
+    if (appState.userData?.role === 'teacher' && appState._lastViewedAssignment) {
+      return window.app.router.go('assignment-detail', { assignment: appState._lastViewedAssignment, classData: window.app.teacher._classDataCache });
+    }
+    window.app.router.go('student-dash');
+  },
   updateNav: () => {
     const navOut = document.getElementById('nav-out');
     const navIn = document.getElementById('nav-in');
