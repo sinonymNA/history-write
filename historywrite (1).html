@@ -349,7 +349,37 @@ const CHRONO_EVENTS = [
   { event: "Communist Manifesto", date: 1848, era: "Modern" },
   { event: "Meiji Restoration", date: 1868, era: "Modern" },
   { event: "Berlin Conference", date: 1884, era: "Modern" },
-  { event: "Boxer Rebellion", date: 1900, era: "Modern" }
+  { event: "Boxer Rebellion", date: 1900, era: "Modern" },
+  { event: "Justinian's Code compiled", date: 529, era: "Post-Classical" },
+  { event: "Sui Dynasty reunifies China", date: 589, era: "Post-Classical" },
+  { event: "Battle of Tours", date: 732, era: "Post-Classical" },
+  { event: "Charlemagne crowned Emperor", date: 800, era: "Post-Classical" },
+  { event: "Song Dynasty begins", date: 960, era: "Post-Classical" },
+  { event: "Great Schism (East-West)", date: 1054, era: "Post-Classical" },
+  { event: "Mansa Musa's hajj", date: 1324, era: "Post-Classical" },
+  { event: "Aztec Empire founded", date: 1428, era: "Post-Classical" },
+  { event: "Gutenberg printing press", date: 1440, era: "Early Modern" },
+  { event: "Vasco da Gama reaches India", date: 1498, era: "Early Modern" },
+  { event: "Cortés conquers Aztecs", date: 1521, era: "Early Modern" },
+  { event: "Council of Trent begins", date: 1545, era: "Early Modern" },
+  { event: "Akbar rules Mughal Empire", date: 1556, era: "Early Modern" },
+  { event: "Dutch East India Co. founded", date: 1602, era: "Early Modern" },
+  { event: "Tokugawa Shogunate begins", date: 1603, era: "Early Modern" },
+  { event: "English Civil War begins", date: 1642, era: "Early Modern" },
+  { event: "Treaty of Westphalia", date: 1648, era: "Early Modern" },
+  { event: "Peter the Great modernizes Russia", date: 1700, era: "Early Modern" },
+  { event: "Seven Years' War begins", date: 1756, era: "Modern" },
+  { event: "Watt's steam engine improved", date: 1769, era: "Modern" },
+  { event: "Latin American revolutions begin", date: 1810, era: "Modern" },
+  { event: "Opium War begins", date: 1839, era: "Modern" },
+  { event: "Sepoy Rebellion in India", date: 1857, era: "Modern" },
+  { event: "Suez Canal opens", date: 1869, era: "Modern" },
+  { event: "Scramble for Africa begins", date: 1881, era: "Modern" },
+  { event: "Russo-Japanese War", date: 1905, era: "Modern" },
+  { event: "Chinese Revolution (Qing falls)", date: 1911, era: "Modern" },
+  { event: "World War I begins", date: 1914, era: "Modern" },
+  { event: "Russian Revolution", date: 1917, era: "Modern" },
+  { event: "Treaty of Versailles", date: 1919, era: "Modern" }
 ];
 
 const PRACTICE_BANK = {
@@ -407,39 +437,54 @@ const THESIS_PROMPTS = [
 ];
 
 const SOURCE_CASES = [
-  {
-    excerpt: "I, a Spanish official at the silver mines of Potosí, write to Your Majesty: revenues increase, though Indian workers grow restless under the mita labor system…",
-    attribution: "Spanish colonial administrator to Philip II, 1580",
-    pov: "Spanish imperial official", audience: "The Spanish monarch",
-    purpose: "Justify colonial policies and request support",
-    context: "Spanish silver extraction using coerced indigenous labor"
-  },
-  {
-    excerpt: "As a Chinese scholar-official, I lament the corruption as foreign silver floods our markets, encouraging greed among those who should uphold Confucian values…",
-    attribution: "Memorial to the Ming Emperor, 1590",
-    pov: "Chinese scholar-official", audience: "The Emperor and imperial court",
-    purpose: "Criticize moral decline and advocate reform",
-    context: "Ming China experiencing massive silver inflows"
-  },
-  {
-    excerpt: "We have witnessed destruction of our temples by foreign missionaries. Yet trade with the Portuguese brings iron tools our village greatly needs…",
-    attribution: "Kongolese elder, recorded by Jesuit missionary, 1620",
-    pov: "Indigenous African leader", audience: "Community members",
-    purpose: "Express tension between cultural loss and material benefit",
-    context: "European-African contact in Central Africa"
-  },
-  {
-    excerpt: "Workers in my mill produce cloth at unimaginable rates. Yet children as young as eight work fourteen-hour days, and the air is thick with cotton dust…",
-    attribution: "British factory owner diary, Manchester, 1832",
-    pov: "British industrial capitalist", audience: "Private diary (self-reflection)",
-    purpose: "Reconcile profit motive with moral concerns about labor",
-    context: "Industrial Revolution transforming labor in Britain"
-  }
+  { excerpt: "I, a Spanish official at the silver mines of Potosí, write to Your Majesty: revenues increase, though Indian workers grow restless under the mita labor system…", attribution: "Spanish colonial administrator to Philip II, 1580", pov: "Spanish imperial official", audience: "The Spanish monarch", purpose: "Justify colonial policies and request support", context: "Spanish silver extraction using coerced indigenous labor" },
+  { excerpt: "As a Chinese scholar-official, I lament the corruption as foreign silver floods our markets, encouraging greed among those who should uphold Confucian values…", attribution: "Memorial to the Ming Emperor, 1590", pov: "Chinese scholar-official", audience: "The Emperor and imperial court", purpose: "Criticize moral decline and advocate reform", context: "Ming China experiencing massive silver inflows" },
+  { excerpt: "We have witnessed destruction of our temples by foreign missionaries. Yet trade with the Portuguese brings iron tools our village greatly needs…", attribution: "Kongolese elder, recorded by Jesuit missionary, 1620", pov: "Indigenous African leader", audience: "Community members", purpose: "Express tension between cultural loss and material benefit", context: "European-African contact in Central Africa" },
+  { excerpt: "Workers in my mill produce cloth at unimaginable rates. Yet children as young as eight work fourteen-hour days, and the air is thick with cotton dust…", attribution: "British factory owner diary, Manchester, 1832", pov: "British industrial capitalist", audience: "Private diary (self-reflection)", purpose: "Reconcile profit motive with moral concerns about labor", context: "Industrial Revolution transforming labor in Britain" },
+  { excerpt: "The natives of this island are remarkably docile and could easily be made to work and sow crops. With fifty men we could subjugate them all and make them do whatever we wish…", attribution: "Christopher Columbus, journal entry, 1492", pov: "European explorer", audience: "Spanish monarchs (Ferdinand & Isabella)", purpose: "Persuade sponsors to fund further expeditions", context: "First European contact with Caribbean peoples" },
+  { excerpt: "Our Confucian teachings and examination system have produced virtuous leaders for a thousand years. Why should we abandon this wisdom for Western barbarian methods?", attribution: "Qing Dynasty court advisor to Empress Dowager Cixi, 1898", pov: "Conservative court official", audience: "The Empress and imperial court", purpose: "Resist Western-style reforms and preserve tradition", context: "Debate over modernization in late Qing China" },
+  { excerpt: "I have seen the future in this American factory system. If Japan does not industrialize quickly, we will become another China — carved up by Western powers.", attribution: "Japanese Meiji reformer, government report, 1872", pov: "Meiji government reformer", audience: "Japanese government officials", purpose: "Argue for rapid industrialization and Western-style reforms", context: "Japan's Meiji Restoration modernization program" },
+  { excerpt: "The civilized nations of Europe have a duty to bring progress to the dark places of the earth. Commerce and Christianity shall uplift the African from his primitive state.", attribution: "King Leopold II of Belgium, public speech, 1876", pov: "European imperialist ruler", audience: "European public and diplomats", purpose: "Justify colonization of Africa using civilizing mission rhetoric", context: "Scramble for Africa and the Berlin Conference era" },
+  { excerpt: "We Hindus and Muslims must unite against our common oppressor. Swaraj — self-rule — is the birthright of every Indian, and we shall have it through peaceful resistance.", attribution: "Indian National Congress pamphlet, 1920", pov: "Indian nationalist leader", audience: "Indian public across religions", purpose: "Build a united independence movement against British rule", context: "Growing Indian nationalism after World War I" },
+  { excerpt: "The trade in human beings has enriched our kingdom greatly, but I fear we sell our own people too cheaply. The Portuguese demand ever more captives, and our villages grow empty.", attribution: "West African king, letter to Portuguese trading partner, 1526", pov: "African ruler engaged in slave trade", audience: "European trading partner", purpose: "Negotiate better terms while expressing concern about depopulation", context: "Atlantic slave trade's impact on African kingdoms" },
+  { excerpt: "These Protestant rebels threaten not only the unity of the Church but the stability of all Christian kingdoms. Their heresy must be stamped out before it spreads further.", attribution: "Pope Leo X, papal decree, 1520", pov: "Catholic Church leader", audience: "Catholic rulers and clergy across Europe", purpose: "Rally opposition to the Protestant Reformation", context: "Early years of the Protestant Reformation" },
+  { excerpt: "Our hacienda produces more sugar than ever before, yet the enslaved workers sicken and die so quickly we must constantly purchase more from Africa. This is simply the cost of commerce.", attribution: "Brazilian plantation owner, letter to business partner, 1650", pov: "Colonial plantation owner", audience: "Business associates", purpose: "Report on plantation economics and justify continued slave purchases", context: "Sugar plantation economy in colonial Brazil" }
 ];
 
-const POV_OPTIONS = ["Spanish imperial official","Chinese scholar-official","Indigenous African leader","British industrial capitalist","European merchant","Local peasant or worker"];
-const AUD_OPTIONS = ["The Spanish monarch","The Emperor and imperial court","Community members","Private diary (self-reflection)","General public","Other merchants"];
-const PURP_OPTIONS = ["Justify colonial policies and request support","Criticize moral decline and advocate reform","Express tension between cultural loss and material benefit","Reconcile profit motive with moral concerns about labor","Advertise goods","Express personal feelings"];
+const POV_OPTIONS = ["Spanish imperial official","Chinese scholar-official","Indigenous African leader","British industrial capitalist","European explorer","Conservative court official","Meiji government reformer","European imperialist ruler","Indian nationalist leader","African ruler engaged in slave trade","Catholic Church leader","Colonial plantation owner"];
+const AUD_OPTIONS = ["The Spanish monarch","The Emperor and imperial court","Community members","Private diary (self-reflection)","Spanish monarchs (Ferdinand & Isabella)","The Empress and imperial court","Japanese government officials","European public and diplomats","Indian public across religions","European trading partner","Catholic rulers and clergy across Europe","Business associates"];
+const PURP_OPTIONS = ["Justify colonial policies and request support","Criticize moral decline and advocate reform","Express tension between cultural loss and material benefit","Reconcile profit motive with moral concerns about labor","Persuade sponsors to fund further expeditions","Resist Western-style reforms and preserve tradition","Argue for rapid industrialization and Western-style reforms","Justify colonization of Africa using civilizing mission rhetoric","Build a united independence movement against British rule","Negotiate better terms while expressing concern about depopulation","Rally opposition to the Protestant Reformation","Report on plantation economics and justify continued slave purchases"];
+
+const THESIS_JUDGE_BANK = [
+  { text: "The Columbian Exchange fundamentally transformed global economies between 1450 and 1750 because it introduced new crops that boosted population growth, created silver-based trade networks, and established coerced labor systems.", verdict: "strong", why: "Clear claim + 'because' with three specific supporting points + time period. This earns the thesis point." },
+  { text: "The Columbian Exchange affected many things in the world.", verdict: "weak", why: "Too vague — no defensible claim, no line of reasoning, no specifics. What things? How? This would NOT earn the point." },
+  { text: "This essay will discuss the causes and effects of the Industrial Revolution.", verdict: "not_thesis", why: "This is a topic sentence, not a thesis. It announces what you'll talk about but makes no argument or claim." },
+  { text: "Although the Mongol Empire caused widespread destruction, it ultimately facilitated unprecedented cultural and commercial exchange across Eurasia by establishing the Pax Mongolica.", verdict: "strong", why: "Starts with a counterpoint ('although'), makes a clear claim, and previews the reasoning. The qualifier shows complexity." },
+  { text: "The Mongols were very important in history and changed a lot of things.", verdict: "weak", why: "No specifics, no argument, no time period. 'Important' and 'changed things' are not defensible claims." },
+  { text: "In this paper I will explore how trade networks developed over time.", verdict: "not_thesis", why: "Announces intent ('I will explore') rather than making an argument. A thesis must make a claim, not describe the essay." },
+  { text: "Maritime exploration between 1450 and 1750 was primarily driven by economic motives, as European states competed for control of spice routes and silver flows to finance their growing military ambitions.", verdict: "strong", why: "'Primarily' shows extent, 'because/as' provides reasoning, and specific details (spice routes, silver) support the claim." },
+  { text: "European exploration happened because of many reasons including religion, economics, and technology.", verdict: "weak", why: "Lists categories but makes no argument about their relative importance. 'Many reasons' is not a defensible claim — which mattered MOST?" },
+  { text: "There are many similarities and differences between the Atlantic slave trade and other forms of coerced labor.", verdict: "not_thesis", why: "The 'similarities and differences' formula without specifying WHAT they are is not a thesis. It's a prompt restatement." },
+  { text: "The Atlantic slave trade fundamentally reshaped both African and American societies between 1500 and 1800, though its effects varied significantly — devastating West African political structures while simultaneously generating the agricultural wealth that fueled European industrialization.", verdict: "strong", why: "Specific time period, clear argument with extent ('fundamentally'), plus nuance ('though its effects varied'). This shows complex thinking." },
+  { text: "Nationalism was both a unifying and divisive force in the 19th century, consolidating states like Germany and Italy while simultaneously fracturing multiethnic empires such as Austria-Hungary and the Ottoman Empire.", verdict: "strong", why: "Makes a paradoxical claim (both unifying AND divisive) with specific examples. This is a sophisticated, defensible thesis." },
+  { text: "Nationalism had a big impact on the world during this time period.", verdict: "weak", why: "Which time period? What kind of impact? Where? This is too vague to be defensible. Needs specifics and an argument." },
+  { text: "The printing press changed Europe forever.", verdict: "weak", why: "No time period, no explanation of HOW or WHY, no line of reasoning. 'Changed forever' is too broad to be a thesis." },
+  { text: "The purpose of this essay is to analyze the extent to which the Enlightenment influenced political revolutions.", verdict: "not_thesis", why: "States the purpose of the essay rather than making an argument. Drop 'the purpose of this essay is to analyze' and make a claim instead." },
+  { text: "Although economic factors were significant, the spread of Islam between 600 and 1450 was primarily facilitated by trade networks and Sufi missionaries rather than military conquest, as evidenced by conversion patterns in Southeast Asia and sub-Saharan Africa.", verdict: "strong", why: "Makes a specific, arguable claim ('primarily facilitated by X rather than Y'), provides a qualifier ('although'), and previews evidence regions." }
+];
+
+const EVIDENCE_BANK = [
+  { claim: "Trade networks facilitated cultural exchange in the period 1200-1450.", evidence: "Merchants traveled along trade routes during this time.", verdict: "weak", why: "Too vague — which merchants? Which routes? When exactly? This lacks the specificity needed for AP credit. Name a person, place, or date." },
+  { claim: "Trade networks facilitated cultural exchange in the period 1200-1450.", evidence: "Ibn Battuta traveled over 75,000 miles across the Dar al-Islam between 1325 and 1354, documenting the shared Islamic legal and cultural practices he found from Morocco to China.", verdict: "strong", why: "Specific person (Ibn Battuta), specific dates (1325-1354), specific detail (75,000 miles), and directly supports the claim about cultural exchange." },
+  { claim: "The Columbian Exchange transformed global economies.", evidence: "New crops were introduced to different parts of the world.", verdict: "weak", why: "Which crops? Where? When? 'New crops' and 'different parts' are too vague. This is a general statement, not specific evidence." },
+  { claim: "The Columbian Exchange transformed global economies.", evidence: "The introduction of the potato from the Americas to Europe led to significant population growth — Ireland's population nearly doubled between 1750 and 1840, largely due to potato cultivation.", verdict: "strong", why: "Specific crop (potato), specific place (Ireland), specific dates and data (doubled, 1750-1840). This is concrete, usable evidence." },
+  { claim: "European imperialism was driven by economic motives.", evidence: "King Leopold II's exploitation of the Congo Free State generated enormous rubber and ivory profits while causing the deaths of an estimated 10 million Congolese between 1885 and 1908.", verdict: "strong", why: "Specific ruler, specific colony, specific resources, specific dates and casualty figures. Directly proves economic motive with human cost." },
+  { claim: "European imperialism was driven by economic motives.", evidence: "Europeans wanted to get rich from colonies in Africa.", verdict: "weak", why: "Which Europeans? Which colonies? What resources? This restates the claim without providing any specific evidence to support it." },
+  { claim: "The Industrial Revolution changed social structures.", evidence: "Many people moved to cities during the Industrial Revolution.", verdict: "weak", why: "How many? Which cities? When? 'Many people' and 'cities' are too vague. Good evidence needs numbers, names, or specific examples." },
+  { claim: "The Industrial Revolution changed social structures.", evidence: "Manchester's population exploded from 25,000 in 1772 to over 300,000 by 1850, creating a new urban working class that lived in overcrowded tenements and worked 14-hour days in textile mills.", verdict: "strong", why: "Specific city, specific population numbers and dates, vivid detail about conditions. This makes the social transformation concrete and real." },
+  { claim: "Gunpowder empires maintained control through military technology.", evidence: "The Ottoman Empire used large cannons to breach the walls of Constantinople in 1453, ending the Byzantine Empire and establishing Ottoman control over a critical trade crossroads.", verdict: "strong", why: "Specific empire, specific technology (cannons), specific event (fall of Constantinople), specific date (1453), and explains the significance." },
+  { claim: "Gunpowder empires maintained control through military technology.", evidence: "Empires used guns and cannons to conquer other places.", verdict: "weak", why: "Which empires? Which places? When? This is a category description, not evidence. AP readers want you to show you know specific history." }
+];
 
 window.app = {
 
@@ -1129,36 +1174,43 @@ game: {
   },
 
   // ═══ ARCADE ═══
-  chronoState: { score: 0, streak: 0, best: 0, anchor: null, challenge: null },
-  thesisState: { streak: 0, best: 0, promptIdx: null },
+  chronoState: { score: 0, streak: 0, best: 0, anchor: null, challenge: null, hardMode: false },
+  thesisJState: { score: 0, streak: 0, best: 0, idx: null },
+  evidenceState: { score: 0, streak: 0, best: 0, idx: null },
   sourceState: { solved: 0, caseIdx: null },
 
   renderArcade: () => `
     <div class="arcP h-full flex flex-col">
-      <div class="flex" style="border-bottom:1px solid #332f26">
+      <div class="flex overflow-x-auto" style="border-bottom:1px solid #332f26">
         <button onclick="window.app.game.switchArcade('chrono')" class="arcTab on flex-1" id="atab-chrono"><i data-lucide="clock" class="w-3 h-3"></i><span>Timeline</span></button>
-        <button onclick="window.app.game.switchArcade('thesis')" class="arcTab flex-1" id="atab-thesis"><i data-lucide="flame" class="w-3 h-3"></i><span>Thesis Forge</span></button>
-        <button onclick="window.app.game.switchArcade('source')" class="arcTab flex-1" id="atab-source"><i data-lucide="search" class="w-3 h-3"></i><span>Source Detective</span></button>
+        <button onclick="window.app.game.switchArcade('thesis')" class="arcTab flex-1" id="atab-thesis"><i data-lucide="scale" class="w-3 h-3"></i><span>Thesis Judge</span></button>
+        <button onclick="window.app.game.switchArcade('evidence')" class="arcTab flex-1" id="atab-evidence"><i data-lucide="check-square" class="w-3 h-3"></i><span>Evidence?</span></button>
+        <button onclick="window.app.game.switchArcade('source')" class="arcTab flex-1" id="atab-source"><i data-lucide="search" class="w-3 h-3"></i><span>Source ID</span></button>
       </div>
-      <div class="flex-1 relative">
-        <div id="arc-chrono" class="absolute inset-0">${window.app.game.renderChrono()}</div>
-        <div id="arc-thesis" class="absolute inset-0 hidden">${window.app.game.renderThesisForge()}</div>
-        <div id="arc-source" class="absolute inset-0 hidden">${window.app.game.renderSourceDetective()}</div>
+      <div class="flex-1 relative overflow-hidden">
+        <div id="arc-chrono" class="absolute inset-0 overflow-y-auto csc">${window.app.game.renderChrono()}</div>
+        <div id="arc-thesis" class="absolute inset-0 overflow-y-auto csc hidden">${window.app.game.renderThesisJudge()}</div>
+        <div id="arc-evidence" class="absolute inset-0 overflow-y-auto csc hidden">${window.app.game.renderEvidenceOrNah()}</div>
+        <div id="arc-source" class="absolute inset-0 overflow-y-auto csc hidden">${window.app.game.renderSourceDetective()}</div>
       </div>
     </div>`,
 
   switchArcade: (mode) => {
-    ['chrono', 'thesis', 'source'].forEach(m => { document.getElementById('arc-' + m)?.classList.toggle('hidden', m !== mode); document.getElementById('atab-' + m)?.classList.toggle('on', m === mode); });
+    ['chrono', 'thesis', 'evidence', 'source'].forEach(m => { document.getElementById('arc-' + m)?.classList.toggle('hidden', m !== mode); document.getElementById('atab-' + m)?.classList.toggle('on', m === mode); });
     lucide.createIcons();
   },
 
-  // ── CHRONO-CRISIS ──
+  // ── CHRONO-CRISIS (expanded + hard mode) ──
   renderChrono: () => `
     <div class="h-full flex flex-col text-white">
       <div id="chrono-start" class="flex-1 flex flex-col items-center justify-center p-6 text-center">
         <div class="w-14 h-14 rounded-2xl flex items-center justify-center mb-4" style="background:var(--ac)"><i data-lucide="clock" class="w-7 h-7 text-white"></i></div>
         <h3 class="text-xl font-bold mb-1 fs">CHRONO-CRISIS</h3>
-        <p class="text-xs mb-3 max-w-xs" style="color:#9a9385">Before or after the anchor? Build streaks for bonus XP!</p>
+        <p class="text-xs mb-4 max-w-xs" style="color:#9a9385">Was this event before or after the anchor? ${CHRONO_EVENTS.length} events to master!</p>
+        <div class="flex gap-2 mb-3">
+          <button onclick="window.app.game.chronoState.hardMode=false;document.getElementById('chrono-easy').classList.add('on');document.getElementById('chrono-hard').classList.remove('on')" id="chrono-easy" class="arcTab on text-[11px] px-3 py-1.5">Easy (eras shown)</button>
+          <button onclick="window.app.game.chronoState.hardMode=true;document.getElementById('chrono-hard').classList.add('on');document.getElementById('chrono-easy').classList.remove('on')" id="chrono-hard" class="arcTab text-[11px] px-3 py-1.5">Hard (no hints)</button>
+        </div>
         <div class="text-xs mb-3" style="color:#7f7868">Best streak: <span id="chrono-best" class="font-bold text-white">${window.app.game.chronoState.best}</span></div>
         <button onclick="window.app.game.startChrono()" class="btnP text-xs px-6 py-2.5">START GAME</button>
       </div>
@@ -1188,16 +1240,27 @@ game: {
 
   startChrono: () => { const c = window.app.game.chronoState; c.score = 0; c.streak = 0; document.getElementById('chrono-start')?.classList.add('hidden'); document.getElementById('chrono-over')?.classList.add('hidden'); document.getElementById('chrono-game')?.classList.remove('hidden'); window.app.game.nextChrono(); lucide.createIcons(); },
   endChrono: () => { const c = window.app.game.chronoState; c.best = Math.max(c.best, c.streak); document.getElementById('chrono-game')?.classList.add('hidden'); document.getElementById('chrono-over')?.classList.remove('hidden'); document.getElementById('chrono-final').textContent = c.score; document.getElementById('chrono-final-streak').textContent = c.streak; document.getElementById('chrono-feedback').textContent = ''; document.getElementById('chrono-best').textContent = c.best; },
-  nextChrono: () => { const c = window.app.game.chronoState; c.anchor = CHRONO_EVENTS[Math.floor(Math.random() * CHRONO_EVENTS.length)]; do { c.challenge = CHRONO_EVENTS[Math.floor(Math.random() * CHRONO_EVENTS.length)]; } while (c.challenge === c.anchor); document.getElementById('chrono-score').textContent = c.score; document.getElementById('chrono-streak').textContent = c.streak; document.getElementById('chrono-anchor-text').textContent = c.anchor.event; document.getElementById('chrono-anchor-date').textContent = c.anchor.date; document.getElementById('chrono-challenge-text').textContent = c.challenge.event; document.getElementById('chrono-challenge-era').textContent = c.challenge.era; },
+  nextChrono: () => {
+    const c = window.app.game.chronoState;
+    c.anchor = CHRONO_EVENTS[Math.floor(Math.random() * CHRONO_EVENTS.length)];
+    do { c.challenge = CHRONO_EVENTS[Math.floor(Math.random() * CHRONO_EVENTS.length)]; } while (c.challenge === c.anchor || c.challenge.date === c.anchor.date);
+    document.getElementById('chrono-score').textContent = c.score;
+    document.getElementById('chrono-streak').textContent = c.streak;
+    document.getElementById('chrono-anchor-text').textContent = c.anchor.event;
+    document.getElementById('chrono-anchor-date').textContent = c.anchor.date;
+    document.getElementById('chrono-challenge-text').textContent = c.challenge.event;
+    const eraEl = document.getElementById('chrono-challenge-era');
+    if (eraEl) eraEl.textContent = c.hardMode ? '???' : c.challenge.era;
+  },
   guessChrono: async (dir) => {
     const c = window.app.game.chronoState; const correct = dir === 'before' ? c.challenge.date < c.anchor.date : c.challenge.date > c.anchor.date;
     const play = document.getElementById('chrono-play');
     if (correct) {
-      c.score++; c.streak++; const bonus = c.streak >= 5 ? 3 : c.streak >= 3 ? 2 : 1; const xp = 5 * bonus;
-      appState.userData.gamification.xp += xp; await updateDoc(doc(db, "users", appState.user.uid), { "gamification.xp": appState.userData.gamification.xp });
+      c.score++; c.streak++; const bonus = (c.hardMode ? 2 : 1) * (c.streak >= 5 ? 3 : c.streak >= 3 ? 2 : 1); const xp = 5 * bonus;
+      if (appState.userData?.gamification) { appState.userData.gamification.xp += xp; if (appState.user) { try { await updateDoc(doc(db, "users", appState.user.uid), { "gamification.xp": appState.userData.gamification.xp }); } catch(e){} } }
       if (play) { play.classList.add('chronoCorrect'); setTimeout(() => play.classList.remove('chronoCorrect'), 400); }
       document.getElementById('chrono-score').textContent = c.score; document.getElementById('chrono-streak').textContent = c.streak;
-      if (c.streak % 5 === 0) { window.app.ui.toast('🔥 Streak bonus! +' + xp + ' XP', 'success'); confetti({ particleCount: 40, spread: 50, origin: { y: 0.7 } }); }
+      if (c.streak % 5 === 0) { window.app.ui.toast('🔥 ' + c.streak + ' streak! +' + xp + ' XP', 'success'); confetti({ particleCount: 40, spread: 50, origin: { y: 0.7 } }); }
       setTimeout(() => window.app.game.nextChrono(), 500);
     } else {
       c.best = Math.max(c.best, c.streak);
@@ -1208,89 +1271,194 @@ game: {
     }
   },
 
-  // ── THESIS FORGE ──
-  renderThesisForge: () => `
+  // ── THESIS OR TRASH (new game) ──
+  renderThesisJudge: () => `
     <div class="h-full flex flex-col text-white">
-      <div class="flex-1 flex flex-col justify-between p-4 gap-3">
-        <div>
-          <div class="flex items-center justify-between mb-2">
-            <div><h3 class="text-sm font-semibold flex items-center gap-2"><i data-lucide="flame" class="w-4 h-4 text-amber-400"></i>Thesis Forge</h3><p class="text-[11px]" style="color:#9a9385">Write AP theses in 1-2 sentences.</p></div>
-            <div class="text-right text-[10px]"><div>Streak: <span id="thesis-streak">0</span></div><div>Best: <span id="thesis-best">0</span></div></div>
-          </div>
-          <div class="mt-2 rounded-lg p-3" style="background:rgba(255,255,255,.05)"><p class="text-[10px] uppercase tracking-[.15em] mb-1" style="color:#e8794a">Prompt</p><p id="thesis-prompt" class="text-xs leading-snug">Click New Prompt to begin.</p></div>
-        </div>
-        <div>
-          <textarea id="thesis-input" class="w-full h-20 rounded-lg p-2 text-xs resize-none focus:outline-none focus:ring-1 focus:ring-amber-400" style="background:rgba(255,255,255,.05);color:#e8e6e1" placeholder="Write your thesis here..."></textarea>
-          <p class="mt-1 text-[10px]" style="color:#655f52">Tip: Claim + because/due to + dates/regions/processes.</p>
-        </div>
+      <div id="tj-start" class="flex-1 flex flex-col items-center justify-center p-6 text-center">
+        <div class="w-14 h-14 rounded-2xl flex items-center justify-center mb-4" style="background:var(--gd)"><i data-lucide="scale" class="w-7 h-7 text-white"></i></div>
+        <h3 class="text-xl font-bold mb-1 fs">THESIS OR TRASH?</h3>
+        <p class="text-xs mb-3 max-w-xs" style="color:#9a9385">Read each statement and judge: is it a strong thesis, a weak thesis, or not a thesis at all?</p>
+        <div class="text-xs mb-3" style="color:#7f7868">Best streak: <span id="tj-best" class="font-bold text-white">${window.app.game.thesisJState.best}</span></div>
+        <button onclick="window.app.game.startThesisJudge()" class="btnP text-xs px-6 py-2.5">START JUDGING</button>
       </div>
-      <div class="p-3 flex items-center justify-between gap-2" style="border-top:1px solid #332f26">
-        <button onclick="window.app.game.newThesisPrompt()" class="text-[11px] flex items-center gap-1 px-3 py-2 rounded-lg" style="background:rgba(255,255,255,.05);color:#e8e6e1"><i data-lucide="refresh-cw" class="w-3 h-3"></i>New Prompt</button>
-        <button onclick="window.app.game.forgeThesis()" class="text-[11px] font-semibold flex items-center gap-1 px-4 py-2 rounded-lg" style="background:#d4a843;color:#13120f"><i data-lucide="hammer" class="w-3 h-3"></i>Forge</button>
+      <div id="tj-game" class="hidden flex-1 flex flex-col">
+        <div class="flex justify-between items-center px-4 py-2" style="background:rgba(255,255,255,.03)">
+          <div class="text-xs"><span style="color:#9a9385">Score</span> <span class="font-bold text-lg text-white ml-1" id="tj-score">0</span></div>
+          <div class="text-xs"><span style="color:#9a9385">Streak</span> <span class="font-bold text-white ml-1" id="tj-streak">0</span> 🔥</div>
+        </div>
+        <div class="flex-1 flex flex-col justify-between p-4">
+          <div class="rounded-xl p-4" style="background:rgba(255,255,255,.05)">
+            <p class="text-[10px] uppercase tracking-[.15em] mb-2" style="color:var(--gd)">Judge this statement</p>
+            <p id="tj-text" class="text-sm fs leading-relaxed italic">"…"</p>
+          </div>
+          <div>
+            <div class="grid grid-cols-3 gap-2 mb-2">
+              <button onclick="window.app.game.judgeThesis('strong')" class="py-3 rounded-xl font-bold text-xs transition hover:opacity-80" style="background:rgba(77,128,96,.2);color:var(--sg)">💪 Strong</button>
+              <button onclick="window.app.game.judgeThesis('weak')" class="py-3 rounded-xl font-bold text-xs transition hover:opacity-80" style="background:rgba(196,149,40,.2);color:var(--gd)">😬 Weak</button>
+              <button onclick="window.app.game.judgeThesis('not_thesis')" class="py-3 rounded-xl font-bold text-xs transition hover:opacity-80" style="background:rgba(212,98,47,.2);color:var(--ac)">🗑️ Not a Thesis</button>
+            </div>
+            <div id="tj-feedback" class="hidden rounded-xl p-3 text-xs" style="background:rgba(255,255,255,.05)">
+              <p id="tj-result" class="font-bold mb-1"></p>
+              <p id="tj-why" style="color:#9a9385"></p>
+            </div>
+          </div>
+        </div>
       </div>
     </div>`,
 
-  newThesisPrompt: () => {
-    const s = window.app.game.thesisState;
-    let i = Math.floor(Math.random() * THESIS_PROMPTS.length);
-    if (i === s.promptIdx && THESIS_PROMPTS.length > 1) i = (i + 1) % THESIS_PROMPTS.length;
-    s.promptIdx = i;
-    const el = document.getElementById('thesis-prompt'); if (el) el.textContent = THESIS_PROMPTS[i];
-    const inp = document.getElementById('thesis-input'); if (inp) inp.value = '';
+  startThesisJudge: () => {
+    const s = window.app.game.thesisJState; s.score = 0; s.streak = 0;
+    document.getElementById('tj-start')?.classList.add('hidden');
+    document.getElementById('tj-game')?.classList.remove('hidden');
+    window.app.game.nextThesisJudge();
   },
-
-  forgeThesis: async () => {
-    const inp = document.getElementById('thesis-input'); if (!inp) return;
-    const txt = inp.value.trim();
-    if (txt.length < 20) return window.app.ui.toast('Too short for a thesis.', 'error');
-    const lo = txt.toLowerCase();
-    const connectors = ['because','due to','as a result','therefore','led to','resulted in','in order to','which caused','contributing to'];
-    const hasConn = connectors.some(c => lo.includes(c));
-    const hasSpec = /(\d{3,4}|asia|europe|americas|africa|atlantic|silk road|mongol|ottoman|ming|qing|mughal|columbian|industrial)/i.test(txt);
-    const words = txt.split(/\s+/).length;
-    const hasQual = /although|while|extent|significant|primarily|largely|limited|transformed|fundamentally/i.test(txt);
-    let quality = 'ok';
-    if (hasConn && hasSpec && words >= 18 && hasQual) quality = 'strong';
-    else if (hasConn && hasSpec && words >= 15) quality = 'good';
-    else if (!hasConn) quality = 'weak';
-    const s = window.app.game.thesisState;
-    if (quality === 'strong') {
-      s.streak++; s.best = Math.max(s.best, s.streak);
-      appState.userData.gamification.xp += 20;
-      await updateDoc(doc(db, "users", appState.user.uid), { "gamification.xp": appState.userData.gamification.xp });
-      window.app.ui.toast('Masterful thesis! +20 XP', 'success');
-      confetti({ particleCount: 90, spread: 70, origin: { y: 0.75 }, colors: ['#d4a843', '#e8794a'] });
-      setTimeout(() => window.app.game.newThesisPrompt(), 500);
-    } else if (quality === 'good') {
-      s.streak++; s.best = Math.max(s.best, s.streak);
-      appState.userData.gamification.xp += 10;
-      await updateDoc(doc(db, "users", appState.user.uid), { "gamification.xp": appState.userData.gamification.xp });
-      window.app.ui.toast('Solid thesis! +10 XP. Add a qualifier for mastery.', 'success');
-    } else if (quality === 'ok') {
-      s.streak = 0; window.app.ui.toast('Decent start. Add cause/effect connectors + specifics.', 'info');
+  nextThesisJudge: () => {
+    const s = window.app.game.thesisJState;
+    let i; do { i = Math.floor(Math.random() * THESIS_JUDGE_BANK.length); } while (i === s.idx && THESIS_JUDGE_BANK.length > 1);
+    s.idx = i;
+    document.getElementById('tj-text').textContent = '"' + THESIS_JUDGE_BANK[i].text + '"';
+    document.getElementById('tj-score').textContent = s.score;
+    document.getElementById('tj-streak').textContent = s.streak;
+    document.getElementById('tj-feedback')?.classList.add('hidden');
+    document.querySelectorAll('#tj-game button[onclick*="judgeThesis"]').forEach(b => b.disabled = false);
+  },
+  judgeThesis: async (guess) => {
+    const s = window.app.game.thesisJState;
+    const item = THESIS_JUDGE_BANK[s.idx];
+    const correct = guess === item.verdict;
+    const fbEl = document.getElementById('tj-feedback');
+    const resultEl = document.getElementById('tj-result');
+    const whyEl = document.getElementById('tj-why');
+    document.querySelectorAll('#tj-game button[onclick*="judgeThesis"]').forEach(b => b.disabled = true);
+    fbEl?.classList.remove('hidden');
+    if (correct) {
+      s.score++; s.streak++; s.best = Math.max(s.best, s.streak);
+      const xp = s.streak >= 5 ? 15 : s.streak >= 3 ? 10 : 8;
+      if (appState.userData?.gamification) { appState.userData.gamification.xp += xp; if (appState.user) { try { await updateDoc(doc(db, "users", appState.user.uid), { "gamification.xp": appState.userData.gamification.xp }); } catch(e){} } }
+      resultEl.textContent = '✅ Correct! +' + xp + ' XP';
+      resultEl.style.color = 'var(--sg)';
+      if (s.streak % 5 === 0) confetti({ particleCount: 40, spread: 50, origin: { y: 0.7 } });
     } else {
-      s.streak = 0; window.app.ui.toast('Too vague. Use "because" or "due to" + dates/names.', 'error');
+      s.streak = 0;
+      const labels = { strong: 'Strong Thesis', weak: 'Weak Thesis', not_thesis: 'Not a Thesis' };
+      resultEl.textContent = '❌ It was: ' + labels[item.verdict];
+      resultEl.style.color = 'var(--ac)';
     }
-    document.getElementById('thesis-streak').textContent = s.streak;
-    document.getElementById('thesis-best').textContent = s.best;
+    whyEl.textContent = item.why;
+    document.getElementById('tj-score').textContent = s.score;
+    document.getElementById('tj-streak').textContent = s.streak;
+    document.getElementById('tj-best').textContent = s.best;
+    setTimeout(() => window.app.game.nextThesisJudge(), correct ? 1800 : 3000);
   },
 
-  // ── SOURCE DETECTIVE ──
+  // ── EVIDENCE OR NAH (new game) ──
+  renderEvidenceOrNah: () => `
+    <div class="h-full flex flex-col text-white">
+      <div id="ev-start" class="flex-1 flex flex-col items-center justify-center p-6 text-center">
+        <div class="w-14 h-14 rounded-2xl flex items-center justify-center mb-4" style="background:var(--sg)"><i data-lucide="check-square" class="w-7 h-7 text-white"></i></div>
+        <h3 class="text-xl font-bold mb-1 fs">EVIDENCE OR NAH?</h3>
+        <p class="text-xs mb-3 max-w-xs" style="color:#9a9385">Is this evidence specific enough for AP credit, or too vague? Train your evidence radar!</p>
+        <div class="text-xs mb-3" style="color:#7f7868">Best streak: <span id="ev-best" class="font-bold text-white">${window.app.game.evidenceState.best}</span></div>
+        <button onclick="window.app.game.startEvidence()" class="btnP text-xs px-6 py-2.5">START</button>
+      </div>
+      <div id="ev-game" class="hidden flex-1 flex flex-col">
+        <div class="flex justify-between items-center px-4 py-2" style="background:rgba(255,255,255,.03)">
+          <div class="text-xs"><span style="color:#9a9385">Score</span> <span class="font-bold text-lg text-white ml-1" id="ev-score">0</span></div>
+          <div class="text-xs"><span style="color:#9a9385">Streak</span> <span class="font-bold text-white ml-1" id="ev-streak">0</span> 🔥</div>
+        </div>
+        <div class="flex-1 flex flex-col justify-between p-4">
+          <div>
+            <div class="rounded-xl p-3 mb-3" style="background:rgba(255,255,255,.03)">
+              <p class="text-[10px] uppercase tracking-[.15em] mb-1" style="color:#9a9385">The claim</p>
+              <p id="ev-claim" class="text-xs font-semibold">…</p>
+            </div>
+            <div class="rounded-xl p-4" style="background:rgba(255,255,255,.05)">
+              <p class="text-[10px] uppercase tracking-[.15em] mb-2" style="color:var(--sg)">The evidence</p>
+              <p id="ev-text" class="text-sm fs leading-relaxed">"…"</p>
+            </div>
+          </div>
+          <div>
+            <div class="grid grid-cols-2 gap-3 mb-2">
+              <button onclick="window.app.game.judgeEvidence('strong')" class="py-3 rounded-xl font-bold text-xs transition hover:opacity-80" style="background:rgba(77,128,96,.2);color:var(--sg)">✅ Strong Evidence</button>
+              <button onclick="window.app.game.judgeEvidence('weak')" class="py-3 rounded-xl font-bold text-xs transition hover:opacity-80" style="background:rgba(212,98,47,.2);color:var(--ac)">❌ Too Vague</button>
+            </div>
+            <div id="ev-feedback" class="hidden rounded-xl p-3 text-xs" style="background:rgba(255,255,255,.05)">
+              <p id="ev-result" class="font-bold mb-1"></p>
+              <p id="ev-why" style="color:#9a9385"></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>`,
+
+  startEvidence: () => {
+    const s = window.app.game.evidenceState; s.score = 0; s.streak = 0;
+    document.getElementById('ev-start')?.classList.add('hidden');
+    document.getElementById('ev-game')?.classList.remove('hidden');
+    window.app.game.nextEvidence();
+  },
+  nextEvidence: () => {
+    const s = window.app.game.evidenceState;
+    let i; do { i = Math.floor(Math.random() * EVIDENCE_BANK.length); } while (i === s.idx && EVIDENCE_BANK.length > 1);
+    s.idx = i;
+    document.getElementById('ev-claim').textContent = EVIDENCE_BANK[i].claim;
+    document.getElementById('ev-text').textContent = '"' + EVIDENCE_BANK[i].evidence + '"';
+    document.getElementById('ev-score').textContent = s.score;
+    document.getElementById('ev-streak').textContent = s.streak;
+    document.getElementById('ev-feedback')?.classList.add('hidden');
+    document.querySelectorAll('#ev-game button[onclick*="judgeEvidence"]').forEach(b => b.disabled = false);
+  },
+  judgeEvidence: async (guess) => {
+    const s = window.app.game.evidenceState;
+    const item = EVIDENCE_BANK[s.idx];
+    const correct = guess === item.verdict;
+    document.querySelectorAll('#ev-game button[onclick*="judgeEvidence"]').forEach(b => b.disabled = true);
+    const fbEl = document.getElementById('ev-feedback');
+    const resultEl = document.getElementById('ev-result');
+    const whyEl = document.getElementById('ev-why');
+    fbEl?.classList.remove('hidden');
+    if (correct) {
+      s.score++; s.streak++; s.best = Math.max(s.best, s.streak);
+      const xp = s.streak >= 5 ? 15 : s.streak >= 3 ? 10 : 8;
+      if (appState.userData?.gamification) { appState.userData.gamification.xp += xp; if (appState.user) { try { await updateDoc(doc(db, "users", appState.user.uid), { "gamification.xp": appState.userData.gamification.xp }); } catch(e){} } }
+      resultEl.textContent = '✅ Correct! +' + xp + ' XP';
+      resultEl.style.color = 'var(--sg)';
+      if (s.streak % 5 === 0) confetti({ particleCount: 40, spread: 50, origin: { y: 0.7 } });
+    } else {
+      s.streak = 0;
+      resultEl.textContent = '❌ Actually: ' + (item.verdict === 'strong' ? 'This IS strong evidence' : 'This is too vague');
+      resultEl.style.color = 'var(--ac)';
+    }
+    whyEl.textContent = item.why;
+    document.getElementById('ev-score').textContent = s.score;
+    document.getElementById('ev-streak').textContent = s.streak;
+    document.getElementById('ev-best').textContent = s.best;
+    setTimeout(() => window.app.game.nextEvidence(), correct ? 1800 : 3000);
+  },
+
+  // ── SOURCE DETECTIVE (expanded) ──
   renderSourceDetective: () => `
     <div class="h-full flex flex-col text-white">
-      <div class="flex-1 flex flex-col justify-between p-4 gap-3">
+      <div class="flex-1 flex flex-col justify-between p-4 gap-2">
         <div>
           <div class="flex items-center justify-between mb-2">
-            <div><h3 class="text-sm font-semibold flex items-center gap-2"><i data-lucide="search" class="w-4 h-4 text-sky-400"></i>Source Detective</h3><p class="text-[11px]" style="color:#9a9385">ID the POV, audience, and purpose.</p></div>
+            <div><h3 class="text-sm font-semibold flex items-center gap-2"><i data-lucide="search" class="w-4 h-4 text-sky-400"></i>Source Detective</h3><p class="text-[11px]" style="color:#9a9385">${SOURCE_CASES.length} cases · ID the POV, audience, and purpose.</p></div>
             <div class="text-right text-[10px]">Solved: <span id="source-solved" class="font-bold text-white">0</span></div>
           </div>
-          <div class="mt-2 rounded-lg p-3 max-h-24 overflow-y-auto csc" style="background:rgba(255,255,255,.05)"><p class="text-[10px] uppercase tracking-[.15em] mb-1" style="color:#7b8ac4">Document</p><p id="source-doc" class="text-xs leading-snug">Click New Case to begin.</p><p id="source-attr" class="text-[10px] mt-1 italic" style="color:#655f52"></p></div>
+          <div class="mt-2 rounded-lg p-3 max-h-28 overflow-y-auto csc" style="background:rgba(255,255,255,.05)">
+            <p class="text-[10px] uppercase tracking-[.15em] mb-1" style="color:#7b8ac4">📄 Document</p>
+            <p id="source-doc" class="text-xs leading-snug italic">Click New Case to begin.</p>
+            <p id="source-attr" class="text-[10px] mt-2 font-semibold" style="color:var(--gd)"></p>
+          </div>
+          <div id="source-context-box" class="hidden mt-2 rounded-lg p-2 text-[10px]" style="background:rgba(92,109,179,.1);color:#7b8ac4">
+            <span class="font-bold">Context:</span> <span id="source-context-text"></span>
+          </div>
         </div>
         <div class="space-y-2">
-          <div><label class="text-[10px]" style="color:#9a9385">Point of View</label><select id="source-pov" class="w-full rounded-lg px-2 py-1.5 text-[11px]" style="background:rgba(255,255,255,.05);color:#e8e6e1;border:none"><option value="">Select...</option></select></div>
+          <div><label class="text-[10px] font-semibold" style="color:#9a9385">👤 Point of View</label><select id="source-pov" class="w-full rounded-lg px-2 py-1.5 text-[11px]" style="background:rgba(255,255,255,.05);color:#e8e6e1;border:none"><option value="">Select...</option></select></div>
           <div class="grid grid-cols-2 gap-2">
-            <div><label class="text-[10px]" style="color:#9a9385">Audience</label><select id="source-aud" class="w-full rounded-lg px-2 py-1.5 text-[11px]" style="background:rgba(255,255,255,.05);color:#e8e6e1;border:none"><option value="">Select...</option></select></div>
-            <div><label class="text-[10px]" style="color:#9a9385">Purpose</label><select id="source-pur" class="w-full rounded-lg px-2 py-1.5 text-[11px]" style="background:rgba(255,255,255,.05);color:#e8e6e1;border:none"><option value="">Select...</option></select></div>
+            <div><label class="text-[10px] font-semibold" style="color:#9a9385">🎯 Audience</label><select id="source-aud" class="w-full rounded-lg px-2 py-1.5 text-[11px]" style="background:rgba(255,255,255,.05);color:#e8e6e1;border:none"><option value="">Select...</option></select></div>
+            <div><label class="text-[10px] font-semibold" style="color:#9a9385">📌 Purpose</label><select id="source-pur" class="w-full rounded-lg px-2 py-1.5 text-[11px]" style="background:rgba(255,255,255,.05);color:#e8e6e1;border:none"><option value="">Select...</option></select></div>
           </div>
         </div>
       </div>
@@ -1302,20 +1470,28 @@ game: {
 
   newSourceCase: () => {
     const s = window.app.game.sourceState;
-    let i = Math.floor(Math.random() * SOURCE_CASES.length);
-    if (i === s.caseIdx && SOURCE_CASES.length > 1) i = (i + 1) % SOURCE_CASES.length;
+    let i; do { i = Math.floor(Math.random() * SOURCE_CASES.length); } while (i === s.caseIdx && SOURCE_CASES.length > 1);
     s.caseIdx = i; const c = SOURCE_CASES[i];
-    const docEl = document.getElementById('source-doc'); if (docEl) docEl.textContent = c.excerpt;
+    document.getElementById('source-doc').textContent = c.excerpt;
     const attrEl = document.getElementById('source-attr'); if (attrEl) attrEl.textContent = '— ' + c.attribution;
+    document.getElementById('source-context-box')?.classList.add('hidden');
+    // Shuffle options with correct answer always included + 4-5 distractors
+    const shuffle = (arr) => arr.sort(() => Math.random() - 0.5);
+    const makeOptions = (correct, allOptions) => {
+      const others = allOptions.filter(o => o !== correct);
+      const picks = shuffle(others).slice(0, 4);
+      picks.push(correct);
+      return shuffle(picks);
+    };
     const fillSelect = (id, options) => {
       const el = document.getElementById(id); if (!el) return;
       el.innerHTML = '<option value="">Select...</option>';
       options.forEach(o => { const opt = document.createElement('option'); opt.value = o; opt.textContent = o; el.appendChild(opt); });
       el.value = '';
     };
-    fillSelect('source-pov', POV_OPTIONS);
-    fillSelect('source-aud', AUD_OPTIONS);
-    fillSelect('source-pur', PURP_OPTIONS);
+    fillSelect('source-pov', makeOptions(c.pov, POV_OPTIONS));
+    fillSelect('source-aud', makeOptions(c.audience, AUD_OPTIONS));
+    fillSelect('source-pur', makeOptions(c.purpose, PURP_OPTIONS));
   },
 
   solveSource: async () => {
@@ -1330,20 +1506,26 @@ game: {
     if (pov === c.pov) score++;
     if (aud === c.audience) score++;
     if (pur === c.purpose) score++;
+    // Show context reveal
+    const ctxBox = document.getElementById('source-context-box');
+    const ctxText = document.getElementById('source-context-text');
+    if (ctxBox && ctxText) { ctxText.textContent = c.context; ctxBox.classList.remove('hidden'); }
     if (score === 3) {
       s.solved++;
-      appState.userData.gamification.xp += 15;
-      await updateDoc(doc(db, "users", appState.user.uid), { "gamification.xp": appState.userData.gamification.xp });
+      const xp = 20;
+      if (appState.userData?.gamification) { appState.userData.gamification.xp += xp; if (appState.user) { try { await updateDoc(doc(db, "users", appState.user.uid), { "gamification.xp": appState.userData.gamification.xp }); } catch(e){} } }
       document.getElementById('source-solved').textContent = s.solved;
-      window.app.ui.toast('Perfect sourcing! Case solved. +15 XP', 'success');
+      window.app.ui.toast('🔍 Case cracked! 3/3 · +' + xp + ' XP', 'success');
       confetti({ particleCount: 70, spread: 60, origin: { y: 0.75 } });
-      setTimeout(() => window.app.game.newSourceCase(), 500);
+      setTimeout(() => window.app.game.newSourceCase(), 1500);
+    } else if (score >= 2) {
+      window.app.ui.toast('Close! ' + score + '/3 — ' + (pov !== c.pov ? 'POV' : aud !== c.audience ? 'Audience' : 'Purpose') + ' was wrong. Try again!', 'info');
     } else {
-      let hints = 'Check:';
-      if (pov !== c.pov) hints += ' POV';
-      if (aud !== c.audience) hints += ' Audience';
-      if (pur !== c.purpose) hints += ' Purpose';
-      window.app.ui.toast(hints + '. ' + score + '/3 correct.', 'info');
+      let wrong = [];
+      if (pov !== c.pov) wrong.push('POV');
+      if (aud !== c.audience) wrong.push('Audience');
+      if (pur !== c.purpose) wrong.push('Purpose');
+      window.app.ui.toast(score + '/3 — Check: ' + wrong.join(', ') + '. Read the attribution carefully!', 'error');
     }
   }
 },
