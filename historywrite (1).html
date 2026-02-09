@@ -60,6 +60,35 @@ body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--tx); 
 .hl-warning { background:rgba(196,149,40,.15); border-bottom:2px solid var(--gd); cursor:help; }
 .hl-error { background:rgba(212,98,47,.15); border-bottom:2px solid var(--ac); cursor:help; }
 
+/* Inline annotation markers */
+.hl-inline { position:relative; cursor:pointer; transition:filter .2s; }
+.hl-inline:hover { filter:brightness(1.15); z-index:1; }
+.hl-num { display:inline-flex; align-items:center; justify-content:center; width:18px; height:18px; border-radius:50%; font-size:10px; font-weight:700; color:#fff; margin-right:3px; vertical-align:middle; font-family:'DM Sans',sans-serif; line-height:1; }
+.hl-success .hl-num { background:var(--sg); }
+.hl-warning .hl-num { background:var(--gd); }
+.hl-error .hl-num { background:var(--ac); }
+
+/* Annotation cards */
+.ann-card { padding:14px; border-radius:14px; background:var(--elev); border:1px solid var(--bd); transition:all .25s; cursor:pointer; }
+.ann-card:hover { border-color:var(--bd2); transform:translateX(-2px); }
+.ann-card-success { border-left:3px solid var(--sg); }
+.ann-card-warning { border-left:3px solid var(--gd); }
+.ann-card-error { border-left:3px solid var(--ac); }
+@keyframes annFlash { 0%,30% { box-shadow:0 0 0 3px var(--ac); } 100% { box-shadow:none; } }
+.ann-flash { animation:annFlash .8s ease-out; }
+
+/* Encouragement banner */
+.enc-banner { background:linear-gradient(135deg,rgba(212,98,47,.08),rgba(196,149,40,.08)); border:1px solid var(--bd2); border-radius:14px; padding:16px 20px; }
+
+/* Improvement tip boxes */
+.tip-box { background:rgba(196,149,40,.08); border:1px solid rgba(196,149,40,.2); border-radius:10px; padding:8px 12px; margin-top:8px; }
+.tip-box-error { background:rgba(212,98,47,.08); border:1px solid rgba(212,98,47,.2); }
+
+/* Highlight legend */
+.hl-legend { display:flex; flex-wrap:wrap; gap:16px; }
+.hl-legend-item { display:flex; align-items:center; gap:6px; font-size:11px; }
+.hl-legend-swatch { width:12px; height:12px; border-radius:3px; }
+
 /* Skill nodes */
 .skill-node { transition:all .3s cubic-bezier(.4,0,.2,1); cursor:pointer; }
 .skill-node:hover { transform:scale(1.12); }
@@ -503,17 +532,22 @@ views: {
   results: (sub, a) => {
     setTimeout(() => confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 }, colors: ['#d4622f', '#c49528', '#4d8060'] }), 400);
     let html = sub.essayText.replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    if (sub.grading.annotations) {
-      sub.grading.annotations.forEach(ann => {
-        if (ann.quote) {
-          const escaped = ann.quote.replace(/</g, '&lt;').replace(/>/g, '&gt;');
-          const cls = ann.status === 'success' ? 'hl-success' : ann.status === 'warning' ? 'hl-warning' : 'hl-error';
-          html = html.replace(escaped, `<span class="${cls}" title="${(ann.feedback || '').replace(/"/g, '&quot;')}">${escaped}</span>`);
-        }
-      });
-    }
+    const annotations = sub.grading.annotations || [];
+    annotations.forEach((ann, idx) => {
+      if (ann.quote) {
+        const escaped = ann.quote.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        const cls = ann.status === 'success' ? 'hl-success' : ann.status === 'warning' ? 'hl-warning' : 'hl-error';
+        const num = idx + 1;
+        html = html.replace(escaped, `<span class="${cls} hl-inline" data-ann="${num}" onclick="document.getElementById('ann-${num}')?.scrollIntoView({behavior:'smooth',block:'center'});document.getElementById('ann-${num}')?.classList.add('ann-flash');setTimeout(()=>document.getElementById('ann-${num}')?.classList.remove('ann-flash'),800)"><span class="hl-num">${num}</span>${escaped}</span>`);
+      }
+    });
     const pct = Math.round((sub.grading.score / sub.grading.maxScore) * 100);
     const grade = pct >= 80 ? 'Excellent' : pct >= 60 ? 'Proficient' : pct >= 40 ? 'Developing' : 'Needs Work';
+    const encourageMsg = pct >= 80 ? "Outstanding work! You're demonstrating real mastery of AP World History writing skills."
+      : pct >= 60 ? "Great progress! Your historical thinking is getting stronger with every essay."
+      : pct >= 40 ? "You're building a solid foundation — keep practicing and you'll see big gains!"
+      : "Every great historian started somewhere. Keep writing, and watch your skills grow!";
+    const encourageIcon = pct >= 80 ? '🏆' : pct >= 60 ? '⭐' : pct >= 40 ? '📈' : '💪';
     return `
     <div class="h-[calc(100vh-56px)] flex pageEnter">
       <div class="flex-1 overflow-y-auto p-6 md:p-10 csc">
@@ -521,20 +555,70 @@ views: {
         <h1 class="text-2xl font-bold fs mb-1">Grading Report</h1>
         <p class="text-xs mb-6" style="color:var(--mu)">${a.title}</p>
         <div class="hcard p-6 md:p-8 fs text-base md:text-lg leading-relaxed" style="white-space:pre-wrap">${html}</div>
+        <div class="mt-4 p-4 rounded-xl text-xs" style="background:var(--elev);border:1px solid var(--bd);color:var(--mu)">
+          <div class="hl-legend">
+            <span class="hl-legend-item"><span class="hl-legend-swatch" style="background:rgba(77,128,96,.15);border-bottom:2px solid var(--sg)"></span> Strong — point earned</span>
+            <span class="hl-legend-item"><span class="hl-legend-swatch" style="background:rgba(196,149,40,.15);border-bottom:2px solid var(--gd)"></span> Close — almost there</span>
+            <span class="hl-legend-item"><span class="hl-legend-swatch" style="background:rgba(212,98,47,.15);border-bottom:2px solid var(--ac)"></span> Needs work — room to grow</span>
+          </div>
+          <p class="mt-2" style="color:var(--fa)">Click a numbered highlight to jump to its feedback.</p>
+        </div>
       </div>
-      <div class="w-72 md:w-80 overflow-y-auto p-6 csc" style="background:var(--card);border-left:1px solid var(--bd)">
-        <div class="text-center mb-6">
+      <div class="w-80 md:w-96 overflow-y-auto p-6 csc" style="background:var(--card);border-left:1px solid var(--bd)">
+        <div class="text-center mb-5">
           <div class="text-5xl font-bold fs" style="color:var(--ac)">${sub.grading.score}<span class="text-xl" style="color:var(--fa)">/${sub.grading.maxScore}</span></div>
           <div class="text-xs font-semibold mt-1" style="color:var(--mu)">${grade}</div>
           <div class="xpBar w-full mt-3"><div class="xpFill" style="width:${pct}%"></div></div>
         </div>
-        ${sub.grading.generalFeedback ? `<p class="text-sm mb-5" style="color:var(--mu)">${sub.grading.generalFeedback}</p>` : ''}
+        <div class="enc-banner mb-5">
+          <div class="flex items-start gap-3">
+            <span class="text-2xl">${encourageIcon}</span>
+            <div>
+              <p class="text-sm font-semibold mb-1">${grade}!</p>
+              <p class="text-xs" style="color:var(--mu)">${encourageMsg}</p>
+            </div>
+          </div>
+        </div>
+        ${sub.grading.generalFeedback ? `<p class="text-sm mb-5 leading-relaxed" style="color:var(--mu)">${sub.grading.generalFeedback}</p>` : ''}
+        <h4 class="text-xs font-bold uppercase tracking-wider mb-3" style="color:var(--fa)">Detailed Feedback</h4>
         <div class="space-y-3">
-          ${(sub.grading.annotations || []).map(a => {
-            const dot = a.status === 'success' ? 'var(--sg)' : a.status === 'warning' ? 'var(--gd)' : 'var(--ac)';
-            return `<div class="p-3 rounded-xl" style="background:var(--elev);border:1px solid var(--bd)"><div class="flex items-center gap-2 mb-1"><div class="w-2 h-2 rounded-full" style="background:${dot}"></div><span class="text-[11px] font-bold uppercase" style="color:${dot}">${a.category}</span></div><p class="text-xs" style="color:var(--mu)">${a.feedback}</p></div>`;
+          ${annotations.map((ann, idx) => {
+            const num = idx + 1;
+            const dot = ann.status === 'success' ? 'var(--sg)' : ann.status === 'warning' ? 'var(--gd)' : 'var(--ac)';
+            const statusCls = 'ann-card-' + ann.status;
+            const statusLabel = ann.status === 'success' ? 'Point Earned' : ann.status === 'warning' ? 'Almost There' : 'Needs Work';
+            const tipHtml = ann.improvementTip && ann.status !== 'success'
+              ? `<div class="tip-box ${ann.status === 'error' ? 'tip-box-error' : ''}" style="margin-top:8px"><p class="text-[10px] font-bold uppercase tracking-wider mb-1" style="color:${dot}">💡 Try this</p><p class="text-xs" style="color:var(--mu)">${ann.improvementTip}</p></div>` : '';
+            const encourageHtml = ann.status === 'success' ? '<p class="text-[10px] mt-2 font-medium" style="color:var(--sg)">✓ Great job on this!</p>' : '';
+            return `<div id="ann-${num}" class="ann-card ${statusCls}" onclick="var el=document.querySelector('[data-ann=&quot;${num}&quot;]');if(el){el.scrollIntoView({behavior:'smooth',block:'center'});}">
+              <div class="flex items-center justify-between mb-1.5">
+                <div class="flex items-center gap-2">
+                  <span class="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold text-white" style="background:${dot}">${num}</span>
+                  <span class="text-[11px] font-bold uppercase" style="color:${dot}">${ann.category}</span>
+                </div>
+                <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full" style="background:${ann.status === 'success' ? 'rgba(77,128,96,.12)' : ann.status === 'warning' ? 'rgba(196,149,40,.12)' : 'rgba(212,98,47,.12)'};color:${dot}">${statusLabel}</span>
+              </div>
+              ${ann.quote ? `<p class="text-[11px] italic mb-1.5 pl-2" style="color:var(--fa);border-left:2px solid var(--bd)">"${ann.quote.length > 80 ? ann.quote.substring(0, 80) + '…' : ann.quote}"</p>` : ''}
+              <p class="text-xs" style="color:var(--mu)">${ann.feedback}</p>
+              ${encourageHtml}
+              ${tipHtml}
+            </div>`;
           }).join('')}
         </div>
+        ${annotations.some(ann => ann.status !== 'success') ? `
+        <div class="mt-6 p-4 rounded-xl" style="background:var(--acs)">
+          <h4 class="text-xs font-bold mb-2" style="color:var(--ac)">🎯 Next Steps</h4>
+          <ul class="text-xs space-y-1.5" style="color:var(--mu)">
+            ${annotations.filter(ann => ann.status !== 'success' && ann.improvementTip).map(ann => `<li class="flex items-start gap-1.5"><span style="color:var(--ac)">→</span> ${ann.improvementTip}</li>`).join('')}
+            ${annotations.filter(ann => ann.status !== 'success' && ann.improvementTip).length === 0 ? '<li class="flex items-start gap-1.5"><span style="color:var(--ac)">→</span> Review the highlighted sections and revise for your next attempt.</li>' : ''}
+          </ul>
+          <p class="text-[10px] mt-3 font-medium" style="color:var(--ac)">Focus on one area at a time — you've got this!</p>
+        </div>` : `
+        <div class="mt-6 p-4 rounded-xl text-center" style="background:rgba(77,128,96,.08);border:1px solid rgba(77,128,96,.2)">
+          <span class="text-2xl">🌟</span>
+          <p class="text-xs font-semibold mt-1" style="color:var(--sg)">Amazing work across the board!</p>
+          <p class="text-[10px] mt-1" style="color:var(--mu)">Keep this up and you'll ace the AP exam.</p>
+        </div>`}
       </div>
     </div>`;
   }
@@ -1010,7 +1094,7 @@ ai: {
         headers: { 'Content-Type': 'application/json', 'x-api-key': appState.apiKey, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
         body: JSON.stringify({
           model: 'claude-sonnet-4-20250514', max_tokens: 2000,
-          messages: [{ role: 'user', content: 'You are an AP World History essay grader. Grade this ' + type.toUpperCase() + ' using the 2025 College Board rubric.\n\nPrompt:\n' + prompt + '\n\nEssay:\n' + essay + '\n\nReturn ONLY valid JSON with no extra text:\n{"score":NUMBER,"maxScore":' + r.maxScore + ',"generalFeedback":"2-3 sentence overview","annotations":[{"quote":"short excerpt from essay","category":"Thesis|Contextualization|Evidence|Sourcing|Reasoning|Complexity","status":"success|warning|error","feedback":"specific feedback"}]}' }]
+          messages: [{ role: 'user', content: 'You are an encouraging AP World History essay grader. Grade this ' + type.toUpperCase() + ' using the 2025 College Board rubric.\n\nPrompt:\n' + prompt + '\n\nEssay:\n' + essay + (structure?.sources ? '\n\nDocuments provided:\n' + structure.sources.map((s,i) => 'Doc ' + (i+1) + ': ' + (s.label||s.title) + ' - ' + s.content).join('\n') : '') + '\n\nGrade using the official AP rubric. For EACH rubric category, find the EXACT quote from the essay that demonstrates that skill (or the best attempt). Be encouraging and specific.\n\nReturn ONLY valid JSON with no extra text:\n{"score":NUMBER,"maxScore":' + r.maxScore + ',"generalFeedback":"2-3 sentence encouraging overview highlighting strengths first, then areas to grow","annotations":[{"quote":"EXACT phrase or sentence copied from the essay (required, 5-80 chars)","category":"Thesis|Contextualization|Evidence|Sourcing|Reasoning|Complexity","status":"success if point earned|warning if close but not quite|error if missing or needs significant work","feedback":"specific encouraging feedback explaining why this earned or missed the point","improvementTip":"for warning/error only: one specific actionable step the student can take to earn this point next time, e.g. Add a date range and name a specific trade route. Empty string for success."}]}' }]
         })
       });
       const data = await resp.json();
@@ -1023,14 +1107,34 @@ ai: {
   mockGrade: (type) => {
     const scores = { saq: 2, leq: 4, dbq: 5 };
     const maxScores = { saq: 3, leq: 6, dbq: 7 };
+    const mockAnnotations = {
+      saq: [
+        { quote: "", category: "Identification", status: "success", feedback: "You correctly identified a relevant historical development — nice work recognizing the key factor here!", improvementTip: "" },
+        { quote: "", category: "Description", status: "success", feedback: "Your description is clear and shows strong understanding of the historical context.", improvementTip: "" },
+        { quote: "", category: "Explanation", status: "warning", feedback: "Your explanation is on the right track, but needs a stronger cause-and-effect connection.", improvementTip: "Add a sentence explaining WHY this development occurred — connect the cause directly to the effect using words like 'because' or 'as a result of'." }
+      ],
+      leq: [
+        { quote: "", category: "Thesis", status: "success", feedback: "Strong thesis! You made a clear, defensible claim with a logical line of reasoning.", improvementTip: "" },
+        { quote: "", category: "Contextualization", status: "success", feedback: "Excellent job setting the broader historical context before diving into your argument.", improvementTip: "" },
+        { quote: "", category: "Evidence", status: "warning", feedback: "You used some evidence, but you need one more specific example with dates and names to earn the full evidence point.", improvementTip: "Add a second specific historical example — include a date, a person's name, or a specific place to make your evidence more concrete." },
+        { quote: "", category: "Evidence", status: "success", feedback: "Good use of evidence to support your argument. The specific details strengthen your case.", improvementTip: "" },
+        { quote: "", category: "Reasoning", status: "warning", feedback: "Your analysis is developing, but you need to more explicitly connect evidence to your thesis.", improvementTip: "After each piece of evidence, add a sentence that directly explains HOW it supports your thesis using comparison, causation, or continuity/change." },
+        { quote: "", category: "Complexity", status: "error", feedback: "The complexity point requires you to go beyond the basic argument — consider counterevidence or connections across time periods.", improvementTip: "Add a paragraph that addresses a counterargument or connects your topic to a different time period or region. Try starting with 'Although...' or 'While some might argue...'." }
+      ],
+      dbq: [
+        { quote: "", category: "Thesis", status: "success", feedback: "Your thesis presents a clear, defensible argument that directly addresses the prompt. Well done!", improvementTip: "" },
+        { quote: "", category: "Contextualization", status: "success", feedback: "Great historical context! You connected the topic to broader trends effectively.", improvementTip: "" },
+        { quote: "", category: "Evidence", status: "success", feedback: "Strong use of document evidence to support your argument.", improvementTip: "" },
+        { quote: "", category: "Evidence", status: "success", feedback: "You used evidence from multiple documents effectively. Nice work integrating sources!", improvementTip: "" },
+        { quote: "", category: "Sourcing", status: "warning", feedback: "You mentioned a document's origin, but need to analyze HOW the source's POV, purpose, or audience affects its reliability.", improvementTip: "Pick one document and explain how the author's point of view or purpose shapes what they wrote. Example: 'As a Spanish official, the author would emphasize... because...'." },
+        { quote: "", category: "Reasoning", status: "warning", feedback: "Your argument groups documents together, but the reasoning connecting them to your thesis could be stronger.", improvementTip: "After discussing a group of documents, add a sentence that explicitly states how they collectively prove your thesis point." },
+        { quote: "", category: "Complexity", status: "error", feedback: "To earn the complexity point, demonstrate nuanced understanding — address counterevidence, qualify your argument, or make connections across periods.", improvementTip: "Try adding: 'However, not all evidence supports this view...' and discuss a document that complicates your argument, then explain why your thesis still holds." }
+      ]
+    };
     return {
       score: scores[type] || 3, maxScore: maxScores[type] || 6,
-      generalFeedback: "Good effort! Your essay shows solid understanding of the topic. Work on including more specific historical evidence with dates and names, and strengthen your analytical reasoning to connect evidence to your argument.",
-      annotations: [
-        { quote: "", category: "Thesis", status: "success", feedback: "You presented a clear, defensible claim that addresses the prompt." },
-        { quote: "", category: "Evidence", status: "warning", feedback: "Include more specific historical examples with dates, names, and places to strengthen your argument." },
-        { quote: "", category: "Reasoning", status: "warning", feedback: "Try to more explicitly connect your evidence to your thesis using causation, comparison, or continuity/change." }
-      ]
+      generalFeedback: "Nice work on this essay! You're showing solid understanding of the historical content and your writing is well-organized. Focus on strengthening your evidence with more specific details and building stronger analytical connections between your evidence and your argument — you're close to leveling up!",
+      annotations: mockAnnotations[type] || mockAnnotations.leq
     };
   }
 },
