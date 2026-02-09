@@ -91,7 +91,7 @@ body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--tx); 
 
 /* Skill nodes */
 .skill-node { transition:all .3s cubic-bezier(.4,0,.2,1); cursor:pointer; }
-.skill-node:hover { transform:scale(1.12); }
+.skill-node:hover { transform:scale(1.08) translateY(-4px); }
 .skill-gold { box-shadow:0 0 0 3px var(--gd),0 0 20px rgba(196,149,40,.4); animation:glowG 2.5s ease-in-out infinite; }
 .skill-grow { border-color:var(--sg); background:rgba(77,128,96,.1); }
 .skill-seed { border-color:var(--bd); background:var(--elev); }
@@ -99,6 +99,35 @@ body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--tx); 
   0%,100% { box-shadow:0 0 0 3px var(--gd),0 0 15px rgba(196,149,40,.3); }
   50% { box-shadow:0 0 0 3px var(--gd),0 0 25px rgba(196,149,40,.6); }
 }
+
+/* Garden enhancements */
+.garden-plot { position:relative; background:var(--elev); border:1px solid var(--bd); border-radius:20px; padding:16px; transition:all .3s; }
+.garden-plot:hover { border-color:var(--bd2); box-shadow:0 6px 24px rgba(0,0,0,.06); }
+.garden-type-header { display:flex; align-items:center; gap:10px; margin-bottom:14px; padding-bottom:10px; border-bottom:1px solid var(--bd); }
+.progress-ring { transform:rotate(-90deg); }
+.progress-ring-bg { fill:none; stroke:var(--bd); }
+.progress-ring-fill { fill:none; stroke-linecap:round; transition:stroke-dashoffset .8s cubic-bezier(.4,0,.2,1); }
+.plant-cell { display:flex; flex-direction:column; align-items:center; gap:6px; padding:10px 6px; border-radius:14px; cursor:pointer; transition:all .3s; position:relative; }
+.plant-cell:hover { background:var(--acs); }
+.plant-pot { width:52px; height:52px; border-radius:16px; display:flex; align-items:center; justify-content:center; font-size:26px; border:2px solid var(--bd); transition:all .3s; position:relative; overflow:hidden; }
+.plant-pot::after { content:''; position:absolute; bottom:0; left:0; right:0; height:0%; background:linear-gradient(to top,rgba(77,128,96,.15),transparent); transition:height .6s; border-radius:0 0 14px 14px; }
+.plant-cell[data-pct="low"] .plant-pot::after { height:25%; }
+.plant-cell[data-pct="mid"] .plant-pot::after { height:55%; }
+.plant-cell[data-pct="high"] .plant-pot::after { height:85%; background:linear-gradient(to top,rgba(196,149,40,.2),transparent); }
+@keyframes sway { 0%,100% { transform:rotate(-2deg); } 50% { transform:rotate(2deg); } }
+.plant-sway { animation:sway 3s ease-in-out infinite; }
+.streak-badge { position:absolute; top:-4px; right:-4px; width:20px; height:20px; border-radius:50%; background:var(--ac); color:#fff; font-size:9px; font-weight:700; display:flex; align-items:center; justify-content:center; }
+.garden-summary { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:16px; }
+.garden-stat { text-align:center; padding:10px; border-radius:12px; background:var(--card); border:1px solid var(--bd); }
+.drill-scenario { background:var(--elev); border:1px solid var(--bd); border-radius:14px; padding:16px; margin-bottom:12px; }
+.drill-hint { background:rgba(196,149,40,.08); border:1px solid rgba(196,149,40,.15); border-radius:10px; padding:10px 14px; margin-top:8px; font-size:12px; }
+.drill-checklist { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
+.drill-check { font-size:11px; padding:4px 10px; border-radius:6px; background:var(--elev); border:1px solid var(--bd); transition:all .2s; }
+.drill-check.met { background:rgba(77,128,96,.12); border-color:var(--sg); color:var(--sg); font-weight:600; }
+.drill-feedback { padding:14px; border-radius:14px; margin-top:12px; }
+.drill-feedback-great { background:rgba(77,128,96,.1); border:1px solid rgba(77,128,96,.25); }
+.drill-feedback-good { background:rgba(196,149,40,.1); border:1px solid rgba(196,149,40,.25); }
+.drill-feedback-try { background:rgba(212,98,47,.08); border:1px solid rgba(212,98,47,.2); }
 
 /* Arcade */
 .arcP { background:#13120f; border-radius:16px; overflow:hidden; }
@@ -322,6 +351,49 @@ const CHRONO_EVENTS = [
   { event: "Berlin Conference", date: 1884, era: "Modern" },
   { event: "Boxer Rebellion", date: 1900, era: "Modern" }
 ];
+
+const PRACTICE_BANK = {
+  thesis: [
+    { scenario:"The spread of Buddhism along the Silk Road transformed East and Southeast Asian societies between 200 BCE and 1000 CE.", hint:"A strong thesis makes a defensible claim and previews your line of reasoning (what + why/how).", checks:["defensible claim","line of reasoning","addresses the prompt","specific time/place"], keywords:["because","due to","led to","as a result","although","primarily","fundamentally","transformed","significant"] },
+    { scenario:"Evaluate the extent to which the Atlantic slave trade reshaped African societies between 1500 and 1800.", hint:"Use 'Evaluate the extent' to show nuance — was the change total, partial, or limited?", checks:["defensible claim","line of reasoning","addresses the prompt","shows extent/degree"], keywords:["because","due to","although","while","extent","significantly","largely","transformed","reshaped"] },
+    { scenario:"Evaluate the extent to which the printing press changed European society between 1450 and 1648.", hint:"Think about multiple categories of change: political, social, religious, intellectual.", checks:["defensible claim","line of reasoning","addresses the prompt","specific categories"], keywords:["because","due to","although","enabled","facilitated","challenged","undermined","religious","political"] },
+    { scenario:"Evaluate the extent to which the Mongol Empire facilitated cultural exchange across Eurasia between 1200 and 1400.", hint:"Consider the Pax Mongolica — what flowed along those trade routes?", checks:["defensible claim","line of reasoning","addresses the prompt","specific time/place"], keywords:["because","due to","Pax Mongolica","facilitated","exchange","connected","silk road","trade"] }
+  ],
+  contextualization: [
+    { scenario:"You are writing an essay about the causes of the French Revolution (1789). Write 2-3 sentences of historical context that sets the stage.", hint:"Contextualization means BROADER context — trends or events BEFORE or AROUND the topic, not the topic itself.", checks:["broader trend","before/around the topic","specific details","connects to prompt"], keywords:["Enlightenment","ancien régime","estates","inequality","American Revolution","monarchy","debt","famine","1780s","Voltaire","Rousseau","Louis"] },
+    { scenario:"You are writing about the effects of the Industrial Revolution on European cities (1750-1900). Provide contextualization.", hint:"What was happening in Europe BEFORE industrialization that set the stage?", checks:["broader trend","before/around the topic","specific details","connects to prompt"], keywords:["agricultural revolution","enclosure","population","rural","mercantilism","cottage industry","steam","coal","urbanization","1700s"] },
+    { scenario:"You are writing about the decline of the Ottoman Empire in the 19th century. Provide contextualization.", hint:"What broader global forces were pressuring empires during this period?", checks:["broader trend","before/around the topic","specific details","connects to prompt"], keywords:["nationalism","industrialization","European","imperialism","tanzimat","reform","military","Napoleonic","decline","19th century","Balkans"] }
+  ],
+  evidence: [
+    { scenario:"The prompt asks: 'Evaluate the extent to which trade networks facilitated cultural exchange 1200-1450.' Provide TWO specific pieces of historical evidence.", hint:"Good evidence = specific names, dates, places, events. Not vague generalizations.", checks:["two distinct examples","specific names/dates","relevant to prompt","different regions/aspects"], keywords:["Silk Road","Ibn Battuta","Marco Polo","Mongol","Mali","Mansa Musa","Indian Ocean","Song","Yuan","Swahili","1200","1300","1400","gold","Islam","Buddhism"] },
+    { scenario:"The prompt asks: 'Evaluate the effects of European maritime exploration 1450-1750.' Provide TWO specific pieces of evidence.", hint:"Think about Columbian Exchange, colonization, trade — pick two different effects.", checks:["two distinct examples","specific names/dates","relevant to prompt","different effects"], keywords:["Columbus","1492","Cortés","Aztec","Potosí","silver","Manila","smallpox","potato","sugar","plantation","encomienda","1500","1600"] },
+    { scenario:"The prompt asks: 'Evaluate the causes of World War I.' Provide TWO specific pieces of evidence.", hint:"Think about alliances, militarism, imperialism, nationalism — pick specific examples.", checks:["two distinct examples","specific names/dates","relevant to prompt","explains significance"], keywords:["Bismarck","alliance","Triple","Balkans","assassination","Archduke","1914","arms race","dreadnought","Morocco","Bosnia","nationalism","imperialism"] }
+  ],
+  sourcing: [
+    { scenario:"Document: 'I, a Jesuit missionary in China, write to Rome that Confucian values are compatible with Christianity, and Chinese converts should be allowed to honor their ancestors.' — Matteo Ricci, letter to Vatican, 1603.\n\nAnalyze this source's POV, purpose, audience, or historical situation.", hint:"HAPP = Historical situation, Audience, Purpose, Point of View. Pick at least one and explain HOW it affects the document.", checks:["identifies HAPP element","explains HOW it affects content","specific to this document","uses evidence from doc"], keywords:["Jesuit","missionary","purpose","convince","Rome","Vatican","audience","POV","convert","accommodate","Chinese Rites","situation","Counter-Reformation"] },
+    { scenario:"Document: 'The factory system has brought prosperity to our nation. Workers earn wages and can purchase goods their grandparents never imagined.' — British Parliament member, speech to House of Commons, 1833.\n\nAnalyze this source.", hint:"Who is speaking, to whom, and why? What would they gain or lose from this position?", checks:["identifies HAPP element","explains HOW it affects content","specific to this document","considers bias/motivation"], keywords:["Parliament","political","purpose","defend","factory","industrialist","audience","Commons","POV","wealthy","bias","interest","reform","child labor","1833"] }
+  ],
+  reasoning: [
+    { scenario:"You've argued that the Columbian Exchange transformed the Americas. You have evidence about crop exchange and disease. Write 2-3 sentences of REASONING that connects this evidence to your thesis.", hint:"Reasoning = explaining HOW/WHY your evidence proves your point. Use comparison, causation, or CCOT.", checks:["connects evidence to thesis","explains HOW/WHY","uses historical thinking","goes beyond description"], keywords:["because","therefore","this demonstrates","as a result","caused","led to","transformed","which meant","consequently","this shows that","comparison","causation"] },
+    { scenario:"You've argued that gunpowder empires (Ottoman, Safavid, Mughal) maintained power through military technology 1450-1750. Write reasoning connecting military evidence to your thesis.", hint:"Don't just describe — explain the MECHANISM. How did the military → political power → empire stability?", checks:["connects evidence to thesis","explains mechanism","uses historical thinking","goes beyond description"], keywords:["because","enabled","maintained","consolidated","centralized","therefore","this meant","power","authority","legitimacy","control","which allowed"] }
+  ],
+  complexity: [
+    { scenario:"Your essay argues the Columbian Exchange was transformative. Write 2-3 sentences that demonstrate COMPLEX understanding.", hint:"Complexity = nuance. Try: counterargument, different perspectives, cross-period connection, or qualifying your argument.", checks:["goes beyond basic argument","shows nuance","addresses counter/alternative","connects across time/place"], keywords:["although","however","while","conversely","on the other hand","not all","varied","uneven","both","complex","nuanced","across","similar to","unlike","long-term","short-term"] },
+    { scenario:"Your essay argues nationalism caused political change 1750-1900. Add complexity.", hint:"Think about who benefited vs. who was harmed, or how the same force had different effects in different places.", checks:["goes beyond basic argument","shows nuance","multiple perspectives","connects across regions"], keywords:["although","however","while","different","varied","Europe","Latin America","Asia","both","unify","divide","elite","popular","uneven","paradox"] }
+  ],
+  identify: [
+    { scenario:"Identify ONE way in which the expansion of Islamic trade networks affected sub-Saharan Africa between 1200 and 1450.", hint:"'Identify' means name the thing clearly — no need to explain at length, just be specific.", checks:["names one specific development","relevant to prompt","within time period","historically accurate"], keywords:["Islam","Swahili","gold","salt","Mansa Musa","Mali","Timbuktu","mosque","merchant","conversion","Arabic","trade","1200","1300","1400","trans-Saharan"] },
+    { scenario:"Identify ONE technological innovation that facilitated maritime exploration between 1400 and 1600.", hint:"Be specific — name the technology and briefly note its significance.", checks:["names one specific technology","relevant to exploration","within time period","historically accurate"], keywords:["compass","astrolabe","caravel","lateen","sail","cartography","map","navigation","stern","rudder","Portuguese","Chinese","1400","1500"] }
+  ],
+  describe: [
+    { scenario:"Describe the encomienda system in Spanish colonies in the Americas during the 1500s.", hint:"'Describe' = explain WHAT it was and HOW it worked in 2-3 clear sentences.", checks:["explains what it was","explains how it worked","specific details","within time period"], keywords:["encomienda","Spanish","indigenous","labor","land","grant","conquistador","tribute","forced","colonial","1500","Americas","native","convert"] },
+    { scenario:"Describe the role of the Indian Ocean trade network between 1200 and 1450.", hint:"Think about WHO traded, WHAT was traded, and HOW the network operated.", checks:["explains what it was","explains how it worked","specific goods/routes","within time period"], keywords:["Indian Ocean","monsoon","dhow","Swahili","spice","silk","porcelain","Gujarat","Malacca","Chinese","Arab","merchant","network","1200","1300"] }
+  ],
+  explain: [
+    { scenario:"Explain ONE cause of the decline of the Byzantine Empire by 1453.", hint:"'Explain' = give the cause AND explain WHY/HOW it led to decline. Connect cause → effect.", checks:["identifies a cause","explains WHY it caused decline","cause-effect connection","specific details"], keywords:["Ottoman","Seljuk","crusade","1204","Constantinople","military","trade","Venice","plague","territory","siege","1453","Mehmed","because","led to","weakened"] },
+    { scenario:"Explain how the development of joint-stock companies affected European exploration and colonization between 1500 and 1700.", hint:"Name the mechanism — HOW did joint-stock companies change what was possible?", checks:["identifies mechanism","explains HOW it affected","cause-effect connection","specific details"], keywords:["joint-stock","Dutch East India","British East India","VOC","investor","risk","capital","profit","colony","trade","monopoly","charter","1600","because","enabled","allowed"] }
+  ]
+};
 
 const THESIS_PROMPTS = [
   "Evaluate the extent to which the Columbian Exchange transformed global economies 1450–1750.",
@@ -857,44 +929,203 @@ game: {
 
   renderSkillGarden: (stats) => {
     const m = stats.mastery || window.app.game.getDefaultStats().mastery;
-    const renderGroup = (type, label, color) => {
-      const skills = m[type]?.skills || {};
-      return `<div class="mb-6"><h4 class="text-xs font-bold uppercase tracking-wider mb-3" style="color:${color}">${label}</h4><div class="grid grid-cols-3 gap-4">${Object.entries(skills).map(([name, val]) => {
-        const state = val >= 80 ? 'skill-gold' : val >= 40 ? 'skill-grow' : 'skill-seed';
-        const icon = val >= 80 ? '🌳' : val >= 40 ? '🌿' : '🌱';
-        return `<button onclick="window.app.game.openPractice('${type}','${name}')" class="skill-node flex flex-col items-center gap-2"><div class="w-16 h-16 rounded-2xl ${state} border-2 flex flex-col items-center justify-center" style="border-color:var(--bd)"><span class="text-lg">${icon}</span><span class="text-[10px] font-bold">${val}%</span></div><span class="text-[10px] font-semibold uppercase" style="color:var(--mu)">${name}</span></button>`;
-      }).join('')}</div></div>`;
+    const allSkills = [];
+    Object.entries(m).forEach(([type, data]) => Object.entries(data.skills || {}).forEach(([name, val]) => allSkills.push({ type, name, val })));
+    const mastered = allSkills.filter(s => s.val >= 80).length;
+    const growing = allSkills.filter(s => s.val >= 40 && s.val < 80).length;
+    const seeds = allSkills.filter(s => s.val < 40).length;
+    const avgPct = allSkills.length ? Math.round(allSkills.reduce((a, s) => a + s.val, 0) / allSkills.length) : 0;
+
+    const renderRing = (pct, size, color) => {
+      const r = (size - 6) / 2, circ = 2 * Math.PI * r, offset = circ - (pct / 100) * circ;
+      return `<svg width="${size}" height="${size}" class="progress-ring"><circle class="progress-ring-bg" cx="${size/2}" cy="${size/2}" r="${r}" stroke-width="3"/><circle class="progress-ring-fill" cx="${size/2}" cy="${size/2}" r="${r}" stroke-width="3" stroke="${color}" stroke-dasharray="${circ}" stroke-dashoffset="${offset}"/></svg>`;
     };
-    return `<div><p class="text-xs mb-5" style="color:var(--fa)">🌱 seedling 🌿 growing 🌳 mastered — tap to practice</p>${renderGroup('saq', 'SAQ Skills', 'var(--ac)')}${renderGroup('dbq', 'DBQ Skills', 'var(--ry)')}${renderGroup('leq', 'LEQ Skills', 'var(--sg)')}</div>`;
+
+    const renderPlot = (type, label, icon, color) => {
+      const skills = m[type]?.skills || {};
+      const entries = Object.entries(skills);
+      const typePct = entries.length ? Math.round(entries.reduce((a, [, v]) => a + v, 0) / entries.length) : 0;
+      return `<div class="garden-plot">
+        <div class="garden-type-header">
+          <div class="relative">${renderRing(typePct, 44, color)}<span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700">${icon}</span></div>
+          <div><h4 class="text-sm font-bold">${label}</h4><p class="text-[10px]" style="color:var(--mu)">${typePct}% mastered · ${entries.filter(([,v]) => v >= 80).length}/${entries.length} golden</p></div>
+        </div>
+        <div class="grid grid-cols-${Math.min(entries.length, 5)} gap-2">
+          ${entries.map(([name, val]) => {
+            const plant = val >= 80 ? '🌳' : val >= 60 ? '🌻' : val >= 40 ? '🌿' : val >= 20 ? '🌱' : '🫘';
+            const state = val >= 80 ? 'skill-gold' : val >= 40 ? 'skill-grow' : 'skill-seed';
+            const pctLvl = val >= 80 ? 'high' : val >= 40 ? 'mid' : 'low';
+            const sway = val >= 40 ? 'plant-sway' : '';
+            return `<div class="plant-cell" data-pct="${pctLvl}" onclick="window.app.game.openPractice('${type}','${name}')">
+              <div class="plant-pot ${state}" style="border-color:var(--bd)"><span class="${sway}">${plant}</span></div>
+              <span class="text-[10px] font-semibold capitalize" style="color:var(--mu)">${name}</span>
+              <div class="w-full rounded-full overflow-hidden" style="height:4px;background:var(--bd)"><div style="width:${val}%;height:100%;background:${color};border-radius:4px;transition:width .6s"></div></div>
+              <span class="text-[9px] font-bold" style="color:${val >= 80 ? 'var(--gd)' : val >= 40 ? 'var(--sg)' : 'var(--fa)'}">${val}%</span>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>`;
+    };
+
+    return `<div>
+      <div class="garden-summary">
+        <div class="garden-stat"><div class="text-lg font-bold" style="color:var(--gd)">${mastered}</div><div class="text-[10px]" style="color:var(--mu)">🌳 Mastered</div></div>
+        <div class="garden-stat"><div class="text-lg font-bold" style="color:var(--sg)">${growing}</div><div class="text-[10px]" style="color:var(--mu)">🌿 Growing</div></div>
+        <div class="garden-stat"><div class="text-lg font-bold" style="color:var(--fa)">${seeds}</div><div class="text-[10px]" style="color:var(--mu)">🌱 Seedlings</div></div>
+      </div>
+      <div class="flex items-center gap-3 mb-4 p-3 rounded-xl" style="background:var(--acs)">
+        <div class="relative">${renderRing(avgPct, 48, 'var(--ac)')}<span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700">${avgPct}%</span></div>
+        <div><p class="text-xs font-semibold">Overall Garden Health</p><p class="text-[10px]" style="color:var(--mu)">Tap any plant to practice that skill and watch it grow!</p></div>
+      </div>
+      <div class="space-y-4">
+        ${renderPlot('saq', 'SAQ Skills', '📝', 'var(--ac)')}
+        ${renderPlot('dbq', 'DBQ Skills', '📜', 'var(--ry)')}
+        ${renderPlot('leq', 'LEQ Skills', '✍️', 'var(--sg)')}
+      </div>
+    </div>`;
   },
 
   openPractice: (type, skill) => {
-    const prompts = { thesis: "Write a thesis: clear defensible claim + line of reasoning (because/due to).", contextualization: "Provide broad historical context — a wider trend beyond the specific prompt.", evidence: "Give TWO specific historical evidence pieces (dates, people, events).", sourcing: "Analyze a source's POV, Purpose, Situation, or Audience.", identify: "Identify ONE specific historical cause, effect, or development.", describe: "Describe a historical development in 2–3 sentences.", explain: "Explain WHY a development occurred. Connect causes to effects.", reasoning: "Use comparison, causation, or CCOT to connect evidence to argument.", complexity: "Qualify an argument, address counterevidence, or connect across periods." };
-    document.getElementById('practice-title').textContent = 'Practice: ' + skill[0].toUpperCase() + skill.slice(1);
-    document.getElementById('practice-prompt').innerHTML = `<p class="font-semibold mb-2" style="color:var(--ac)">${type.toUpperCase()} → ${skill}</p><p>${prompts[skill] || 'Practice this skill.'}</p>`;
-    document.getElementById('practice-response').value = '';
-    appState.practiceContext = { type, skill }; window.app.ui.modal('practice-modal', 'open');
+    const bank = PRACTICE_BANK[skill] || PRACTICE_BANK.thesis;
+    const drill = bank[Math.floor(Math.random() * bank.length)];
+    appState.practiceContext = { type, skill, drill };
+
+    const titleEl = document.getElementById('practice-title');
+    const promptEl = document.getElementById('practice-prompt');
+    const respEl = document.getElementById('practice-response');
+    const btnEl = document.getElementById('submit-practice-btn');
+
+    titleEl.textContent = 'Practice: ' + skill[0].toUpperCase() + skill.slice(1);
+    const skillDescriptions = { thesis:"Write a clear, defensible thesis with a line of reasoning.", contextualization:"Set the broader historical context before your argument.", evidence:"Provide specific historical evidence with names, dates, places.", sourcing:"Analyze a source using HAPP (Historical situation, Audience, Purpose, POV).", reasoning:"Connect your evidence to your thesis — explain HOW and WHY.", complexity:"Show nuanced understanding — counterarguments, qualifications, cross-period connections.", identify:"Name ONE specific historical development.", describe:"Explain WHAT something was and HOW it worked.", explain:"Explain WHY something happened — connect cause to effect." };
+
+    promptEl.innerHTML = `
+      <div class="flex items-center gap-2 mb-3">
+        <span class="text-[10px] font-bold fm uppercase px-2 py-1 rounded" style="background:var(--acs);color:var(--ac)">${type.toUpperCase()}</span>
+        <span class="text-[10px] font-bold uppercase" style="color:var(--mu)">→ ${skill}</span>
+      </div>
+      <p class="text-xs mb-3" style="color:var(--mu)">${skillDescriptions[skill] || ''}</p>
+      <div class="drill-scenario">
+        <p class="text-[10px] font-bold uppercase tracking-wider mb-2" style="color:var(--ac)">📋 Your Task</p>
+        <p class="text-sm fs leading-relaxed" style="white-space:pre-line">${drill.scenario}</p>
+      </div>
+      <div class="drill-hint">
+        <p class="text-[10px] font-bold uppercase tracking-wider mb-1" style="color:var(--gd)">💡 Hint</p>
+        <p style="color:var(--mu)">${drill.hint}</p>
+      </div>
+      <div class="mt-3">
+        <p class="text-[10px] font-bold uppercase tracking-wider mb-2" style="color:var(--mu)">Checklist</p>
+        <div class="drill-checklist" id="practice-checks">
+          ${drill.checks.map(c => `<span class="drill-check">${c}</span>`).join('')}
+        </div>
+      </div>`;
+
+    respEl.value = '';
+    if (btnEl) { btnEl.textContent = 'Submit Response'; btnEl.disabled = false; }
+    const feedbackEl = document.getElementById('practice-feedback');
+    if (feedbackEl) feedbackEl.remove();
+    window.app.ui.modal('practice-modal', 'open');
+    lucide.createIcons();
   },
 
   submitPractice: async () => {
     const resp = document.getElementById('practice-response')?.value.trim();
     if (!resp || resp.length < 15) return window.app.ui.toast('Write a bit more before submitting.', 'error');
-    const btn = document.getElementById('submit-practice-btn'); btn.textContent = 'Checking…'; btn.disabled = true;
+    const btn = document.getElementById('submit-practice-btn');
+    btn.textContent = 'Evaluating…'; btn.disabled = true;
+
     setTimeout(async () => {
-      const { type, skill } = appState.practiceContext;
+      const { type, skill, drill } = appState.practiceContext;
+      const lo = resp.toLowerCase();
       const words = resp.split(/\s+/).length;
-      const hasSpecifics = /\d{3,4}|[A-Z][a-z]+ [A-Z]/.test(resp);
-      const boost = words >= 25 && hasSpecifics ? 12 : words >= 15 ? 8 : 5;
-      appState.userData.gamification.mastery[type].skills[skill] = Math.min(100, appState.userData.gamification.mastery[type].skills[skill] + boost);
-      appState.userData.gamification.xp += 30 + boost;
-      await updateDoc(doc(db, "users", appState.user.uid), { gamification: appState.userData.gamification });
-      btn.textContent = 'Submit Response'; btn.disabled = false;
-      window.app.ui.closeModal('practice-modal');
-      window.app.ui.toast(`${skill} improved +${boost}% | +${30 + boost} XP`, 'success');
-      if (boost >= 10) confetti({ particleCount: 80, spread: 60, origin: { y: 0.7 }, colors: ['#d4622f', '#c49528', '#4d8060'] });
+      const hasSpecifics = /\d{3,4}/.test(resp);
+      const hasNames = /[A-Z][a-z]{2,}(?:\s[A-Z][a-z]+)?/.test(resp);
+      const matchedKeywords = (drill.keywords || []).filter(k => lo.includes(k.toLowerCase()));
+      const keywordScore = Math.min(matchedKeywords.length / Math.max(1, Math.min(drill.keywords?.length || 1, 5)), 1);
+
+      // Score each check
+      const checkResults = (drill.checks || []).map(check => {
+        const c = check.toLowerCase();
+        if (c.includes('claim') || c.includes('defensible')) return words >= 15 && matchedKeywords.length >= 2;
+        if (c.includes('line of reasoning')) return /because|due to|as a result|in order to|led to/.test(lo);
+        if (c.includes('addresses') || c.includes('relevant')) return matchedKeywords.length >= 1;
+        if (c.includes('specific') || c.includes('names') || c.includes('dates')) return hasSpecifics || hasNames;
+        if (c.includes('broader') || c.includes('before')) return words >= 20 && matchedKeywords.length >= 2;
+        if (c.includes('two distinct') || c.includes('two examples')) return hasSpecifics && words >= 30;
+        if (c.includes('cause-effect') || c.includes('mechanism') || c.includes('explains')) return /because|led to|caused|resulted|therefore|this meant|enabled/.test(lo);
+        if (c.includes('connects') || c.includes('how/why')) return /this demonstrates|this shows|therefore|which meant|as a result|because/.test(lo);
+        if (c.includes('nuance') || c.includes('counter') || c.includes('beyond')) return /although|however|while|on the other hand|not all|varied|conversely/.test(lo);
+        if (c.includes('extent') || c.includes('degree')) return /extent|significant|largely|primarily|fundamentally|limited|partial/.test(lo);
+        if (c.includes('happ') || c.includes('pov')) return /point of view|purpose|audience|situation|pov|bias|perspective|motivation/.test(lo);
+        if (c.includes('time period') || c.includes('within')) return hasSpecifics;
+        if (c.includes('historically accurate')) return words >= 10 && matchedKeywords.length >= 1;
+        return words >= 15 && matchedKeywords.length >= 1;
+      });
+
+      const checksHit = checkResults.filter(Boolean).length;
+      const totalChecks = checkResults.length || 1;
+      const checkPct = checksHit / totalChecks;
+
+      // Update checklist visually
+      const checkEls = document.querySelectorAll('#practice-checks .drill-check');
+      checkEls.forEach((el, i) => { if (checkResults[i]) el.classList.add('met'); });
+
+      // Calculate boost
+      let boost, quality;
+      if (checkPct >= 0.8 && keywordScore >= 0.4 && words >= 20) { boost = 14; quality = 'great'; }
+      else if (checkPct >= 0.5 && keywordScore >= 0.2 && words >= 15) { boost = 9; quality = 'good'; }
+      else { boost = 5; quality = 'try'; }
+
+      const xpGain = 25 + (boost * 2);
+      const messages = {
+        great: ["Excellent work! You nailed the key elements.", "That's AP-level writing right there!", "Outstanding — you clearly understand this skill!", "Impressive response! Your garden is flourishing."],
+        good: ["Good effort! You hit several key points.", "Solid work — a few tweaks and you'll master this!", "You're on the right track! Keep building on this.", "Nice job! Focus on the unchecked items next time."],
+        try: ["Good start! Let's work on including more specifics.", "You're building the foundation — try adding dates, names, or key terms.", "Keep at it! Check the hint for ideas on what to add.", "Don't give up — every practice makes you stronger!"]
+      };
+      const msg = messages[quality][Math.floor(Math.random() * messages[quality].length)];
+      const tipsByQuality = {
+        great: "Try an essay next to put this skill in context!",
+        good: "Look at the unchecked items above — those are your next targets.",
+        try: "Re-read the hint, then try again. Focus on one checklist item at a time."
+      };
+
+      // Show inline feedback
+      const oldFeedback = document.getElementById('practice-feedback');
+      if (oldFeedback) oldFeedback.remove();
+      const fbDiv = document.createElement('div');
+      fbDiv.id = 'practice-feedback';
+      fbDiv.className = `drill-feedback drill-feedback-${quality}`;
+      fbDiv.innerHTML = `
+        <div class="flex items-start gap-3">
+          <span class="text-xl">${quality === 'great' ? '🌟' : quality === 'good' ? '👍' : '💪'}</span>
+          <div>
+            <p class="text-sm font-semibold mb-1">${checksHit}/${totalChecks} checklist items · +${boost}% · +${xpGain} XP</p>
+            <p class="text-xs mb-2" style="color:var(--mu)">${msg}</p>
+            <p class="text-[10px] font-medium" style="color:var(--${quality === 'great' ? 'sg' : quality === 'good' ? 'gd' : 'ac'})">${tipsByQuality[quality]}</p>
+          </div>
+        </div>`;
+      document.getElementById('practice-response')?.parentNode?.appendChild(fbDiv);
+
+      // Update gamification
+      const gamif = appState.userData?.gamification;
+      if (gamif) {
+        gamif.mastery[type].skills[skill] = Math.min(100, gamif.mastery[type].skills[skill] + boost);
+        gamif.xp += xpGain;
+        if (appState.user) {
+          try { await updateDoc(doc(db, "users", appState.user.uid), { gamification: gamif }); } catch(e) {}
+        }
+      }
+
+      btn.textContent = 'Try Another'; btn.disabled = false;
+      btn.onclick = () => { window.app.ui.closeModal('practice-modal'); setTimeout(() => window.app.game.openPractice(type, skill), 200); };
+
+      if (quality === 'great') {
+        confetti({ particleCount: 100, spread: 70, origin: { y: 0.65 }, colors: ['#d4622f', '#c49528', '#4d8060'] });
+        window.app.ui.toast(`🌟 ${skill} mastery +${boost}% | +${xpGain} XP`, 'success');
+      } else {
+        window.app.ui.toast(`${skill} +${boost}% | +${xpGain} XP`, quality === 'good' ? 'success' : 'info');
+      }
       window.app.game.checkLevelUp();
-      if (appState.userData.role === 'student') window.app.router.go('student-dash');
-    }, 1000);
+    }, 800);
   },
 
   // ═══ ARCADE ═══
