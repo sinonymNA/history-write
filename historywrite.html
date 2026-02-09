@@ -15,6 +15,7 @@ tailwind.config={theme:{extend:{colors:{
 </script>
 <script src="https://unpkg.com/lucide@latest"></script>
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -255,6 +256,11 @@ body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--tx); 
         <div>
           <label class="text-xs font-semibold uppercase tracking-wider" style="color:var(--mu)">Name</label>
           <input type="text" id="profile-name-input" class="hinp mt-2">
+        </div>
+        <div id="settings-student-id-wrap">
+          <label class="text-xs font-semibold uppercase tracking-wider" style="color:var(--mu)">School Student ID</label>
+          <input type="text" id="student-id-input" placeholder="e.g. 123456" class="hinp mt-2">
+          <p class="text-[11px] mt-1" style="color:var(--fa)">Your permanent school ID. Used by teachers to export grades into Synergy.</p>
         </div>
         <div>
           <label class="text-xs font-semibold uppercase tracking-wider" style="color:var(--mu)">Claude API Key</label>
@@ -537,7 +543,7 @@ router: {
       'student-dash': () => { root.innerHTML = V.studentDash(); window.app.student.init(); },
       'class-detail': () => { root.innerHTML = V.classDetail(params.classData); window.app.teacher.loadClass(params.classData.id); },
       'assignment-builder': () => { root.innerHTML = V.assignmentBuilder(params.classData); window.app.teacher.initBuilder(); },
-      'assignment-detail': () => { root.innerHTML = V.assignmentDetail(params.assignment, params.classData); window.app.teacher.loadSubmissions(params.assignment); },
+      'assignment-detail': () => { window.app.teacher._lastAssignment = params.assignment; root.innerHTML = V.assignmentDetail(params.assignment, params.classData); window.app.teacher.loadSubmissions(params.assignment); },
       'library': () => root.innerHTML = V.library(),
       'editor': () => { appState.activeAssignment = params.assignment; root.innerHTML = V.editor(params.assignment); window.app.student.initEditor(); },
       'demo': () => { appState.demoMode = true; const a = DEMO_ASSIGNMENT; appState.activeAssignment = a; localStorage.setItem('draft_demo', DEMO_ESSAY); root.innerHTML = V.editor(a); window.app.student.initEditor(); },
@@ -589,10 +595,11 @@ views: {
   signup: () => `
     <div class="min-h-screen flex items-center justify-center p-4 pageEnter"><div class="hcard w-full max-w-sm p-8">
       <h2 class="text-2xl font-bold fs mb-6">Join HistoryWrite</h2>
-      <form onsubmit="event.preventDefault();window.app.auth.signup(this.name.value,this.email.value,this.password.value,this.role.value)">
+      <form onsubmit="event.preventDefault();window.app.auth.signup(this.name.value,this.email.value,this.password.value,this.role.value,this.studentId.value)">
         <input name="name" placeholder="Full Name" required class="hinp mb-3">
         <input name="email" type="email" placeholder="Email" required class="hinp mb-3">
-        <input name="password" type="password" placeholder="Password (min 6)" required minlength="6" class="hinp mb-4">
+        <input name="password" type="password" placeholder="Password (min 6)" required minlength="6" class="hinp mb-3">
+        <input name="studentId" placeholder="School Student ID (optional — for grade export)" class="hinp mb-4">
         <div class="mb-5"><label class="text-xs font-semibold uppercase tracking-wider mb-2 block" style="color:var(--mu)">I am a…</label>
           <div class="grid grid-cols-2 gap-3">
             <label class="cursor-pointer"><input type="radio" name="role" value="student" checked class="peer sr-only"><div class="p-3 rounded-xl text-center transition peer-checked:ring-2 peer-checked:ring-[var(--ac)]" style="border:1px solid var(--bd)"><i data-lucide="book-open" class="w-6 h-6 mx-auto mb-1" style="color:var(--ac)"></i><span class="font-semibold text-xs">Student</span></div></label>
@@ -661,7 +668,10 @@ views: {
       <button onclick="window.app.router.go('teacher-dash')" class="mb-6 text-sm flex items-center gap-1" style="color:var(--mu)"><i data-lucide="arrow-left" class="w-4 h-4"></i>Back</button>
       <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div><h1 class="text-2xl font-bold fs">${cls.name}</h1><p class="text-sm mt-1 fm" style="color:var(--mu)">Code: <span style="color:var(--ac)" class="font-bold">${cls.code}</span></p><p class="text-xs mt-1" style="color:var(--fa)">${(cls.students||[]).length} student${(cls.students||[]).length===1?'':'s'} enrolled</p></div>
-        <button onclick="window.app.router.go('assignment-builder',{classData:window.app.teacher._classDataCache})" class="btnP text-sm flex items-center gap-2"><i data-lucide="plus" class="w-4 h-4"></i>New Assignment</button>
+        <div class="flex gap-2">
+          <button onclick="window.app.teacher.exportClassGradebook(window.app.teacher._classDataCache)" class="btnG text-sm flex items-center gap-2"><i data-lucide="file-spreadsheet" class="w-4 h-4"></i>Export Gradebook</button>
+          <button onclick="window.app.router.go('assignment-builder',{classData:window.app.teacher._classDataCache})" class="btnP text-sm flex items-center gap-2"><i data-lucide="plus" class="w-4 h-4"></i>New Assignment</button>
+        </div>
       </div>
       <div id="assignments-list" class="space-y-3"></div>
     </div>`;
@@ -748,10 +758,13 @@ views: {
           <span class="text-[10px] font-bold fm uppercase px-2 py-1 rounded" style="background:var(--acs);color:var(--ac)">${assignment.type}</span>
           <h1 class="text-2xl font-bold fs mt-2">${assignment.title}</h1>
         </div>
+        <button onclick="window.app.teacher.exportAssignmentGrades(window.app.teacher._lastAssignment)" class="btnG text-xs py-2 px-4 flex items-center gap-2"><i data-lucide="download" class="w-3.5 h-3.5"></i>Export Grades (.xlsx)</button>
       </div>
       <div class="mt-3 mb-6 p-4 rounded-xl fs text-sm leading-relaxed" style="background:var(--elev);border:1px solid var(--bd)">${assignment.prompt}</div>
       ${assignment.structure?.sources?.length ? `<div class="mb-6"><h3 class="text-sm font-bold mb-2">Documents</h3>${assignment.structure.sources.map((s,i) => `<div class="preview-doc">${window.app.teacher.renderDocContent(s,i)}</div>`).join('')}</div>` : ''}
-      <h3 class="text-sm font-bold mb-3">Student Submissions</h3>
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="text-sm font-bold">Student Submissions</h3>
+      </div>
       <div id="submissions-list"><p class="text-sm" style="color:var(--fa)">Loading submissions…</p></div>
     </div>`,
 
@@ -900,11 +913,13 @@ auth: {
     try { await signInWithEmailAndPassword(auth, email, password); }
     catch (e) { window.app.ui.toast(e.message, 'error'); window.app.ui.btnLoading('login-btn', false); }
   },
-  signup: async (name, email, password, role) => {
+  signup: async (name, email, password, role, studentId) => {
     window.app.ui.btnLoading('signup-btn', true);
     try {
       const cred = await createUserWithEmailAndPassword(auth, email, password);
-      await setDoc(doc(db, "users", cred.user.uid), { name, email, role, createdAt: serverTimestamp(), gamification: role === 'student' ? window.app.game.getDefaultStats() : null });
+      const userData = { name, email, role, createdAt: serverTimestamp(), gamification: role === 'student' ? window.app.game.getDefaultStats() : null };
+      if (studentId?.trim()) userData.studentId = studentId.trim();
+      await setDoc(doc(db, "users", cred.user.uid), userData);
       await updateProfile(cred.user, { displayName: name });
     } catch (e) { window.app.ui.toast(e.message, 'error'); window.app.ui.btnLoading('signup-btn', false); }
   },
@@ -1122,6 +1137,137 @@ teacher: {
       }).join('')}</div>`;
       lucide.createIcons();
     } catch(e) { console.error(e); el.innerHTML = `<p class="text-sm" style="color:var(--ac)">Error loading submissions.</p>`; }
+  },
+  // ── Grade Export ──
+  exportAssignmentGrades: async (assignment) => {
+    try {
+      window.app.ui.toast('Generating spreadsheet…', 'info');
+      const subSnap = await getDocs(query(collection(db, "submissions"), where("assignmentId", "==", assignment.id)));
+      if (subSnap.empty) return window.app.ui.toast('No submissions to export.', 'error');
+      // Fetch student user docs to get studentId (school ID)
+      const studentUids = [...new Set(subSnap.docs.map(d => d.data().studentId))];
+      const studentMap = {};
+      for (let i = 0; i < studentUids.length; i += 10) {
+        const batch = studentUids.slice(i, i + 10);
+        const userSnap = await getDocs(query(collection(db, "users"), where("__name__", "in", batch)));
+        userSnap.forEach(u => { studentMap[u.id] = u.data(); });
+      }
+      // Build rows
+      const rows = subSnap.docs.map(d => {
+        const sub = d.data();
+        const user = studentMap[sub.studentId] || {};
+        const score = sub.grading?.score ?? '';
+        const max = sub.grading?.maxScore ?? '';
+        const pct = max > 0 ? Math.round((score / max) * 100) : '';
+        const categories = (sub.grading?.annotations || []).map(a => `${a.category}: ${a.status}`).join('; ');
+        return {
+          'Student ID': user.studentId || '',
+          'Student Name': sub.studentName || user.name || '',
+          'Score': score,
+          'Max Score': max,
+          'Percentage': pct ? pct + '%' : '',
+          'Rubric Breakdown': categories,
+          'General Feedback': sub.grading?.generalFeedback || '',
+          'Submitted': sub.submittedAt?.toDate ? sub.submittedAt.toDate().toLocaleDateString() : ''
+        };
+      });
+      rows.sort((a, b) => (a['Student Name'] || '').localeCompare(b['Student Name'] || ''));
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.json_to_sheet(rows);
+      // Set column widths
+      ws['!cols'] = [{ wch: 12 }, { wch: 22 }, { wch: 8 }, { wch: 10 }, { wch: 12 }, { wch: 40 }, { wch: 50 }, { wch: 14 }];
+      XLSX.utils.book_append_sheet(wb, ws, assignment.title?.substring(0, 31) || 'Grades');
+      const filename = (assignment.title || 'grades').replace(/[^a-zA-Z0-9]/g, '_') + '.xlsx';
+      XLSX.writeFile(wb, filename);
+      window.app.ui.toast('Exported ' + rows.length + ' submissions!', 'success');
+    } catch(e) { console.error(e); window.app.ui.toast('Export error: ' + e.message, 'error'); }
+  },
+  exportClassGradebook: async (classData) => {
+    try {
+      window.app.ui.toast('Generating class gradebook…', 'info');
+      // Get all assignments for this class
+      const aSnap = await getDocs(query(collection(db, "assignments"), where("classId", "==", classData.id)));
+      if (aSnap.empty) return window.app.ui.toast('No assignments in this class.', 'error');
+      const assignments = aSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+      assignments.sort((a, b) => (a.title || '').localeCompare(b.title || ''));
+      // Get all submissions for these assignments
+      const aIds = assignments.map(a => a.id);
+      let allSubs = [];
+      for (let i = 0; i < aIds.length; i += 10) {
+        const batch = aIds.slice(i, i + 10);
+        const subSnap = await getDocs(query(collection(db, "submissions"), where("assignmentId", "in", batch)));
+        subSnap.forEach(d => allSubs.push(d.data()));
+      }
+      // Build student-assignment score map
+      const studentUids = [...new Set(allSubs.map(s => s.studentId))];
+      // Also include students from class roster who haven't submitted
+      const rosterUids = [...new Set([...studentUids, ...(classData.students || [])])];
+      const studentMap = {};
+      for (let i = 0; i < rosterUids.length; i += 10) {
+        const batch = rosterUids.slice(i, i + 10);
+        try {
+          const userSnap = await getDocs(query(collection(db, "users"), where("__name__", "in", batch)));
+          userSnap.forEach(u => { studentMap[u.id] = u.data(); });
+        } catch(e) { console.warn('Batch user fetch error', e); }
+      }
+      // Pivot: studentId → { assignmentId → score }
+      const scoreMap = {};
+      allSubs.forEach(sub => {
+        if (!scoreMap[sub.studentId]) scoreMap[sub.studentId] = {};
+        scoreMap[sub.studentId][sub.assignmentId] = sub.grading;
+      });
+      // Build rows — one per student
+      const rows = rosterUids.map(uid => {
+        const user = studentMap[uid] || {};
+        const row = {
+          'Student ID': user.studentId || '',
+          'Student Name': user.name || uid
+        };
+        let totalEarned = 0, totalMax = 0;
+        assignments.forEach(a => {
+          const grading = scoreMap[uid]?.[a.id];
+          const header = a.title + ' (' + a.type.toUpperCase() + ')';
+          if (grading) {
+            row[header] = grading.score + '/' + grading.maxScore;
+            totalEarned += grading.score || 0;
+            totalMax += grading.maxScore || 0;
+          } else {
+            row[header] = 'Missing';
+          }
+        });
+        row['Total Points'] = totalEarned + '/' + totalMax;
+        row['Overall %'] = totalMax > 0 ? Math.round((totalEarned / totalMax) * 100) + '%' : '';
+        return row;
+      });
+      rows.sort((a, b) => (a['Student Name'] || '').localeCompare(b['Student Name'] || ''));
+
+      // === SYNERGY-COMPATIBLE SHEET ===
+      // Second sheet formatted for TeacherVUE import: Student ID column + assignment name columns with raw scores
+      const synergyRows = rosterUids.map(uid => {
+        const user = studentMap[uid] || {};
+        const row = { 'Student ID': user.studentId || '', 'Student Name': user.name || '' };
+        assignments.forEach(a => {
+          row[a.title] = scoreMap[uid]?.[a.id]?.score ?? '';
+        });
+        return row;
+      }).filter(r => r['Student ID']); // Only include students who have a school ID
+      synergyRows.sort((a, b) => (a['Student Name'] || '').localeCompare(b['Student Name'] || ''));
+
+      const wb = XLSX.utils.book_new();
+      // Full gradebook sheet
+      const ws1 = XLSX.utils.json_to_sheet(rows);
+      ws1['!cols'] = [{ wch: 12 }, { wch: 22 }, ...assignments.map(() => ({ wch: 16 })), { wch: 14 }, { wch: 12 }];
+      XLSX.utils.book_append_sheet(wb, ws1, 'Full Gradebook');
+      // Synergy import sheet
+      if (synergyRows.length) {
+        const ws2 = XLSX.utils.json_to_sheet(synergyRows);
+        ws2['!cols'] = [{ wch: 12 }, { wch: 22 }, ...assignments.map(() => ({ wch: 16 }))];
+        XLSX.utils.book_append_sheet(wb, ws2, 'Synergy Import');
+      }
+      const filename = (classData.name || 'gradebook').replace(/[^a-zA-Z0-9]/g, '_') + '_gradebook.xlsx';
+      XLSX.writeFile(wb, filename);
+      window.app.ui.toast('Exported gradebook with ' + rows.length + ' students!', 'success');
+    } catch(e) { console.error(e); window.app.ui.toast('Export error: ' + e.message, 'error'); }
   }
 },
 
@@ -1917,6 +2063,11 @@ ui: {
       modal.classList.remove('hidden');
       document.getElementById('profile-name-input').value = appState.userData?.name || '';
       document.getElementById('api-key-input').value = appState.apiKey || '';
+      // Student ID field — show for students, hide for teachers
+      const sidWrap = document.getElementById('settings-student-id-wrap');
+      const sidInput = document.getElementById('student-id-input');
+      if (sidWrap) sidWrap.style.display = appState.userData?.role === 'teacher' ? 'none' : '';
+      if (sidInput) sidInput.value = appState.userData?.studentId || '';
       const theme = document.body.getAttribute('data-theme');
       document.querySelector(`input[name="theme"][value="${theme}"]`).checked = true;
     } else { modal.classList.add('hidden'); }
@@ -1925,10 +2076,14 @@ ui: {
   saveSettings: async () => {
     const name = document.getElementById('profile-name-input').value.trim();
     const key = document.getElementById('api-key-input').value.trim();
+    const studentId = document.getElementById('student-id-input')?.value.trim() || '';
     const theme = document.querySelector('input[name="theme"]:checked')?.value || 'light';
     if (name && appState.user) {
-      await updateDoc(doc(db, "users", appState.user.uid), { name });
+      const updates = { name };
+      if (appState.userData?.role === 'student') updates.studentId = studentId;
+      await updateDoc(doc(db, "users", appState.user.uid), updates);
       appState.userData.name = name;
+      if (appState.userData?.role === 'student') appState.userData.studentId = studentId;
       document.getElementById('nav-name').textContent = name;
     }
     appState.apiKey = key;
