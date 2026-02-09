@@ -262,10 +262,10 @@ body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--tx); 
           <input type="text" id="student-id-input" placeholder="e.g. 123456" class="hinp mt-2">
           <p class="text-[11px] mt-1" style="color:var(--fa)">Your permanent school ID. Used by teachers to export grades into Synergy.</p>
         </div>
-        <div>
+        <div id="settings-api-key-wrap">
           <label class="text-xs font-semibold uppercase tracking-wider" style="color:var(--mu)">Claude API Key</label>
           <input type="password" id="api-key-input" placeholder="sk-ant-..." class="hinp mt-2">
-          <p class="text-[11px] mt-1" style="color:var(--fa)">Optional. Enables AI-powered essay grading.</p>
+          <p class="text-[11px] mt-1" style="color:var(--fa)">Your Anthropic API key powers AI essay grading. Set it here — your students will use it automatically when they submit essays.</p>
         </div>
         <div>
           <label class="text-xs font-semibold uppercase tracking-wider mb-3 block" style="color:var(--mu)">Theme</label>
@@ -2005,13 +2005,23 @@ game: {
 ai: {
   grade: async (type, prompt, essay, structure) => {
     appState._usedMockGrading = false;
-    if (!appState.apiKey) { appState._usedMockGrading = true; return window.app.ai.mockGrade(type, essay); }
+    // Resolve API key: use local key, or fetch teacher's key from the assignment
+    let key = appState.apiKey;
+    if (!key && appState.activeAssignment?.teacherId) {
+      try {
+        const teacherDoc = await getDoc(doc(db, "users", appState.activeAssignment.teacherId));
+        if (teacherDoc.exists() && teacherDoc.data().claudeKey) {
+          key = teacherDoc.data().claudeKey;
+        }
+      } catch(e) { console.warn('Could not fetch teacher API key', e); }
+    }
+    if (!key) { appState._usedMockGrading = true; return window.app.ai.mockGrade(type, essay); }
     const rubrics = { saq: { maxScore: 3 }, leq: { maxScore: 6 }, dbq: { maxScore: 7 } };
     const r = rubrics[type];
     try {
       const resp = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-api-key': appState.apiKey, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+        headers: { 'Content-Type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
         body: JSON.stringify({
           model: 'claude-sonnet-4-20250514', max_tokens: 2000,
           messages: [{ role: 'user', content: 'You are an encouraging AP World History essay grader. Grade this ' + type.toUpperCase() + ' using the 2025 College Board rubric.\n\nPrompt:\n' + prompt + '\n\nEssay:\n' + essay + (structure?.sources ? '\n\nDocuments provided:\n' + structure.sources.map((s,i) => 'Doc ' + (i+1) + ' (' + s.type + '): ' + (s.label||s.title) + (s.type === 'image' || s.type === 'map' ? ' [Image: ' + s.content + ']' : ' - ' + s.content)).join('\n') : '') + '\n\nGrade using the official AP rubric. For EACH rubric category, find the EXACT quote from the essay that demonstrates that skill (or the best attempt). Be encouraging and specific.\n\nReturn ONLY valid JSON with no extra text:\n{"score":NUMBER,"maxScore":' + r.maxScore + ',"generalFeedback":"2-3 sentence encouraging overview highlighting strengths first, then areas to grow","annotations":[{"quote":"EXACT phrase or sentence copied from the essay (required, 5-80 chars)","category":"Thesis|Contextualization|Evidence|Sourcing|Reasoning|Complexity","status":"success if point earned|warning if close but not quite|error if missing or needs significant work","feedback":"specific encouraging feedback explaining why this earned or missed the point","improvementTip":"for warning/error only: one specific actionable step the student can take to earn this point next time, e.g. Add a date range and name a specific trade route. Empty string for success."}]}' }]
@@ -2116,6 +2126,9 @@ ui: {
       const sidInput = document.getElementById('student-id-input');
       if (sidWrap) sidWrap.style.display = appState.userData?.role === 'teacher' ? 'none' : '';
       if (sidInput) sidInput.value = appState.userData?.studentId || '';
+      // API key field — show for teachers only
+      const akWrap = document.getElementById('settings-api-key-wrap');
+      if (akWrap) akWrap.style.display = appState.userData?.role === 'student' ? 'none' : '';
       const theme = document.body.getAttribute('data-theme');
       document.querySelector(`input[name="theme"][value="${theme}"]`).checked = true;
     } else { modal.classList.add('hidden'); }
@@ -2134,8 +2147,13 @@ ui: {
       if (appState.userData?.role === 'student') appState.userData.studentId = studentId;
       document.getElementById('nav-name').textContent = name;
     }
-    appState.apiKey = key;
-    if (key) localStorage.setItem('anthropic_key', key); else localStorage.removeItem('anthropic_key');
+    if (key) {
+      appState.apiKey = key; localStorage.setItem('anthropic_key', key);
+      // Store encrypted key on teacher's user doc so students can use it
+      if (appState.user && appState.userData?.role === 'teacher') {
+        try { await updateDoc(doc(db, "users", appState.user.uid), { claudeKey: key }); } catch(e) { console.warn('Could not save key to profile', e); }
+      }
+    } else { localStorage.removeItem('anthropic_key'); appState.apiKey = ''; }
     document.body.setAttribute('data-theme', theme);
     localStorage.setItem('hw_theme', theme);
     window.app.ui.toggleSettings();
@@ -2156,6 +2174,10 @@ onAuthStateChanged(auth, async (user) => {
     appState.user = user;
     const snap = await getDoc(doc(db, "users", user.uid));
     appState.userData = snap.exists() ? snap.data() : { name: user.displayName, role: 'student' };
+    // Load teacher's saved API key
+    if (appState.userData.claudeKey && !localStorage.getItem('anthropic_key')) {
+      appState.apiKey = appState.userData.claudeKey;
+    }
     window.app.ui.updateNav();
     window.app.router.go(appState.userData.role === 'teacher' ? 'teacher-dash' : 'student-dash');
   } else {
