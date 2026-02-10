@@ -3148,7 +3148,7 @@ blocks: {
       await Promise.all(batch);
       await updateDoc(doc(db, 'blockSessions', sessionId), {
         status: 'active',
-        groups: groups.map(g => g.map(p => p.id)),
+        groups: Object.fromEntries(groups.map((g, i) => [String(i), g.map(p => p.id)])),
         blocks: blocks.map(b => ({ id: b.id, label: b.label, emoji: b.emoji, question: b.question })),
         startedAt: serverTimestamp()
       });
@@ -3253,7 +3253,7 @@ blocks: {
       const me = window.app.blocks._state.me;
       if (!session || !me) return;
       const myGroup = me.groupIndex;
-      const groupPlayerIds = session.groups?.[myGroup] || [];
+      const groupPlayerIds = session.groups?.[String(myGroup)] || [];
       const allDone = await Promise.all(groupPlayerIds.map(async pid => {
         const pDoc = await getDoc(doc(db, 'blockSessions', sessionId, 'players', pid));
         return pDoc.exists() && pDoc.data().response?.trim();
@@ -3287,7 +3287,8 @@ blocks: {
       const players = {};
       playersSnap.forEach(d => { players[d.id] = d.data(); });
 
-      const groups = session.groups || [];
+      const groupsObj = session.groups || {};
+      const groups = Object.keys(groupsObj).sort((a,b) => Number(a) - Number(b)).map(k => groupsObj[k]);
       const blocks = session.blocks || [];
 
       const essaysEl = document.getElementById('review-essays');
@@ -3359,7 +3360,7 @@ blocks: {
       const players = {};
       playersSnap.forEach(d => { players[d.id] = d.data(); });
 
-      const groupPlayerIds = session.groups[groupIndex];
+      const groupPlayerIds = session.groups[String(groupIndex)];
       const memberData = groupPlayerIds.map(pid => players[pid]).filter(Boolean);
       memberData.sort((a, b) => a.blockIndex - b.blockIndex);
       const fullText = memberData.map(m => m.response || '').join('\n\n');
