@@ -798,6 +798,7 @@ router: {
     const bl = window.app.blocks;
     if (bl) {
       if (bl._unsub) { bl._unsub(); bl._unsub = null; }
+      if (bl._unsub2) { bl._unsub2(); bl._unsub2 = null; }
       if (bl._state?.timerInterval) { clearInterval(bl._state.timerInterval); bl._state.timerInterval = null; }
       if (bl._state) bl._state.rendered = false;
     }
@@ -2708,6 +2709,7 @@ ui: {
 blocks: {
   _state: {},
   _unsub: null,
+  _unsub2: null,
 
   // ─── MENU (shown in the Essay Blocks tab) ───
   renderMenu: () => {
@@ -2997,8 +2999,10 @@ blocks: {
   initLobby: (sessionId) => {
     const st = window.app.blocks;
     if (st._unsub) { st._unsub(); st._unsub = null; }
+    if (st._unsub2) { st._unsub2(); st._unsub2 = null; }
 
-    st._unsub = onSnapshot(doc(db, 'blockSessions', sessionId), async (snap) => {
+    // Fetch session doc once and listen for status changes
+    const unsubSession = onSnapshot(doc(db, 'blockSessions', sessionId), (snap) => {
       if (!snap.exists()) return;
       const session = { id: snap.id, ...snap.data() };
       st._state.session = session;
@@ -3007,9 +3011,24 @@ blocks: {
       document.getElementById('lobby-prompt')&&(document.getElementById('lobby-prompt').textContent = session.prompt);
       document.getElementById('lobby-code')&&(document.getElementById('lobby-code').textContent = session.code);
 
-      // Fetch players
-      const playersSnap = await getDocs(collection(db, 'blockSessions', sessionId, 'players'));
-      const players = playersSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+      // Check for status transitions
+      if (session.status === 'active') {
+        if (st._unsub) { st._unsub(); st._unsub = null; }
+        if (st._unsub2) { st._unsub2(); st._unsub2 = null; }
+        window.app.router.go('blocks-play', { sessionId });
+        return;
+      }
+      if (session.status === 'reviewing' || session.status === 'done') {
+        if (st._unsub) { st._unsub(); st._unsub = null; }
+        if (st._unsub2) { st._unsub2(); st._unsub2 = null; }
+        window.app.router.go('blocks-review', { sessionId });
+        return;
+      }
+    });
+
+    // Listen to players subcollection in real-time
+    const unsubPlayers = onSnapshot(collection(db, 'blockSessions', sessionId, 'players'), (snap) => {
+      const players = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       st._state.players = players;
 
       const isTeacher = appState.userData?.role === 'teacher';
@@ -3028,18 +3047,6 @@ blocks: {
 
       const actionsEl = document.getElementById('lobby-actions');
       if (actionsEl) {
-        if (session.status === 'active') {
-          // Game started! Go to play
-          if (st._unsub) { st._unsub(); st._unsub = null; }
-          window.app.router.go('blocks-play', { sessionId });
-          return;
-        }
-        if (session.status === 'reviewing') {
-          if (st._unsub) { st._unsub(); st._unsub = null; }
-          window.app.router.go('blocks-review', { sessionId });
-          return;
-        }
-
         if (isTeacher) {
           const readyCount = players.filter(p => p.ready).length;
           const canStart = players.length >= 2;
@@ -3059,6 +3066,10 @@ blocks: {
       }
       lucide.createIcons();
     });
+
+    // Store both unsubscribe functions
+    st._unsub = unsubSession;
+    st._unsub2 = unsubPlayers;
   },
 
   joinSession: async (sessionId) => {
