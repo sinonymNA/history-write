@@ -516,7 +516,7 @@ a, [onclick] { transition:opacity .2s, color .2s; }
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
-import { getFirestore, collection, addDoc, getDoc, getDocs, doc, query, where, setDoc, updateDoc, deleteDoc, onSnapshot, serverTimestamp, arrayUnion, orderBy } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc, getDoc, getDocs, doc, query, where, setDoc, updateDoc, onSnapshot, serverTimestamp, arrayUnion } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 
 const app = initializeApp({
   apiKey: "AIzaSyD2K9kbT3FKq0lHvl8eetv43I8xVkOFvaI",
@@ -794,6 +794,13 @@ router: {
   go: (view, params = {}) => {
     const root = document.getElementById('app-root');
     root.scrollTop = 0;
+    // Cleanup blocks listeners/timers on navigation
+    const bl = window.app.blocks;
+    if (bl) {
+      if (bl._unsub) { bl._unsub(); bl._unsub = null; }
+      if (bl._state?.timerInterval) { clearInterval(bl._state.timerInterval); bl._state.timerInterval = null; }
+      if (bl._state) bl._state.rendered = false;
+    }
     const V = window.app.views;
     const routes = {
       'home': () => { if (appState.user) return window.app.router.go(appState.userData?.role === 'teacher' ? 'teacher-dash' : 'student-dash'); root.innerHTML = V.landing(); },
@@ -821,8 +828,8 @@ router: {
 // ═══ VIEWS ═══
 views: {
   landing: () => `
-    <div class="min-h-screen heroBg flex flex-col pageEnter">
-      <div class="flex-1 flex items-center justify-center px-4">
+    <div class="heroBg flex flex-col pageEnter" style="min-height:calc(100vh - 56px)">
+      <div class="flex-1 flex items-center justify-center px-4 pt-8 pb-4">
         <div class="max-w-2xl text-center">
           <div class="mb-8 flex justify-center gap-4">
             <div class="float1 w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg" style="background:var(--ac)"><i data-lucide="feather" class="w-6 h-6 text-white"></i></div>
@@ -1356,6 +1363,7 @@ views: {
 
   blocksLobby: (sessionId) => `
     <div class="max-w-4xl mx-auto px-4 py-8 pageEnter">
+      <button onclick="window.app.router.go(appState.userData?.role==='teacher'?'teacher-dash':'student-dash')" class="mb-4 text-sm flex items-center gap-1" style="color:var(--mu)"><i data-lucide="arrow-left" class="w-4 h-4"></i>Back</button>
       <div class="eb-lobby">
         <div class="mb-6">
           <span class="text-[10px] font-bold fm uppercase px-3 py-1.5 rounded-lg" style="background:var(--acs);color:var(--ac)">Multiplayer Essay Blocks</span>
@@ -1374,6 +1382,10 @@ views: {
   blocksPlay: (sessionId) => `
     <div class="max-w-4xl mx-auto px-4 py-6 pageEnter">
       <div class="eb-wrap">
+        <div class="flex justify-between items-start mb-2">
+          <button onclick="if(confirm('Leave the game? Your block will be submitted as-is.')){window.app.blocks.submitMultiBlock('${sessionId}');window.app.router.go('student-dash')}" class="text-xs flex items-center gap-1" style="color:var(--fa)"><i data-lucide="arrow-left" class="w-3 h-3"></i>Exit</button>
+          ${appState.userData?.role === 'teacher' ? '<button onclick="window.app.blocks.endSession(\''+sessionId+'\')" class="btnG text-xs py-1 px-3" style="border-color:var(--ac);color:var(--ac)">End Game</button>' : ''}
+        </div>
         <div class="text-center mb-4">
           <div class="eb-timer" id="mp-timer">--:--</div>
           <p class="text-xs mt-1" style="color:var(--fa)">Time remaining</p>
@@ -1385,10 +1397,16 @@ views: {
 
   blocksReview: (sessionId) => `
     <div class="max-w-5xl mx-auto px-4 py-6 pageEnter">
-      <div class="text-center mb-6">
-        <span class="text-[10px] font-bold fm uppercase px-2 py-1 rounded" style="background:var(--acs);color:var(--ac)">Review Phase</span>
-        <h1 class="text-2xl font-bold fs mt-2">Grade the Essays!</h1>
-        <p class="text-sm mt-1" style="color:var(--mu)">Read each group's essay and vote for the best one.</p>
+      <div class="flex justify-between items-center mb-6">
+        <div>
+          <span class="text-[10px] font-bold fm uppercase px-2 py-1 rounded" style="background:var(--acs);color:var(--ac)">Review Phase</span>
+          <h1 class="text-2xl font-bold fs mt-2">Grade the Essays!</h1>
+          <p class="text-sm mt-1" style="color:var(--mu)">Read each group's essay and vote for the best one.</p>
+        </div>
+        <div class="flex gap-2">
+          ${appState.userData?.role === 'teacher' ? '<button onclick="window.app.blocks.endSession(\''+sessionId+'\')" class="btnP text-xs py-2 px-4">Finish & Show Results</button>' : ''}
+          <button onclick="window.app.router.go('student-dash')" class="btnG text-xs py-2 px-4">Back to Dashboard</button>
+        </div>
       </div>
       <div id="review-essays" class="space-y-6 stagger"></div>
       <div id="review-results" class="hidden mt-8"></div>
@@ -3212,6 +3230,7 @@ blocks: {
     const input = document.getElementById('mp-input');
     const text = input?.value?.trim() || '';
     if (text.length < 10) return window.app.ui.toast('Write a bit more before submitting!', 'error');
+    if (!appState.user) return window.app.ui.toast('Not logged in.', 'error');
     window.app.ui.btnLoading('mp-submit', true);
     try {
       await updateDoc(doc(db, 'blockSessions', sessionId, 'players', appState.user.uid), { response: text });
@@ -3220,7 +3239,9 @@ blocks: {
 
       // Check if all players in my group are done
       const session = window.app.blocks._state.session;
-      const myGroup = window.app.blocks._state.me.groupIndex;
+      const me = window.app.blocks._state.me;
+      if (!session || !me) return;
+      const myGroup = me.groupIndex;
       const groupPlayerIds = session.groups?.[myGroup] || [];
       const allDone = await Promise.all(groupPlayerIds.map(async pid => {
         const pDoc = await getDoc(doc(db, 'blockSessions', sessionId, 'players', pid));
@@ -3287,7 +3308,7 @@ blocks: {
         </div>`).join('<hr style="border-color:var(--bd);margin:8px 0">')}
         <div class="flex items-center gap-2 mt-4 pt-3" style="border-top:1px solid var(--bd)">
           <button onclick="window.app.blocks.voteForGroup('${sessionId}',${i})" class="eb-vote-btn flex-1" id="vote-${i}">⭐ Vote for this essay</button>
-          <button onclick="window.app.blocks.gradeGroupEssay('${sessionId}',${i},'${session.type}','${encodeURIComponent(session.prompt)}')" class="btnG text-xs py-2 px-4" id="ai-grade-${i}"><i data-lucide="sparkles" class="w-3 h-3 inline mr-1"></i>AI Grade</button>
+          <button onclick="window.app.blocks.gradeGroupEssay('${sessionId}',${i})" class="btnG text-xs py-2 px-4" id="ai-grade-${i}"><i data-lucide="sparkles" class="w-3 h-3 inline mr-1"></i>AI Grade</button>
         </div>
         <div id="group-grade-${i}" class="mt-3"></div>
       </div>`).join('');
@@ -3318,8 +3339,7 @@ blocks: {
     } catch(e) { window.app.ui.toast('Error voting: ' + e.message, 'error'); }
   },
 
-  gradeGroupEssay: async (sessionId, groupIndex, type, encodedPrompt) => {
-    const prompt = decodeURIComponent(encodedPrompt);
+  gradeGroupEssay: async (sessionId, groupIndex) => {
     window.app.ui.btnLoading(`ai-grade-${groupIndex}`, true);
     try {
       const sessionSnap = await getDoc(doc(db, 'blockSessions', sessionId));
@@ -3333,7 +3353,7 @@ blocks: {
       memberData.sort((a, b) => a.blockIndex - b.blockIndex);
       const fullText = memberData.map(m => m.response || '').join('\n\n');
 
-      const grading = await window.app.ai.grade(type, prompt, fullText, session.structure);
+      const grading = await window.app.ai.grade(session.type, session.prompt, fullText, session.structure);
       const pct = Math.round((grading.score / grading.maxScore) * 100);
       const grade = pct >= 80 ? 'Excellent' : pct >= 60 ? 'Proficient' : pct >= 40 ? 'Developing' : 'Needs Work';
 
@@ -3374,6 +3394,15 @@ blocks: {
       <button onclick="window.app.router.go('student-dash')" class="btnP mt-4">Back to Dashboard</button>
     </div>`;
     try { confetti({ particleCount: 150, spread: 90, origin: { y: 0.5 }, colors: ['#d4622f', '#c49528', '#4d8060'] }); } catch(e){}
+  },
+
+  endSession: async (sessionId) => {
+    if (!confirm('End this session now?')) return;
+    try {
+      await updateDoc(doc(db, 'blockSessions', sessionId), { status: 'done' });
+      window.app.ui.toast('Session ended.', 'success');
+      window.app.router.go('student-dash');
+    } catch(e) { window.app.ui.toast('Error: ' + e.message, 'error'); }
   },
 
   _createFromModal: async (classId) => {
@@ -3419,22 +3448,26 @@ blocks: {
       const classIds = classSnap.docs.map(d => d.id);
       if (!classIds.length) return;
 
+      const allSessions = [];
       for (let i = 0; i < classIds.length; i += 10) {
         const batch = classIds.slice(i, i + 10);
-        const sessSnap = await getDocs(query(collection(db, 'blockSessions'), where('classId', 'in', batch), where('status', 'in', ['lobby', 'active'])));
-        const container = document.getElementById('eb-active-sessions');
-        if (container && !sessSnap.empty) {
-          container.innerHTML = `<div class="mb-4 p-3 rounded-xl" style="background:rgba(212,98,47,.08);border:1px solid rgba(212,98,47,.15)">
-            <p class="text-xs font-bold mb-2" style="color:var(--ac)">🎮 Active Sessions</p>
-            ${sessSnap.docs.map(d => {
-              const s = d.data();
-              return `<div class="flex items-center justify-between py-1">
-                <span class="text-sm font-semibold">${s.title}</span>
-                <button onclick="window.app.router.go('blocks-lobby',{sessionId:'${d.id}'})" class="btnP text-xs py-1 px-3">Join</button>
-              </div>`;
-            }).join('')}
+        const sessSnap = await getDocs(query(collection(db, 'blockSessions'), where('classId', 'in', batch)));
+        sessSnap.docs.forEach(d => {
+          const s = d.data();
+          if (s.status === 'lobby' || s.status === 'active') allSessions.push({ id: d.id, ...s });
+        });
+      }
+      const container = document.getElementById('eb-active-sessions');
+      if (container && allSessions.length) {
+        container.innerHTML = `<div class="mb-4 p-3 rounded-xl" style="background:rgba(212,98,47,.08);border:1px solid rgba(212,98,47,.15)">
+          <p class="text-xs font-bold mb-2" style="color:var(--ac)">🎮 Active Sessions</p>
+          ${allSessions.map(s => {
+            return `<div class="flex items-center justify-between py-1">
+              <span class="text-sm font-semibold">${s.title}</span>
+              <button onclick="window.app.router.go('blocks-lobby',{sessionId:'${s.id}'})" class="btnP text-xs py-1 px-3">Join</button>
+            </div>`;
+          }).join('')}
           </div>`;
-        }
       }
     } catch(e) { console.warn('Session check failed:', e); }
   }
