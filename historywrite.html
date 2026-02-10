@@ -317,6 +317,42 @@ a, [onclick] { transition:opacity .2s, color .2s; }
 /* Encouragement banner animated */
 .enc-banner { transition:all .3s var(--ease-out-expo); }
 .enc-banner:hover { transform:translateY(-1px); box-shadow:0 4px 20px rgba(0,0,0,.04); }
+
+/* ═══ ESSAY BLOCKS ═══ */
+.eb-wrap { max-width:680px; margin:0 auto; padding:24px 16px; }
+.eb-progress { display:flex; gap:4px; margin-bottom:24px; }
+.eb-pip { flex:1; height:6px; border-radius:3px; background:var(--bd); transition:all .4s var(--ease-out-expo); }
+.eb-pip.done { background:var(--sg); }
+.eb-pip.active { background:var(--ac); box-shadow:0 0 8px rgba(212,98,47,.3); }
+@keyframes blockIn { from { opacity:0; transform:translateY(30px) scale(.96); } to { opacity:1; transform:translateY(0) scale(1); } }
+.eb-block { animation:blockIn .5s var(--ease-spring); }
+.eb-card { background:var(--card); border:1px solid var(--bd); border-radius:20px; padding:28px; box-shadow:0 4px 24px rgba(0,0,0,.04); }
+.eb-emoji { font-size:40px; margin-bottom:12px; display:block; animation:floatAnim 4s ease-in-out infinite; }
+.eb-hint { background:rgba(196,149,40,.08); border:1px solid rgba(196,149,40,.15); border-radius:12px; padding:12px 16px; margin-top:12px; font-size:13px; color:var(--mu); }
+.eb-hint-btn { display:inline-flex; align-items:center; gap:6px; font-size:12px; color:var(--gd); font-weight:600; cursor:pointer; padding:6px 12px; border-radius:8px; border:1px solid rgba(196,149,40,.2); background:rgba(196,149,40,.05); transition:all .2s; }
+.eb-hint-btn:hover { background:rgba(196,149,40,.12); }
+.eb-textarea { width:100%; min-height:120px; padding:16px; background:var(--elev); border:2px solid var(--bd); border-radius:14px; color:var(--tx); font-size:15px; font-family:'Crimson Pro',Georgia,serif; line-height:1.7; resize:none; outline:none; transition:border-color .3s,box-shadow .3s; }
+.eb-textarea:focus { border-color:var(--ac); box-shadow:0 0 0 3px rgba(212,98,47,.1); }
+.eb-nav { display:flex; gap:12px; margin-top:20px; }
+@keyframes consolidate { from { opacity:0; transform:scale(.9); } to { opacity:1; transform:scale(1); } }
+.eb-consolidated { animation:consolidate .6s var(--ease-spring); }
+.eb-final { background:var(--card); border:1px solid var(--bd); border-radius:16px; padding:24px; font-family:'Crimson Pro',Georgia,serif; font-size:15px; line-height:1.8; white-space:pre-wrap; }
+.eb-block-label { display:inline-flex; align-items:center; gap:4px; font-size:10px; font-weight:700; padding:2px 8px; border-radius:5px; text-transform:uppercase; background:var(--acs); color:var(--ac); margin-bottom:4px; }
+
+/* Multiplayer lobby */
+.eb-lobby { max-width:600px; margin:0 auto; text-align:center; }
+.eb-player { display:flex; align-items:center; gap:10px; padding:10px 14px; border-radius:12px; background:var(--elev); border:1px solid var(--bd); transition:all .3s; }
+.eb-player.ready { border-color:var(--sg); background:rgba(77,128,96,.06); }
+.eb-player .dot { width:10px; height:10px; border-radius:50%; background:var(--bd); transition:all .3s; }
+.eb-player.ready .dot { background:var(--sg); box-shadow:0 0 6px rgba(77,128,96,.4); }
+@keyframes timerPulse { 0%,100% { transform:scale(1); } 50% { transform:scale(1.08); } }
+.eb-timer { font-size:48px; font-weight:800; font-family:'JetBrains Mono',monospace; color:var(--ac); }
+.eb-timer.urgent { animation:timerPulse .5s ease-in-out infinite; color:#b34d1e; }
+.eb-group-card { background:var(--card); border:1px solid var(--bd); border-radius:16px; padding:20px; transition:all .3s var(--ease-out-expo); }
+.eb-group-card:hover { transform:translateY(-2px); box-shadow:0 8px 24px rgba(0,0,0,.06); }
+.eb-vote-btn { padding:8px 16px; border-radius:10px; border:2px solid var(--bd); background:var(--card); cursor:pointer; font-size:13px; font-weight:600; transition:all .2s; font-family:'DM Sans',sans-serif; }
+.eb-vote-btn:hover { border-color:var(--ac); color:var(--ac); }
+.eb-vote-btn.voted { border-color:var(--ac); background:var(--acs); color:var(--ac); }
 </style>
 </head>
 <body class="antialiased h-screen flex flex-col overflow-hidden" data-theme="light">
@@ -430,7 +466,7 @@ a, [onclick] { transition:opacity .2s, color .2s; }
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
-import { getFirestore, collection, addDoc, getDoc, getDocs, doc, query, where, setDoc, updateDoc, onSnapshot, serverTimestamp, arrayUnion } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc, getDoc, getDocs, doc, query, where, setDoc, updateDoc, deleteDoc, onSnapshot, serverTimestamp, arrayUnion, orderBy } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 
 const app = initializeApp({
   apiKey: "AIzaSyD2K9kbT3FKq0lHvl8eetv43I8xVkOFvaI",
@@ -614,6 +650,62 @@ const POV_OPTIONS = ["Spanish imperial official","Chinese scholar-official","Ind
 const AUD_OPTIONS = ["The Spanish monarch","The Emperor and imperial court","Community members","Private diary (self-reflection)","Spanish monarchs (Ferdinand & Isabella)","The Empress and imperial court","Japanese government officials","European public and diplomats","Indian public across religions","European trading partner","Catholic rulers and clergy across Europe","Business associates"];
 const PURP_OPTIONS = ["Justify colonial policies and request support","Criticize moral decline and advocate reform","Express tension between cultural loss and material benefit","Reconcile profit motive with moral concerns about labor","Persuade sponsors to fund further expeditions","Resist Western-style reforms and preserve tradition","Argue for rapid industrialization and Western-style reforms","Justify colonization of Africa using civilizing mission rhetoric","Build a united independence movement against British rule","Negotiate better terms while expressing concern about depopulation","Rally opposition to the Protestant Reformation","Report on plantation economics and justify continued slave purchases"];
 
+// ═══ ESSAY BLOCKS — Block Templates ═══
+const BLOCK_TEMPLATES = {
+  saq: (prompt, parts = 3) => {
+    const labels = ['a','b','c','d'];
+    const emojis = ['🔍','💡','🔗','🎯'];
+    const guides = [
+      'Identify the key concept or event described in the prompt.',
+      'Explain the significance — why did this matter?',
+      'Make a connection to a broader historical pattern or another event.',
+      'Analyze the long-term impact or legacy.'
+    ];
+    return Array.from({length: Math.min(parts, 4)}, (_, i) => ({
+      id: `saq-${labels[i]}`,
+      label: `Part ${labels[i].toUpperCase()}`,
+      emoji: emojis[i],
+      question: guides[i],
+      hint: `Think about specific historical evidence you can cite. Use names, dates, and places.`,
+      minWords: 30
+    }));
+  },
+  leq: (prompt) => [
+    { id: 'leq-ctx', label: 'Set the Scene', emoji: '🌍', question: 'What was happening in the world at this time? Set the historical context — describe the big picture before your argument.', hint: 'Think about political, economic, social, or cultural conditions that existed before or during the topic.', minWords: 40 },
+    { id: 'leq-thesis', label: 'Your Argument', emoji: '⚔️', question: 'What\'s your main argument? State a clear, defensible claim with a line of reasoning.', hint: 'A strong thesis uses "because" and previews 2-3 supporting points. Take a stance!', minWords: 25 },
+    { id: 'leq-ev1', label: 'Evidence #1', emoji: '📜', question: 'Give your first piece of specific historical evidence that supports your argument. Explain how it proves your point.', hint: 'Name a specific event, person, policy, or development. Then explain WHY it supports your thesis.', minWords: 50 },
+    { id: 'leq-ev2', label: 'Evidence #2', emoji: '📖', question: 'Now give a second piece of evidence. Pick something different from your first — show range!', hint: 'Try a different category: if your first was political, go economic or social. Connect it back to your thesis.', minWords: 50 },
+    { id: 'leq-analysis', label: 'So What?', emoji: '🧠', question: 'Analyze HOW your evidence supports your argument. What patterns or comparisons do you see?', hint: 'Use words like "this demonstrates," "as a result," "this pattern shows." Compare, contrast, or show cause/effect.', minWords: 40 },
+    { id: 'leq-complex', label: 'Level Up', emoji: '🏆', question: 'Show complexity! Acknowledge a counterargument, different perspective, or connect to another time period.', hint: 'Start with "However," or "While this is true," to show you can think beyond your main argument.', minWords: 30 }
+  ],
+  dbq: (prompt, numDocs = 0) => {
+    const blocks = [
+      { id: 'dbq-ctx', label: 'Set the Scene', emoji: '🌍', question: 'What was the historical context? Describe what was happening BEFORE or DURING the topic of the prompt.', hint: 'Don\'t reference the documents yet — use your outside knowledge to set up the situation.', minWords: 40 },
+      { id: 'dbq-thesis', label: 'Your Argument', emoji: '⚔️', question: 'State your thesis. Make a clear argument that addresses the prompt and previews your line of reasoning.', hint: 'Group the documents into categories that support your argument. Your thesis should hint at these groupings.', minWords: 25 },
+      { id: 'dbq-docs1', label: 'Document Deep Dive #1', emoji: '🔎', question: 'Use 2-3 documents as evidence. For each, explain what it says AND why it supports your argument.', hint: 'Don\'t just summarize — analyze! Mention the author, purpose, or audience (HAPP) for at least one doc.', minWords: 60 },
+      { id: 'dbq-docs2', label: 'Document Deep Dive #2', emoji: '📑', question: 'Use 2-3 MORE documents. Try to use documents from a different perspective or grouping.', hint: 'Show sourcing skills: explain how the author\'s point of view or purpose affects the document\'s reliability.', minWords: 60 },
+      { id: 'dbq-outside', label: 'Beyond the Docs', emoji: '💡', question: 'Provide ONE piece of outside evidence (not from the documents) that supports your argument.', hint: 'Think of a specific event, person, or development from your class notes that connects to this topic.', minWords: 30 },
+      { id: 'dbq-complex', label: 'Level Up', emoji: '🏆', question: 'Show complexity! Qualify your argument, address a counterargument, or connect across time periods.', hint: 'Acknowledge limitations, show nuance, or explain why the situation is more complicated than it seems.', minWords: 30 }
+    ];
+    return blocks;
+  }
+};
+
+const ESSAY_BLOCKS_PROMPTS = [
+  { type: 'leq', title: 'Maritime Empires LEQ', prompt: 'Evaluate the extent to which maritime empires in the period 1450–1750 transformed global trade networks.', difficulty: 'Medium' },
+  { type: 'leq', title: 'Industrial Revolution LEQ', prompt: 'Evaluate the extent to which the Industrial Revolution (1750–1900) changed social structures in ONE of the following regions: Europe, East Asia, or Latin America.', difficulty: 'Medium' },
+  { type: 'saq', title: 'Columbian Exchange SAQ', prompt: 'a) Identify ONE biological exchange that occurred as a result of the Columbian Exchange.\nb) Explain ONE economic effect of the Columbian Exchange on the Americas.\nc) Explain ONE way the Columbian Exchange affected population patterns in Afro-Eurasia.', difficulty: 'Easy', parts: 3 },
+  { type: 'saq', title: 'Mongol Empire SAQ', prompt: 'a) Identify ONE way the Mongol Empire facilitated trade across Eurasia.\nb) Explain ONE negative consequence of Mongol expansion.\nc) Explain how the Mongol Empire contributed to cultural exchange between East and West.', difficulty: 'Easy', parts: 3 },
+  { type: 'leq', title: 'Imperialism LEQ', prompt: 'Evaluate the extent to which European imperialism in the period 1750–1900 was driven by economic motives versus ideological justifications.', difficulty: 'Hard' },
+  { type: 'leq', title: 'Decolonization LEQ', prompt: 'Compare the processes of decolonization in TWO of the following regions: South Asia, Sub-Saharan Africa, or Southeast Asia.', difficulty: 'Hard' }
+];
+
+function generateBlocks(type, prompt, structure) {
+  if (type === 'saq') return BLOCK_TEMPLATES.saq(prompt, structure?.parts || 3);
+  if (type === 'dbq') return BLOCK_TEMPLATES.dbq(prompt, structure?.sources?.length || 0);
+  return BLOCK_TEMPLATES.leq(prompt);
+}
+
 const THESIS_JUDGE_BANK = [
   { text: "The Columbian Exchange fundamentally transformed global economies between 1450 and 1750 because it introduced new crops that boosted population growth, created silver-based trade networks, and established coerced labor systems.", verdict: "strong", why: "Clear claim + 'because' with three specific supporting points + time period. This earns the thesis point." },
   { text: "The Columbian Exchange affected many things in the world.", verdict: "weak", why: "Too vague — no defensible claim, no line of reasoning, no specifics. What things? How? This would NOT earn the point." },
@@ -665,7 +757,11 @@ router: {
       'library': () => { root.innerHTML = V.library(); window.app.teacher.initLibrary(); },
       'editor': () => { appState.activeAssignment = params.assignment; root.innerHTML = V.editor(params.assignment); window.app.student.initEditor(); },
       'demo': () => { appState.demoMode = true; const a = DEMO_ASSIGNMENT; appState.activeAssignment = a; localStorage.setItem('draft_demo', DEMO_ESSAY); root.innerHTML = V.editor(a); window.app.student.initEditor(); },
-      'results': () => { appState._lastViewedAssignment = params.assignment; root.innerHTML = V.results(params.submission, params.assignment); }
+      'results': () => { appState._lastViewedAssignment = params.assignment; root.innerHTML = V.results(params.submission, params.assignment); },
+      'blocks-solo': () => { root.innerHTML = V.blocksSolo(params.prompt); window.app.blocks.initSolo(params.prompt); },
+      'blocks-lobby': () => { root.innerHTML = V.blocksLobby(params.sessionId); window.app.blocks.initLobby(params.sessionId); },
+      'blocks-play': () => { root.innerHTML = V.blocksPlay(params.sessionId); window.app.blocks.initMultiPlay(params.sessionId); },
+      'blocks-review': () => { root.innerHTML = V.blocksReview(params.sessionId); window.app.blocks.initReview(params.sessionId); }
     };
     if (routes[view]) routes[view]();
     lucide.createIcons();
@@ -765,10 +861,12 @@ views: {
       </div>
       <div class="flex gap-1 mb-3" style="border-bottom:1px solid var(--bd)">
         <button id="stab-assign" onclick="window.app.student.switchTab('assign')" class="tabBtn on"><i data-lucide="book-open" class="w-3.5 h-3.5 inline mr-1"></i>Assignments</button>
+        <button id="stab-blocks" onclick="window.app.student.switchTab('blocks')" class="tabBtn"><i data-lucide="puzzle" class="w-3.5 h-3.5 inline mr-1"></i>Essay Blocks</button>
         <button id="stab-skills" onclick="window.app.student.switchTab('skills')" class="tabBtn"><i data-lucide="sprout" class="w-3.5 h-3.5 inline mr-1"></i>Skill Garden</button>
         <button id="stab-arcade" onclick="window.app.student.switchTab('arcade')" class="tabBtn"><i data-lucide="gamepad-2" class="w-3.5 h-3.5 inline mr-1"></i>Arcade</button>
       </div>
       <div id="tab-assign" class="flex-1 min-h-0 overflow-y-auto csc"><div id="assignments-list" class="space-y-2 stagger"></div></div>
+      <div id="tab-blocks" class="hidden flex-1 min-h-0 overflow-y-auto csc py-2">${window.app.blocks.renderMenu()}</div>
       <div id="tab-skills" class="hidden flex-1 min-h-0 overflow-y-auto csc py-2">${window.app.game.renderSkillGarden(stats)}</div>
       <div id="tab-arcade" class="hidden flex-1 min-h-0">${window.app.game.renderArcade()}</div>
       <div id="join-class" class="hidden"><div class="modalBg" onclick="event.target===this&&window.app.ui.closeModal('join-class')"><div class="modalBox" style="max-width:380px">
@@ -788,10 +886,31 @@ views: {
         <div><h1 class="text-2xl font-bold fs">${cls.name}</h1><p class="text-sm mt-1 fm" style="color:var(--mu)">Code: <span style="color:var(--ac)" class="font-bold">${cls.code}</span></p><p class="text-xs mt-1" style="color:var(--fa)">${(cls.students||[]).length} student${(cls.students||[]).length===1?'':'s'} enrolled</p></div>
         <div class="flex gap-2">
           <button onclick="window.app.teacher.exportClassGradebook(window.app.teacher._classDataCache)" class="btnG text-sm flex items-center gap-2"><i data-lucide="file-spreadsheet" class="w-4 h-4"></i>Export Gradebook</button>
+          <button onclick="window.app.ui.modal('eb-session-modal','open')" class="btnG text-sm flex items-center gap-2" style="border-color:var(--ac);color:var(--ac)"><i data-lucide="puzzle" class="w-4 h-4"></i>Essay Blocks</button>
           <button onclick="window.app.router.go('assignment-builder',{classData:window.app.teacher._classDataCache})" class="btnP text-sm flex items-center gap-2"><i data-lucide="plus" class="w-4 h-4"></i>New Assignment</button>
         </div>
       </div>
       <div id="assignments-list" class="space-y-3 stagger"></div>
+      <div id="eb-session-modal" class="hidden"><div class="modalBg" onclick="event.target===this&&window.app.ui.closeModal('eb-session-modal')"><div class="modalBox">
+        <h3 class="text-lg font-bold mb-1">🧩 Start Essay Blocks Session</h3>
+        <p class="text-xs mb-4" style="color:var(--mu)">Students will be grouped randomly, each writing one block of an essay.</p>
+        <label class="text-[10px] font-bold uppercase tracking-wider mb-1 block" style="color:var(--fa)">Select a prompt</label>
+        <select id="eb-prompt-select" class="hinp mb-3" onchange="document.getElementById('eb-custom-fields').classList.toggle('hidden',this.value!=='custom')">
+          ${ESSAY_BLOCKS_PROMPTS.map((p, i) => '<option value="'+i+'">['+p.type.toUpperCase()+'] '+p.title+'</option>').join('')}
+          <option value="custom">Custom prompt...</option>
+        </select>
+        <div id="eb-custom-fields" class="hidden mb-3">
+          <select id="eb-custom-type" class="hinp mb-2"><option value="saq">SAQ</option><option value="leq">LEQ</option><option value="dbq">DBQ</option></select>
+          <input id="eb-custom-title" placeholder="Title" class="hinp mb-2">
+          <textarea id="eb-custom-prompt" placeholder="Full prompt..." rows="3" class="hinp"></textarea>
+        </div>
+        <label class="text-[10px] font-bold uppercase tracking-wider mb-1 block" style="color:var(--fa)">Timer (minutes)</label>
+        <input id="eb-timer" type="number" value="5" min="2" max="20" class="hinp w-24 mb-4">
+        <div class="flex gap-2">
+          <button onclick="window.app.ui.closeModal('eb-session-modal')" class="btnG flex-1">Cancel</button>
+          <button onclick="window.app.blocks._createFromModal('${cls.id}')" class="btnP flex-1">Create Session</button>
+        </div>
+      </div></div></div>
     </div>`;
   },
 
@@ -1026,7 +1145,63 @@ views: {
         </div>`}
       </div>
     </div>`;
-  }
+  },
+
+  // ═══ ESSAY BLOCKS VIEWS ═══
+  blocksSolo: (prompt) => `
+    <div class="max-w-4xl mx-auto px-4 py-6 pageEnter">
+      <button onclick="window.app.router.go('student-dash')" class="mb-4 text-sm flex items-center gap-1" style="color:var(--mu)"><i data-lucide="arrow-left" class="w-4 h-4"></i>Back to Dashboard</button>
+      <div class="eb-wrap">
+        <div class="text-center mb-6">
+          <span class="text-[10px] font-bold fm uppercase px-2 py-1 rounded" style="background:var(--acs);color:var(--ac)">${prompt.type.toUpperCase()} — Essay Blocks</span>
+          <h1 class="text-2xl font-bold fs mt-2">${prompt.title}</h1>
+          <p class="text-sm mt-2" style="color:var(--mu);max-width:500px;margin:0 auto">${prompt.prompt}</p>
+        </div>
+        <div class="eb-progress" id="eb-progress"></div>
+        <div id="eb-current-block"></div>
+        <div id="eb-consolidated" class="hidden"></div>
+      </div>
+    </div>`,
+
+  blocksLobby: (sessionId) => `
+    <div class="max-w-4xl mx-auto px-4 py-8 pageEnter">
+      <div class="eb-lobby">
+        <div class="mb-6">
+          <span class="text-[10px] font-bold fm uppercase px-3 py-1.5 rounded-lg" style="background:var(--acs);color:var(--ac)">Multiplayer Essay Blocks</span>
+        </div>
+        <h1 class="text-3xl font-bold fs mb-2" id="lobby-title">Waiting for players...</h1>
+        <p class="text-sm mb-2" style="color:var(--mu)" id="lobby-prompt"></p>
+        <div class="hcard p-4 inline-block mb-6">
+          <p class="text-[10px] font-bold uppercase mb-1" style="color:var(--fa)">Session Code</p>
+          <p class="text-2xl font-bold fm" style="color:var(--ac)" id="lobby-code">${sessionId}</p>
+        </div>
+        <div id="lobby-players" class="space-y-2 mb-6 stagger"></div>
+        <div id="lobby-actions"></div>
+      </div>
+    </div>`,
+
+  blocksPlay: (sessionId) => `
+    <div class="max-w-4xl mx-auto px-4 py-6 pageEnter">
+      <div class="eb-wrap">
+        <div class="text-center mb-4">
+          <div class="eb-timer" id="mp-timer">--:--</div>
+          <p class="text-xs mt-1" style="color:var(--fa)">Time remaining</p>
+        </div>
+        <div id="mp-block-info" class="mb-4"></div>
+        <div id="mp-block-area"></div>
+      </div>
+    </div>`,
+
+  blocksReview: (sessionId) => `
+    <div class="max-w-5xl mx-auto px-4 py-6 pageEnter">
+      <div class="text-center mb-6">
+        <span class="text-[10px] font-bold fm uppercase px-2 py-1 rounded" style="background:var(--acs);color:var(--ac)">Review Phase</span>
+        <h1 class="text-2xl font-bold fs mt-2">Grade the Essays!</h1>
+        <p class="text-sm mt-1" style="color:var(--mu)">Read each group's essay and vote for the best one.</p>
+      </div>
+      <div id="review-essays" class="space-y-6 stagger"></div>
+      <div id="review-results" class="hidden mt-8"></div>
+    </div>`
 },
 
 // ═══ AUTH ═══
@@ -1503,11 +1678,12 @@ student: {
   },
 
   switchTab: (tab) => {
-    ['assign', 'skills', 'arcade'].forEach(t => {
+    ['assign', 'blocks', 'skills', 'arcade'].forEach(t => {
       document.getElementById(`tab-${t}`)?.classList.toggle('hidden', t !== tab);
       const btn = document.getElementById(`stab-${t}`);
       if (btn) btn.classList.toggle('on', t === tab);
     });
+    if (tab === 'blocks') window.app.blocks.checkActiveSessions();
     lucide.createIcons();
   },
 
@@ -2316,6 +2492,753 @@ ui: {
     const btn = document.getElementById(id); if (!btn) return;
     if (loading) { btn.disabled = true; btn.dataset.origText = btn.textContent; btn.innerHTML = '<span style="display:inline-flex;align-items:center;gap:8px"><svg width="16" height="16" viewBox="0 0 16 16" style="animation:spin .8s linear infinite"><circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="28" stroke-dashoffset="8" stroke-linecap="round"/></svg>Loading…</span>'; }
     else { btn.disabled = false; btn.textContent = btn.dataset.origText || btn.textContent; }
+  }
+}
+
+},
+
+// ═══ ESSAY BLOCKS MODULE ═══
+blocks: {
+  _state: {},
+  _unsub: null,
+
+  // ─── MENU (shown in the Essay Blocks tab) ───
+  renderMenu: () => {
+    const practiceCards = ESSAY_BLOCKS_PROMPTS.map((p, i) => {
+      const color = p.type === 'saq' ? 'var(--sg)' : p.type === 'leq' ? 'var(--ry)' : 'var(--ac)';
+      const diff = p.difficulty === 'Easy' ? '🟢' : p.difficulty === 'Medium' ? '🟡' : '🔴';
+      return `<div class="hcard p-5 flex flex-col justify-between">
+        <div class="mb-4">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-[10px] font-bold fm uppercase px-2 py-1 rounded" style="background:${p.type === 'saq' ? 'rgba(77,128,96,.1)' : p.type === 'leq' ? 'rgba(92,109,179,.1)' : 'var(--acs)'};color:${color}">${p.type.toUpperCase()}</span>
+            <span class="text-[10px]">${diff} ${p.difficulty}</span>
+          </div>
+          <h3 class="font-bold text-sm">${p.title}</h3>
+          <p class="text-xs mt-1 line-clamp-2" style="color:var(--mu)">${p.prompt.substring(0, 120)}${p.prompt.length > 120 ? '…' : ''}</p>
+        </div>
+        <button onclick="window.app.router.go('blocks-solo',{prompt:ESSAY_BLOCKS_PROMPTS[${i}]})" class="btnP text-xs w-full flex items-center justify-center gap-2"><i data-lucide="puzzle" class="w-3.5 h-3.5"></i>Start Blocks</button>
+      </div>`;
+    }).join('');
+
+    return `<div class="px-1">
+      <div class="flex items-center gap-3 mb-4">
+        <div class="w-10 h-10 rounded-xl flex items-center justify-center text-lg" style="background:var(--acs)">🧩</div>
+        <div><h3 class="font-bold text-sm">Essay Blocks</h3><p class="text-xs" style="color:var(--mu)">Build essays piece by piece — one fun block at a time!</p></div>
+      </div>
+      <div class="hcard p-4 mb-4 flex flex-col sm:flex-row items-center gap-3">
+        <div class="flex-1"><h4 class="text-sm font-bold">Join a Live Session</h4><p class="text-xs" style="color:var(--mu)">Got a session code from your teacher?</p></div>
+        <div class="flex gap-2">
+          <input id="eb-join-code" placeholder="CODE" class="hinp fm uppercase text-center" style="width:120px">
+          <button onclick="window.app.blocks.joinSessionByCode(document.getElementById('eb-join-code')?.value)" class="btnP text-xs py-2 px-4">Join</button>
+        </div>
+      </div>
+      <div id="eb-active-sessions"></div>
+      <h4 class="text-xs font-bold uppercase tracking-wider mb-3" style="color:var(--fa)">Solo Practice</h4>
+      <div class="grid sm:grid-cols-2 gap-3 stagger">${practiceCards}</div>
+    </div>`;
+  },
+
+  // ─── SOLO MODE ───
+  initSolo: (prompt) => {
+    const blocks = generateBlocks(prompt.type, prompt.prompt, prompt);
+    window.app.blocks._state = {
+      prompt,
+      blocks,
+      responses: blocks.map(() => ''),
+      currentIdx: 0,
+      hints: blocks.map(() => null),
+      done: false
+    };
+    window.app.blocks._renderSoloBlock();
+    lucide.createIcons();
+  },
+
+  _renderSoloBlock: () => {
+    const st = window.app.blocks._state;
+    const { blocks, currentIdx, responses, done } = st;
+
+    // Progress pips
+    const progEl = document.getElementById('eb-progress');
+    if (progEl) {
+      progEl.innerHTML = blocks.map((b, i) =>
+        `<div class="eb-pip ${i < currentIdx ? 'done' : ''} ${i === currentIdx && !done ? 'active' : ''}"></div>`
+      ).join('');
+    }
+
+    if (done) {
+      window.app.blocks._renderConsolidated();
+      return;
+    }
+
+    const b = blocks[currentIdx];
+    const saved = responses[currentIdx] || '';
+    const hint = st.hints[currentIdx];
+    const blockEl = document.getElementById('eb-current-block');
+    if (!blockEl) return;
+
+    blockEl.innerHTML = `<div class="eb-block">
+      <div class="eb-card">
+        <span class="eb-emoji">${b.emoji}</span>
+        <div class="flex items-center gap-2 mb-2">
+          <span class="eb-block-label">${b.label}</span>
+          <span class="text-xs" style="color:var(--fa)">Block ${currentIdx + 1} of ${blocks.length}</span>
+        </div>
+        <h2 class="text-lg font-bold fs mb-2">${b.question}</h2>
+        <textarea id="eb-input" class="eb-textarea" placeholder="Type your response here..." oninput="window.app.blocks._onInput(this)">${saved}</textarea>
+        <div class="flex items-center justify-between mt-2">
+          <span class="text-xs fm" style="color:var(--fa)" id="eb-wc">${saved.split(/\s+/).filter(w=>w).length} words</span>
+          <button onclick="window.app.blocks.getHint()" class="eb-hint-btn"><i data-lucide="lightbulb" class="w-3.5 h-3.5"></i>Get a hint</button>
+        </div>
+        ${hint ? `<div class="eb-hint fadeIn"><span class="text-xs font-bold" style="color:var(--gd)">💡 Hint:</span> ${hint}</div>` : ''}
+        <div class="eb-nav">
+          ${currentIdx > 0 ? `<button onclick="window.app.blocks.prevBlock()" class="btnG flex-1 flex items-center justify-center gap-2"><i data-lucide="arrow-left" class="w-4 h-4"></i>Back</button>` : '<div class="flex-1"></div>'}
+          <button onclick="window.app.blocks.nextBlock()" class="btnP flex-1 flex items-center justify-center gap-2" id="eb-next-btn">
+            ${currentIdx === blocks.length - 1 ? '<i data-lucide="check-circle" class="w-4 h-4"></i>Finish & Build Essay' : 'Next Block<i data-lucide="arrow-right" class="w-4 h-4"></i>'}
+          </button>
+        </div>
+      </div>
+    </div>`;
+    lucide.createIcons();
+    document.getElementById('eb-input')?.focus();
+  },
+
+  _onInput: (el) => {
+    const st = window.app.blocks._state;
+    st.responses[st.currentIdx] = el.value;
+    const wc = el.value.split(/\s+/).filter(w => w).length;
+    const wcEl = document.getElementById('eb-wc');
+    if (wcEl) wcEl.textContent = wc + ' words';
+  },
+
+  nextBlock: () => {
+    const st = window.app.blocks._state;
+    const resp = st.responses[st.currentIdx].trim();
+    const block = st.blocks[st.currentIdx];
+    const wc = resp.split(/\s+/).filter(w => w).length;
+    if (wc < (block.minWords || 10)) {
+      return window.app.ui.toast(`Write at least ${block.minWords || 10} words before moving on!`, 'error');
+    }
+    if (st.currentIdx < st.blocks.length - 1) {
+      st.currentIdx++;
+      window.app.blocks._renderSoloBlock();
+    } else {
+      st.done = true;
+      window.app.blocks._renderSoloBlock();
+    }
+  },
+
+  prevBlock: () => {
+    const st = window.app.blocks._state;
+    if (st.currentIdx > 0) {
+      st.currentIdx--;
+      window.app.blocks._renderSoloBlock();
+    }
+  },
+
+  getHint: async () => {
+    const st = window.app.blocks._state;
+    const block = st.blocks[st.currentIdx];
+    const current = st.responses[st.currentIdx] || '';
+
+    // Try AI hint, fallback to static hint
+    let key = appState._cachedGlobalKey || appState.apiKey;
+    if (!key) {
+      try {
+        const cfgDoc = await getDoc(doc(db, "config", "apiKey"));
+        if (cfgDoc.exists() && cfgDoc.data().key) { key = cfgDoc.data().key; appState._cachedGlobalKey = key; }
+      } catch(e) {}
+    }
+
+    if (key && current.length > 10) {
+      try {
+        window.app.ui.toast('Getting AI hint...', 'info');
+        const resp = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+          body: JSON.stringify({
+            model: 'claude-sonnet-4-20250514', max_tokens: 200,
+            messages: [{ role: 'user', content: `You are an encouraging AP World History tutor helping a student write an essay. The student is working on: "${block.question}"\n\nTheir current response: "${current}"\n\nGive ONE short, specific, encouraging hint (1-2 sentences) to help them improve or expand their response. Be specific — mention historical content they could add. Do NOT write the answer for them.` }]
+          })
+        });
+        const data = await resp.json();
+        const hint = data?.content?.[0]?.text || block.hint;
+        st.hints[st.currentIdx] = hint;
+        window.app.blocks._renderSoloBlock();
+        return;
+      } catch(e) { console.warn('AI hint failed:', e); }
+    }
+
+    st.hints[st.currentIdx] = block.hint;
+    window.app.blocks._renderSoloBlock();
+  },
+
+  _renderConsolidated: () => {
+    const st = window.app.blocks._state;
+    const { blocks, responses, prompt } = st;
+
+    document.getElementById('eb-current-block')?.classList.add('hidden');
+    const el = document.getElementById('eb-consolidated');
+    if (!el) return;
+    el.classList.remove('hidden');
+
+    const fullEssay = responses.join('\n\n');
+    const wordCount = fullEssay.split(/\s+/).filter(w => w).length;
+
+    const blockBreakdown = blocks.map((b, i) =>
+      `<div class="mb-3"><div class="eb-block-label">${b.emoji} ${b.label}</div><p class="text-sm fs leading-relaxed" style="color:var(--tx)">${responses[i]}</p></div>`
+    ).join('<hr style="border-color:var(--bd);margin:12px 0">');
+
+    el.innerHTML = `<div class="eb-consolidated">
+      <div class="text-center mb-6">
+        <span class="text-5xl score-reveal">🎉</span>
+        <h2 class="text-2xl font-bold fs mt-3">Essay Complete!</h2>
+        <p class="text-sm mt-1" style="color:var(--mu)">You just wrote a ${wordCount}-word ${prompt.type.toUpperCase()} — block by block!</p>
+      </div>
+
+      <div class="hcard p-1 mb-4">
+        <div class="flex">
+          <button onclick="window.app.blocks._showTab('blocks')" id="ebt-blocks" class="tabBtn on flex-1">By Blocks</button>
+          <button onclick="window.app.blocks._showTab('full')" id="ebt-full" class="tabBtn flex-1">Full Essay</button>
+        </div>
+      </div>
+
+      <div id="eb-tab-blocks" class="eb-final">${blockBreakdown}</div>
+      <div id="eb-tab-full" class="eb-final hidden" style="white-space:pre-wrap">${fullEssay}</div>
+
+      <div class="flex gap-3 mt-6">
+        <button onclick="window.app.blocks.gradeEssay()" class="btnP flex-1 flex items-center justify-center gap-2" id="eb-grade-btn"><i data-lucide="sparkles" class="w-4 h-4"></i>Grade with AI</button>
+        <button onclick="window.app.router.go('student-dash')" class="btnG flex-1">Back to Dashboard</button>
+      </div>
+      <div id="eb-grade-result" class="mt-4"></div>
+    </div>`;
+    lucide.createIcons();
+    try { confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 }, colors: ['#d4622f', '#c49528', '#4d8060'] }); } catch(e){}
+  },
+
+  _showTab: (tab) => {
+    document.getElementById('eb-tab-blocks')?.classList.toggle('hidden', tab !== 'blocks');
+    document.getElementById('eb-tab-full')?.classList.toggle('hidden', tab !== 'full');
+    document.getElementById('ebt-blocks')?.classList.toggle('on', tab === 'blocks');
+    document.getElementById('ebt-full')?.classList.toggle('on', tab === 'full');
+  },
+
+  gradeEssay: async () => {
+    const st = window.app.blocks._state;
+    const fullEssay = st.responses.join('\n\n');
+    window.app.ui.btnLoading('eb-grade-btn', true);
+    window.app.ui.toast('AI is grading your essay...', 'info');
+    try {
+      const grading = await window.app.ai.grade(st.prompt.type, st.prompt.prompt, fullEssay, st.prompt);
+      const pct = Math.round((grading.score / grading.maxScore) * 100);
+      const grade = pct >= 80 ? 'Excellent' : pct >= 60 ? 'Proficient' : pct >= 40 ? 'Developing' : 'Needs Work';
+      const el = document.getElementById('eb-grade-result');
+      if (el) {
+        el.innerHTML = `<div class="hcard p-6 scaleIn">
+          <div class="text-center mb-4">
+            <div class="text-4xl font-bold fs score-reveal" style="color:var(--ac)">${grading.score}<span class="text-lg" style="color:var(--fa)">/${grading.maxScore}</span></div>
+            <div class="text-xs font-semibold" style="color:var(--mu)">${grade}</div>
+          </div>
+          ${grading.generalFeedback ? `<p class="text-sm mb-3 leading-relaxed" style="color:var(--mu)">${grading.generalFeedback}</p>` : ''}
+          <div class="space-y-2 stagger">
+            ${(grading.annotations || []).map(ann => {
+              const dot = ann.status === 'success' ? 'var(--sg)' : ann.status === 'warning' ? 'var(--gd)' : 'var(--ac)';
+              return `<div class="ann-card ann-card-${ann.status}"><div class="flex items-center gap-2 mb-1"><span class="text-[10px] font-bold uppercase" style="color:${dot}">${ann.category}</span></div><p class="text-xs" style="color:var(--mu)">${ann.feedback}</p>${ann.improvementTip ? `<div class="tip-box ${ann.status === 'error' ? 'tip-box-error' : ''}" style="margin-top:6px"><p class="text-xs" style="color:var(--mu)">💡 ${ann.improvementTip}</p></div>` : ''}</div>`;
+            }).join('')}
+          </div>
+        </div>`;
+        lucide.createIcons();
+        // Save XP
+        if (appState.userData?.gamification) {
+          const xp = Math.round(pct / 10) * 5;
+          appState.userData.gamification.xp = (appState.userData.gamification.xp || 0) + xp;
+          if (appState.user) try { await updateDoc(doc(db, "users", appState.user.uid), { "gamification.xp": appState.userData.gamification.xp }); } catch(e){}
+          window.app.ui.toast(`+${xp} XP earned!`, 'success');
+        }
+      }
+    } catch(e) { console.error(e); window.app.ui.toast('Grading failed: ' + e.message, 'error'); }
+    window.app.ui.btnLoading('eb-grade-btn', false);
+  },
+
+  // ─── TEACHER: CREATE SESSION ───
+  createSession: async (classId, assignmentOrPrompt) => {
+    const code = Math.random().toString(36).substring(2, 8).toUpperCase();
+    const sessionData = {
+      classId,
+      code,
+      title: assignmentOrPrompt.title,
+      type: assignmentOrPrompt.type,
+      prompt: assignmentOrPrompt.prompt,
+      structure: assignmentOrPrompt.structure || {},
+      teacherId: appState.user.uid,
+      status: 'lobby',
+      timerSeconds: 300,
+      groups: [],
+      createdAt: serverTimestamp()
+    };
+    try {
+      const ref = await addDoc(collection(db, 'blockSessions'), sessionData);
+      window.app.ui.toast('Session created!', 'success');
+      window.app.router.go('blocks-lobby', { sessionId: ref.id });
+    } catch(e) { window.app.ui.toast('Error: ' + e.message, 'error'); }
+  },
+
+  // ─── LOBBY ───
+  initLobby: (sessionId) => {
+    const st = window.app.blocks;
+    if (st._unsub) { st._unsub(); st._unsub = null; }
+
+    st._unsub = onSnapshot(doc(db, 'blockSessions', sessionId), async (snap) => {
+      if (!snap.exists()) return;
+      const session = { id: snap.id, ...snap.data() };
+      st._state.session = session;
+
+      document.getElementById('lobby-title')&&(document.getElementById('lobby-title').textContent = session.title);
+      document.getElementById('lobby-prompt')&&(document.getElementById('lobby-prompt').textContent = session.prompt);
+      document.getElementById('lobby-code')&&(document.getElementById('lobby-code').textContent = session.code);
+
+      // Fetch players
+      const playersSnap = await getDocs(collection(db, 'blockSessions', sessionId, 'players'));
+      const players = playersSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+      st._state.players = players;
+
+      const isTeacher = appState.userData?.role === 'teacher';
+      const me = players.find(p => p.id === appState.user?.uid);
+
+      const playersEl = document.getElementById('lobby-players');
+      if (playersEl) {
+        playersEl.innerHTML = players.length === 0
+          ? `<p class="text-sm" style="color:var(--fa)">No players yet. Share the session code!</p>`
+          : players.map(p => `<div class="eb-player ${p.ready ? 'ready' : ''}">
+              <div class="dot"></div>
+              <span class="text-sm font-semibold flex-1 text-left">${p.name}</span>
+              <span class="text-xs fm" style="color:${p.ready ? 'var(--sg)' : 'var(--fa)'}">${p.ready ? 'Ready!' : 'Waiting...'}</span>
+            </div>`).join('');
+      }
+
+      const actionsEl = document.getElementById('lobby-actions');
+      if (actionsEl) {
+        if (session.status === 'active') {
+          // Game started! Go to play
+          if (st._unsub) { st._unsub(); st._unsub = null; }
+          window.app.router.go('blocks-play', { sessionId });
+          return;
+        }
+        if (session.status === 'reviewing') {
+          if (st._unsub) { st._unsub(); st._unsub = null; }
+          window.app.router.go('blocks-review', { sessionId });
+          return;
+        }
+
+        if (isTeacher) {
+          const readyCount = players.filter(p => p.ready).length;
+          const canStart = players.length >= 2;
+          actionsEl.innerHTML = `<div class="flex flex-col gap-2">
+            <p class="text-xs" style="color:var(--fa)">${readyCount}/${players.length} ready${!canStart ? ' — need at least 2 players' : ''}</p>
+            <button onclick="window.app.blocks.startGame('${sessionId}')" class="btnP py-3 px-8 ${canStart ? 'pulse-cta' : ''}" ${canStart ? '' : 'disabled'}>Start Game</button>
+          </div>`;
+        } else {
+          if (!me) {
+            actionsEl.innerHTML = `<button onclick="window.app.blocks.joinSession('${sessionId}')" class="btnP py-3 px-8">Join Session</button>`;
+          } else if (!me.ready) {
+            actionsEl.innerHTML = `<button onclick="window.app.blocks.readyUp('${sessionId}')" class="btnP py-3 px-8 pulse-cta">I'm Ready!</button>`;
+          } else {
+            actionsEl.innerHTML = `<p class="text-sm font-semibold" style="color:var(--sg)">✓ You're ready! Waiting for the teacher to start...</p>`;
+          }
+        }
+      }
+      lucide.createIcons();
+    });
+  },
+
+  joinSession: async (sessionId) => {
+    if (!appState.user) return window.app.ui.toast('Please log in first.', 'error');
+    try {
+      await setDoc(doc(db, 'blockSessions', sessionId, 'players', appState.user.uid), {
+        name: appState.userData?.name || 'Student',
+        ready: false,
+        groupIndex: -1,
+        blockIndex: -1,
+        response: ''
+      });
+    } catch(e) { window.app.ui.toast('Error joining: ' + e.message, 'error'); }
+  },
+
+  joinSessionByCode: async (code) => {
+    if (!code) return window.app.ui.toast('Enter a session code.', 'error');
+    try {
+      const snap = await getDocs(query(collection(db, 'blockSessions'), where('code', '==', code.toUpperCase()), where('status', '==', 'lobby')));
+      if (snap.empty) return window.app.ui.toast('No active session found with that code.', 'error');
+      const sessionId = snap.docs[0].id;
+      await window.app.blocks.joinSession(sessionId);
+      window.app.router.go('blocks-lobby', { sessionId });
+    } catch(e) { window.app.ui.toast('Error: ' + e.message, 'error'); }
+  },
+
+  readyUp: async (sessionId) => {
+    try {
+      await updateDoc(doc(db, 'blockSessions', sessionId, 'players', appState.user.uid), { ready: true });
+    } catch(e) { window.app.ui.toast('Error: ' + e.message, 'error'); }
+  },
+
+  startGame: async (sessionId) => {
+    const session = window.app.blocks._state.session;
+    const players = window.app.blocks._state.players || [];
+    if (players.length < 2) return window.app.ui.toast('Need at least 2 players!', 'error');
+
+    // Generate blocks for this essay type
+    const blocks = generateBlocks(session.type, session.prompt, session.structure);
+    const groupSize = Math.min(blocks.length, players.length);
+
+    // Shuffle players
+    const shuffled = [...players].sort(() => Math.random() - 0.5);
+
+    // Create groups
+    const groups = [];
+    for (let i = 0; i < shuffled.length; i += groupSize) {
+      const group = shuffled.slice(i, i + groupSize);
+      if (group.length < 2 && groups.length > 0) {
+        // Merge tiny leftover group into previous
+        groups[groups.length - 1].push(...group);
+      } else {
+        groups.push(group);
+      }
+    }
+
+    // Assign blocks to each player
+    const batch = [];
+    groups.forEach((group, gi) => {
+      group.forEach((player, bi) => {
+        const blockIdx = bi % blocks.length;
+        batch.push(updateDoc(doc(db, 'blockSessions', sessionId, 'players', player.id), {
+          groupIndex: gi,
+          blockIndex: blockIdx,
+          response: ''
+        }));
+      });
+    });
+
+    try {
+      await Promise.all(batch);
+      await updateDoc(doc(db, 'blockSessions', sessionId), {
+        status: 'active',
+        groups: groups.map(g => g.map(p => p.id)),
+        blocks: blocks.map(b => ({ id: b.id, label: b.label, emoji: b.emoji, question: b.question })),
+        startedAt: serverTimestamp()
+      });
+    } catch(e) { window.app.ui.toast('Error starting: ' + e.message, 'error'); }
+  },
+
+  // ─── MULTIPLAYER PLAY ───
+  initMultiPlay: (sessionId) => {
+    const st = window.app.blocks;
+    if (st._unsub) { st._unsub(); st._unsub = null; }
+    st._state.timerInterval = null;
+
+    st._unsub = onSnapshot(doc(db, 'blockSessions', sessionId), async (snap) => {
+      if (!snap.exists()) return;
+      const session = { id: snap.id, ...snap.data() };
+      st._state.session = session;
+
+      if (session.status === 'reviewing' || session.status === 'done') {
+        if (st._state.timerInterval) clearInterval(st._state.timerInterval);
+        if (st._unsub) { st._unsub(); st._unsub = null; }
+        window.app.router.go('blocks-review', { sessionId });
+        return;
+      }
+
+      // Get my player data
+      const myDoc = await getDoc(doc(db, 'blockSessions', sessionId, 'players', appState.user.uid));
+      if (!myDoc.exists()) return;
+      const me = myDoc.data();
+      st._state.me = me;
+
+      const block = session.blocks?.[me.blockIndex] || session.blocks?.[0];
+      if (!block) return;
+
+      // Timer
+      if (!st._state.timerInterval && session.startedAt) {
+        const startTime = session.startedAt.toDate ? session.startedAt.toDate().getTime() : Date.now();
+        const duration = (session.timerSeconds || 300) * 1000;
+        st._state.timerInterval = setInterval(() => {
+          const remaining = Math.max(0, duration - (Date.now() - startTime));
+          const mins = Math.floor(remaining / 60000);
+          const secs = Math.floor((remaining % 60000) / 1000);
+          const timerEl = document.getElementById('mp-timer');
+          if (timerEl) {
+            timerEl.textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+            timerEl.classList.toggle('urgent', remaining < 60000);
+          }
+          if (remaining <= 0) {
+            clearInterval(st._state.timerInterval);
+            // Teacher auto-ends or player submits
+            window.app.blocks.submitMultiBlock(sessionId);
+          }
+        }, 1000);
+      }
+
+      // Render block
+      const infoEl = document.getElementById('mp-block-info');
+      if (infoEl) {
+        infoEl.innerHTML = `<div class="text-center">
+          <span class="eb-block-label">${block.emoji} ${block.label}</span>
+          <p class="text-xs mt-1" style="color:var(--fa)">Group ${me.groupIndex + 1} — Your piece of the puzzle</p>
+        </div>`;
+      }
+
+      const areaEl = document.getElementById('mp-block-area');
+      if (areaEl && !st._state.rendered) {
+        st._state.rendered = true;
+        areaEl.innerHTML = `<div class="eb-card eb-block">
+          <h2 class="text-lg font-bold fs mb-2">${block.question}</h2>
+          <p class="text-xs mb-3" style="color:var(--fa)">Write your part — your teammates are working on other blocks right now! You can't see what they're writing. 🤫</p>
+          <textarea id="mp-input" class="eb-textarea" placeholder="Write your block here..." style="min-height:180px">${me.response || ''}</textarea>
+          <div class="flex items-center justify-between mt-3">
+            <span class="text-xs fm" style="color:var(--fa)" id="mp-wc">0 words</span>
+            <button onclick="window.app.blocks.submitMultiBlock('${sessionId}')" class="btnP text-sm py-2 px-6" id="mp-submit">Submit Block</button>
+          </div>
+        </div>`;
+        const inp = document.getElementById('mp-input');
+        if (inp) {
+          inp.oninput = () => {
+            const wc = inp.value.split(/\s+/).filter(w => w).length;
+            document.getElementById('mp-wc')&&(document.getElementById('mp-wc').textContent = wc + ' words');
+          };
+          inp.focus();
+        }
+      }
+      lucide.createIcons();
+    });
+  },
+
+  submitMultiBlock: async (sessionId) => {
+    const input = document.getElementById('mp-input');
+    const text = input?.value?.trim() || '';
+    if (text.length < 10) return window.app.ui.toast('Write a bit more before submitting!', 'error');
+    window.app.ui.btnLoading('mp-submit', true);
+    try {
+      await updateDoc(doc(db, 'blockSessions', sessionId, 'players', appState.user.uid), { response: text });
+      window.app.ui.toast('Block submitted! Waiting for teammates...', 'success');
+      if (input) input.disabled = true;
+
+      // Check if all players in my group are done
+      const session = window.app.blocks._state.session;
+      const myGroup = window.app.blocks._state.me.groupIndex;
+      const groupPlayerIds = session.groups?.[myGroup] || [];
+      const allDone = await Promise.all(groupPlayerIds.map(async pid => {
+        const pDoc = await getDoc(doc(db, 'blockSessions', sessionId, 'players', pid));
+        return pDoc.exists() && pDoc.data().response?.trim();
+      }));
+
+      // If teacher, check ALL groups
+      if (appState.userData?.role === 'teacher' || allDone.every(Boolean)) {
+        // Check all groups
+        const allPlayersSnap = await getDocs(collection(db, 'blockSessions', sessionId, 'players'));
+        const allSubmitted = allPlayersSnap.docs.every(d => d.data().response?.trim());
+        if (allSubmitted) {
+          await updateDoc(doc(db, 'blockSessions', sessionId), { status: 'reviewing' });
+        }
+      }
+    } catch(e) { window.app.ui.toast('Error: ' + e.message, 'error'); }
+    window.app.ui.btnLoading('mp-submit', false);
+  },
+
+  // ─── REVIEW PHASE ───
+  initReview: async (sessionId) => {
+    const st = window.app.blocks;
+    if (st._unsub) { st._unsub(); st._unsub = null; }
+
+    try {
+      const sessionSnap = await getDoc(doc(db, 'blockSessions', sessionId));
+      if (!sessionSnap.exists()) return;
+      const session = { id: sessionSnap.id, ...sessionSnap.data() };
+      st._state.session = session;
+
+      const playersSnap = await getDocs(collection(db, 'blockSessions', sessionId, 'players'));
+      const players = {};
+      playersSnap.forEach(d => { players[d.id] = d.data(); });
+
+      const groups = session.groups || [];
+      const blocks = session.blocks || [];
+
+      const essaysEl = document.getElementById('review-essays');
+      if (!essaysEl) return;
+
+      const groupEssays = groups.map((groupPlayerIds, gi) => {
+        // Consolidate blocks — sort by block index
+        const memberData = groupPlayerIds.map(pid => players[pid]).filter(Boolean);
+        memberData.sort((a, b) => a.blockIndex - b.blockIndex);
+
+        const parts = memberData.map(m => {
+          const block = blocks[m.blockIndex] || { label: 'Block', emoji: '📝' };
+          return { label: block.label, emoji: block.emoji, text: m.response || '(no response)', author: m.name };
+        });
+
+        const fullText = parts.map(p => p.text).join('\n\n');
+        return { groupIndex: gi, parts, fullText, members: memberData.map(m => m.name) };
+      });
+
+      essaysEl.innerHTML = groupEssays.map((g, i) => `<div class="eb-group-card">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="font-bold fs text-lg">Group ${i + 1}</h3>
+          <span class="text-xs" style="color:var(--fa)">${g.members.join(', ')}</span>
+        </div>
+        ${g.parts.map(p => `<div class="mb-2">
+          <span class="eb-block-label">${p.emoji} ${p.label}</span>
+          <span class="text-[10px]" style="color:var(--fa)"> — ${p.author}</span>
+          <p class="text-sm fs leading-relaxed mt-1">${p.text}</p>
+        </div>`).join('<hr style="border-color:var(--bd);margin:8px 0">')}
+        <div class="flex items-center gap-2 mt-4 pt-3" style="border-top:1px solid var(--bd)">
+          <button onclick="window.app.blocks.voteForGroup('${sessionId}',${i})" class="eb-vote-btn flex-1" id="vote-${i}">⭐ Vote for this essay</button>
+          <button onclick="window.app.blocks.gradeGroupEssay('${sessionId}',${i},'${session.type}','${encodeURIComponent(session.prompt)}')" class="btnG text-xs py-2 px-4" id="ai-grade-${i}"><i data-lucide="sparkles" class="w-3 h-3 inline mr-1"></i>AI Grade</button>
+        </div>
+        <div id="group-grade-${i}" class="mt-3"></div>
+      </div>`).join('');
+
+      // Listen for vote changes
+      st._unsub = onSnapshot(doc(db, 'blockSessions', sessionId), (snap) => {
+        if (!snap.exists()) return;
+        const data = snap.data();
+        if (data.status === 'done') {
+          st._showResults(data, groupEssays);
+        }
+      });
+
+      lucide.createIcons();
+    } catch(e) { console.error(e); window.app.ui.toast('Error loading review: ' + e.message, 'error'); }
+  },
+
+  voteForGroup: async (sessionId, groupIndex) => {
+    if (!appState.user) return;
+    try {
+      await updateDoc(doc(db, 'blockSessions', sessionId), {
+        [`votes.${appState.user.uid}`]: groupIndex
+      });
+      // Visual update
+      document.querySelectorAll('[id^="vote-"]').forEach(el => el.classList.remove('voted'));
+      document.getElementById(`vote-${groupIndex}`)?.classList.add('voted');
+      window.app.ui.toast('Vote cast!', 'success');
+    } catch(e) { window.app.ui.toast('Error voting: ' + e.message, 'error'); }
+  },
+
+  gradeGroupEssay: async (sessionId, groupIndex, type, encodedPrompt) => {
+    const prompt = decodeURIComponent(encodedPrompt);
+    window.app.ui.btnLoading(`ai-grade-${groupIndex}`, true);
+    try {
+      const sessionSnap = await getDoc(doc(db, 'blockSessions', sessionId));
+      const session = sessionSnap.data();
+      const playersSnap = await getDocs(collection(db, 'blockSessions', sessionId, 'players'));
+      const players = {};
+      playersSnap.forEach(d => { players[d.id] = d.data(); });
+
+      const groupPlayerIds = session.groups[groupIndex];
+      const memberData = groupPlayerIds.map(pid => players[pid]).filter(Boolean);
+      memberData.sort((a, b) => a.blockIndex - b.blockIndex);
+      const fullText = memberData.map(m => m.response || '').join('\n\n');
+
+      const grading = await window.app.ai.grade(type, prompt, fullText, session.structure);
+      const pct = Math.round((grading.score / grading.maxScore) * 100);
+      const grade = pct >= 80 ? 'Excellent' : pct >= 60 ? 'Proficient' : pct >= 40 ? 'Developing' : 'Needs Work';
+
+      const el = document.getElementById(`group-grade-${groupIndex}`);
+      if (el) {
+        el.innerHTML = `<div class="hcard p-4 scaleIn">
+          <div class="flex items-center gap-3 mb-2">
+            <span class="text-2xl font-bold fs score-reveal" style="color:var(--ac)">${grading.score}/${grading.maxScore}</span>
+            <span class="text-xs font-semibold" style="color:var(--mu)">${grade}</span>
+          </div>
+          ${grading.generalFeedback ? `<p class="text-xs mb-2" style="color:var(--mu)">${grading.generalFeedback}</p>` : ''}
+          <div class="space-y-1">${(grading.annotations || []).slice(0, 4).map(a => {
+            const dot = a.status === 'success' ? 'var(--sg)' : a.status === 'warning' ? 'var(--gd)' : 'var(--ac)';
+            return `<div class="text-xs flex items-start gap-2"><span style="color:${dot}">●</span><span style="color:var(--mu)">${a.feedback}</span></div>`;
+          }).join('')}</div>
+        </div>`;
+      }
+    } catch(e) { window.app.ui.toast('Grading failed: ' + e.message, 'error'); }
+    window.app.ui.btnLoading(`ai-grade-${groupIndex}`, false);
+  },
+
+  _showResults: (session, groupEssays) => {
+    const resultsEl = document.getElementById('review-results');
+    if (!resultsEl) return;
+
+    const votes = session.votes || {};
+    const counts = {};
+    Object.values(votes).forEach(gi => { counts[gi] = (counts[gi] || 0) + 1; });
+
+    let winner = 0, max = 0;
+    Object.entries(counts).forEach(([gi, c]) => { if (c > max) { max = c; winner = parseInt(gi); } });
+
+    resultsEl.classList.remove('hidden');
+    resultsEl.innerHTML = `<div class="hcard p-8 text-center scaleIn">
+      <span class="text-5xl score-reveal">🏆</span>
+      <h2 class="text-2xl font-bold fs mt-3">Group ${winner + 1} Wins!</h2>
+      <p class="text-sm mt-1" style="color:var(--mu)">${max} vote${max !== 1 ? 's' : ''}</p>
+      <button onclick="window.app.router.go('student-dash')" class="btnP mt-4">Back to Dashboard</button>
+    </div>`;
+    try { confetti({ particleCount: 150, spread: 90, origin: { y: 0.5 }, colors: ['#d4622f', '#c49528', '#4d8060'] }); } catch(e){}
+  },
+
+  _createFromModal: async (classId) => {
+    const sel = document.getElementById('eb-prompt-select');
+    const timerMins = parseInt(document.getElementById('eb-timer')?.value || '5');
+    let promptData;
+    if (sel.value === 'custom') {
+      const type = document.getElementById('eb-custom-type')?.value || 'leq';
+      const title = document.getElementById('eb-custom-title')?.value?.trim();
+      const prompt = document.getElementById('eb-custom-prompt')?.value?.trim();
+      if (!title || !prompt) return window.app.ui.toast('Fill in title and prompt.', 'error');
+      promptData = { type, title, prompt };
+    } else {
+      promptData = ESSAY_BLOCKS_PROMPTS[parseInt(sel.value)];
+    }
+    const code = Math.random().toString(36).substring(2, 8).toUpperCase();
+    try {
+      const ref = await addDoc(collection(db, 'blockSessions'), {
+        classId,
+        code,
+        title: promptData.title,
+        type: promptData.type,
+        prompt: promptData.prompt,
+        structure: promptData.structure || {},
+        teacherId: appState.user.uid,
+        status: 'lobby',
+        timerSeconds: timerMins * 60,
+        groups: [],
+        votes: {},
+        createdAt: serverTimestamp()
+      });
+      window.app.ui.closeModal('eb-session-modal');
+      window.app.ui.toast('Session created!', 'success');
+      window.app.router.go('blocks-lobby', { sessionId: ref.id });
+    } catch(e) { window.app.ui.toast('Error: ' + e.message, 'error'); }
+  },
+
+  // ─── STUDENT: Check active sessions ───
+  checkActiveSessions: async () => {
+    if (!appState.user) return;
+    try {
+      const classSnap = await getDocs(query(collection(db, 'classes'), where('students', 'array-contains', appState.user.uid)));
+      const classIds = classSnap.docs.map(d => d.id);
+      if (!classIds.length) return;
+
+      for (let i = 0; i < classIds.length; i += 10) {
+        const batch = classIds.slice(i, i + 10);
+        const sessSnap = await getDocs(query(collection(db, 'blockSessions'), where('classId', 'in', batch), where('status', 'in', ['lobby', 'active'])));
+        const container = document.getElementById('eb-active-sessions');
+        if (container && !sessSnap.empty) {
+          container.innerHTML = `<div class="mb-4 p-3 rounded-xl" style="background:rgba(212,98,47,.08);border:1px solid rgba(212,98,47,.15)">
+            <p class="text-xs font-bold mb-2" style="color:var(--ac)">🎮 Active Sessions</p>
+            ${sessSnap.docs.map(d => {
+              const s = d.data();
+              return `<div class="flex items-center justify-between py-1">
+                <span class="text-sm font-semibold">${s.title}</span>
+                <button onclick="window.app.router.go('blocks-lobby',{sessionId:'${d.id}'})" class="btnP text-xs py-1 px-3">Join</button>
+              </div>`;
+            }).join('')}
+          </div>`;
+        }
+      }
+    } catch(e) { console.warn('Session check failed:', e); }
   }
 }
 
