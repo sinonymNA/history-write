@@ -2631,7 +2631,8 @@ ui: {
     const el = document.createElement('div');
     el.className = 'toastAnim text-white px-5 py-3 rounded-xl shadow-lg pointer-events-auto text-sm font-medium flex items-center gap-2';
     el.style.cssText = (colors[type] || colors.info) + ';backdrop-filter:blur(8px)';
-    el.innerHTML = `<span style="font-size:16px">${icons[type]||icons.info}</span> ${msg}`;
+    const safe = msg.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    el.innerHTML = `<span style="font-size:16px">${icons[type]||icons.info}</span> ${safe}`;
     container.appendChild(el);
     setTimeout(() => { el.style.animation = 'toastOut .3s var(--ease-out-expo) forwards'; setTimeout(() => el.remove(), 300); }, 3200);
   },
@@ -2960,11 +2961,13 @@ blocks: {
           </div>
         </div>`;
         lucide.createIcons();
-        // Save XP
+        // Save XP and update skill mastery
         if (appState.userData?.gamification) {
           const xp = Math.round(pct / 10) * 5;
           appState.userData.gamification.xp = (appState.userData.gamification.xp || 0) + xp;
-          if (appState.user) try { await updateDoc(doc(db, "users", appState.user.uid), { "gamification.xp": appState.userData.gamification.xp }); } catch(e){}
+          window.app.game.updateSkillsFromGrading(st.prompt.type, grading);
+          if (appState.user) try { await updateDoc(doc(db, "users", appState.user.uid), { gamification: appState.userData.gamification }); } catch(e){}
+          window.app.game.checkLevelUp();
           window.app.ui.toast(`+${xp} XP earned!`, 'success');
         }
       }
@@ -2985,7 +2988,7 @@ blocks: {
       teacherId: appState.user.uid,
       status: 'lobby',
       timerSeconds: 300,
-      groups: [],
+      groups: {},
       createdAt: serverTimestamp()
     };
     try {
@@ -3159,6 +3162,7 @@ blocks: {
   initMultiPlay: (sessionId) => {
     const st = window.app.blocks;
     if (st._unsub) { st._unsub(); st._unsub = null; }
+    if (st._unsub2) { st._unsub2(); st._unsub2 = null; }
     st._state.timerInterval = null;
 
     st._unsub = onSnapshot(doc(db, 'blockSessions', sessionId), async (snap) => {
@@ -3413,7 +3417,7 @@ blocks: {
     try {
       await updateDoc(doc(db, 'blockSessions', sessionId), { status: 'done' });
       window.app.ui.toast('Session ended.', 'success');
-      window.app.router.go('student-dash');
+      window.app.router.go(appState.userData?.role === 'teacher' ? 'teacher-dash' : 'student-dash');
     } catch(e) { window.app.ui.toast('Error: ' + e.message, 'error'); }
   },
 
@@ -3442,7 +3446,7 @@ blocks: {
         teacherId: appState.user.uid,
         status: 'lobby',
         timerSeconds: timerMins * 60,
-        groups: [],
+        groups: {},
         votes: {},
         createdAt: serverTimestamp()
       });
