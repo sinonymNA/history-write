@@ -354,6 +354,15 @@ a, [onclick] { transition:opacity .2s, color .2s; }
 .eb-vote-btn:hover { border-color:var(--ac); color:var(--ac); }
 .eb-vote-btn.voted { border-color:var(--ac); background:var(--acs); color:var(--ac); }
 
+/* ═══ ILLUSTRATIONS ═══ */
+.illus { opacity:.12; transition:opacity .4s; }
+.illus:hover { opacity:.2; }
+.illus-hero { position:absolute; pointer-events:none; }
+@keyframes float { 0%,100% { transform:translateY(0) rotate(0); } 50% { transform:translateY(-8px) rotate(1deg); } }
+@keyframes orbitSlow { 0% { transform:rotate(0deg) translateX(40px) rotate(0deg); } 100% { transform:rotate(360deg) translateX(40px) rotate(-360deg); } }
+.orbit { animation:orbitSlow 20s linear infinite; }
+.orbit-dot { width:6px; height:6px; border-radius:50%; background:var(--ac); opacity:.25; }
+
 /* ═══ LANDING SHOWCASES ═══ */
 .showcase-wrap { position:relative; overflow:hidden; border-radius:20px; background:var(--card); border:1px solid var(--bd); box-shadow:0 12px 40px rgba(0,0,0,.06); }
 .showcase-inner { padding:20px; min-height:320px; position:relative; }
@@ -830,8 +839,13 @@ router: {
 views: {
   landing: () => `
     <div class="heroBg flex flex-col pageEnter" style="min-height:calc(100vh - 56px)">
-      <div class="flex-1 flex items-center justify-center px-4 pt-8 pb-4">
-        <div class="max-w-2xl text-center">
+      <div class="flex-1 flex items-center justify-center px-4 pt-8 pb-4 relative overflow-hidden">
+        <!-- Decorative SVG background illustrations -->
+        <svg class="illus-hero" style="top:8%;left:5%;opacity:.07" width="120" height="120" viewBox="0 0 120 120" fill="none"><circle cx="60" cy="60" r="55" stroke="var(--ac)" stroke-width="1.5" stroke-dasharray="8 6"/><path d="M40 75 L60 35 L80 75 Z" stroke="var(--ac)" stroke-width="1.5" fill="none"/><circle cx="60" cy="55" r="8" stroke="var(--gd)" stroke-width="1"/></svg>
+        <svg class="illus-hero float2" style="top:15%;right:8%;opacity:.06" width="100" height="100" viewBox="0 0 100 100" fill="none"><rect x="15" y="15" width="70" height="70" rx="8" stroke="var(--ry)" stroke-width="1.5" stroke-dasharray="4 4"/><line x1="30" y1="35" x2="70" y2="35" stroke="var(--ry)" stroke-width="1" opacity=".5"/><line x1="30" y1="50" x2="60" y2="50" stroke="var(--ry)" stroke-width="1" opacity=".5"/><line x1="30" y1="65" x2="55" y2="65" stroke="var(--ry)" stroke-width="1" opacity=".5"/></svg>
+        <svg class="illus-hero float3" style="bottom:12%;left:10%;opacity:.06" width="90" height="90" viewBox="0 0 90 90" fill="none"><circle cx="45" cy="45" r="35" stroke="var(--sg)" stroke-width="1.5"/><path d="M30 45 Q45 20 60 45 Q45 70 30 45" stroke="var(--sg)" stroke-width="1" fill="none"/><circle cx="45" cy="45" r="4" fill="var(--sg)" opacity=".2"/></svg>
+        <svg class="illus-hero" style="bottom:18%;right:6%;opacity:.05" width="80" height="80" viewBox="0 0 80 80" fill="none"><path d="M10 70 L40 10 L70 70 Z" stroke="var(--gd)" stroke-width="1.5" fill="none" stroke-dasharray="6 4"/><circle cx="40" cy="50" r="12" stroke="var(--gd)" stroke-width="1" opacity=".4"/></svg>
+        <div class="max-w-2xl text-center relative z-10">
           <div class="mb-8 flex justify-center gap-4">
             <div class="float1 w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg" style="background:var(--ac)"><i data-lucide="feather" class="w-6 h-6 text-white"></i></div>
             <div class="float2 w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg" style="background:var(--sg)"><i data-lucide="scroll-text" class="w-6 h-6 text-white"></i></div>
@@ -992,10 +1006,27 @@ views: {
         <div class="hcard p-6 text-center"><div class="w-10 h-10 rounded-xl mx-auto mb-3 flex items-center justify-center" style="background:var(--acs)"><i data-lucide="sprout" class="w-5 h-5" style="color:var(--ac)"></i></div><h3 class="font-bold text-sm mb-1">Skill Garden</h3><p class="text-xs" style="color:var(--mu)">Watch AP skills grow from seedlings to golden mastery.</p></div>
         <div class="hcard p-6 text-center"><div class="w-10 h-10 rounded-xl mx-auto mb-3 flex items-center justify-center" style="background:var(--acs)"><i data-lucide="gamepad-2" class="w-5 h-5" style="color:var(--ac)"></i></div><h3 class="font-bold text-sm mb-1">Arcade Mode</h3><p class="text-xs" style="color:var(--mu)">Timeline races, thesis forging, and source detective games.</p></div>
       </div></div>
+      <!-- Footer -->
+      <div class="py-8 px-4" style="border-top:1px solid var(--bd)">
+        <div class="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div class="flex items-center gap-2">
+            <div class="w-7 h-7 rounded-lg flex items-center justify-center" style="background:var(--ac)"><i data-lucide="feather" class="w-4 h-4 text-white"></i></div>
+            <span class="text-sm font-bold">HistoryWrite</span>
+          </div>
+          <div class="flex items-center gap-6 text-xs" style="color:var(--fa)">
+            <span>Built for AP World History</span>
+            <span class="hidden sm:inline">·</span>
+            <span class="flex items-center gap-1"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg> Made with love for history teachers and students</span>
+          </div>
+        </div>
+      </div>
     </div>`,
 
   login: () => `
-    <div class="min-h-screen flex items-center justify-center p-4 pageEnter"><div class="hcard w-full max-w-sm p-8 scaleIn">
+    <div class="min-h-screen flex items-center justify-center p-4 pageEnter relative overflow-hidden">
+      <svg class="illus-hero" style="top:10%;left:8%;opacity:.06" width="160" height="160" viewBox="0 0 160 160" fill="none"><circle cx="80" cy="80" r="70" stroke="var(--ac)" stroke-width="1.5" stroke-dasharray="10 8"/><path d="M50 110 L80 40 L110 110" stroke="var(--gd)" stroke-width="1.5" fill="none"/><circle cx="80" cy="75" r="15" stroke="var(--ry)" stroke-width="1" opacity=".4"/></svg>
+      <svg class="illus-hero float2" style="bottom:15%;right:10%;opacity:.05" width="120" height="120" viewBox="0 0 120 120" fill="none"><rect x="10" y="10" width="100" height="100" rx="12" stroke="var(--sg)" stroke-width="1.5" stroke-dasharray="6 4"/><line x1="30" y1="40" x2="90" y2="40" stroke="var(--sg)" stroke-width="1" opacity=".4"/><line x1="30" y1="60" x2="75" y2="60" stroke="var(--sg)" stroke-width="1" opacity=".4"/><line x1="30" y1="80" x2="65" y2="80" stroke="var(--sg)" stroke-width="1" opacity=".4"/></svg>
+    <div class="hcard w-full max-w-sm p-8 scaleIn relative z-10">
       <h2 class="text-2xl font-bold fs mb-6">Welcome back</h2>
       <form onsubmit="event.preventDefault();window.app.auth.login(this.email.value,this.password.value)">
         <input name="email" type="email" placeholder="Email" required class="hinp mb-3">
@@ -1006,7 +1037,10 @@ views: {
     </div></div>`,
 
   signup: () => `
-    <div class="min-h-screen flex items-center justify-center p-4 pageEnter"><div class="hcard w-full max-w-sm p-8 scaleIn">
+    <div class="min-h-screen flex items-center justify-center p-4 pageEnter relative overflow-hidden">
+      <svg class="illus-hero" style="top:12%;right:8%;opacity:.06" width="140" height="140" viewBox="0 0 140 140" fill="none"><circle cx="70" cy="70" r="60" stroke="var(--sg)" stroke-width="1.5" stroke-dasharray="8 6"/><path d="M50 95 L70 35 L90 95 Z" stroke="var(--ac)" stroke-width="1.5" fill="none"/></svg>
+      <svg class="illus-hero float3" style="bottom:10%;left:6%;opacity:.05" width="100" height="100" viewBox="0 0 100 100" fill="none"><rect x="15" y="15" width="70" height="70" rx="10" stroke="var(--ry)" stroke-width="1.5" stroke-dasharray="5 5"/><circle cx="50" cy="50" r="18" stroke="var(--gd)" stroke-width="1" opacity=".4"/></svg>
+    <div class="hcard w-full max-w-sm p-8 scaleIn relative z-10">
       <h2 class="text-2xl font-bold fs mb-6">Join HistoryWrite</h2>
       <form onsubmit="event.preventDefault();window.app.auth.signup(this.name.value,this.email.value,this.password.value,this.role.value,this.studentId.value)">
         <input name="name" placeholder="Full Name" required class="hinp mb-3">
@@ -1027,7 +1061,12 @@ views: {
   teacherDash: () => `
     <div class="max-w-5xl mx-auto px-4 py-6 pageEnter">
       <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
-        <div><h2 class="text-2xl font-bold fs">My Classes</h2><p class="text-sm mt-1" style="color:var(--mu)">Create classes and assign writing tasks.</p></div>
+        <div class="flex items-center gap-4">
+          <div class="w-14 h-14 rounded-2xl flex items-center justify-center shadow-sm" style="background:linear-gradient(135deg,var(--ac),var(--gd))">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+          </div>
+          <div><h2 class="text-2xl font-bold fs">My Classes</h2><p class="text-sm mt-1" style="color:var(--mu)">Create classes and assign writing tasks.</p></div>
+        </div>
         <div class="flex gap-2">
           <button onclick="window.app.router.go('library')" class="btnG text-sm py-2 px-4 flex items-center gap-2"><i data-lucide="library" class="w-4 h-4"></i>Library</button>
           <button onclick="window.app.ui.modal('create-class','open')" class="btnP text-sm py-2 px-4 flex items-center gap-2"><i data-lucide="plus" class="w-4 h-4"></i>New Class</button>
@@ -1049,7 +1088,12 @@ views: {
     return `
     <div class="max-w-5xl mx-auto px-4 py-6 flex flex-col h-[calc(100vh-56px)] pageEnter">
       <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
-        <div><h2 class="text-xl md:text-2xl font-bold fs tracking-tight">Welcome back, ${appState.userData?.name || 'Scholar'}</h2><p class="text-xs mt-0.5" style="color:var(--mu)">Sharpen your AP World writing skills.</p></div>
+        <div class="flex items-center gap-3">
+          <div class="w-12 h-12 rounded-2xl flex items-center justify-center shadow-sm" style="background:linear-gradient(135deg,var(--ac),var(--gd))">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="M2 2l7.586 7.586"/><circle cx="11" cy="11" r="2"/></svg>
+          </div>
+          <div><h2 class="text-xl md:text-2xl font-bold fs tracking-tight">Welcome back, ${appState.userData?.name || 'Scholar'}</h2><p class="text-xs mt-0.5" style="color:var(--mu)">Sharpen your AP World writing skills.</p></div>
+        </div>
         <div class="flex items-center gap-3">
           <div class="hcard flex items-center gap-3 px-4 py-2">
             <div class="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold" style="background:var(--acs);color:var(--ac)">Lv${level}</div>
@@ -1082,7 +1126,12 @@ views: {
     <div class="max-w-5xl mx-auto px-4 py-6 pageEnter">
       <button onclick="window.app.router.go('teacher-dash')" class="mb-6 text-sm flex items-center gap-1" style="color:var(--mu)"><i data-lucide="arrow-left" class="w-4 h-4"></i>Back</button>
       <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-        <div><h1 class="text-2xl font-bold fs">${cls.name}</h1><p class="text-sm mt-1 fm" style="color:var(--mu)">Code: <span style="color:var(--ac)" class="font-bold">${cls.code}</span></p><p class="text-xs mt-1" style="color:var(--fa)">${(cls.students||[]).length} student${(cls.students||[]).length===1?'':'s'} enrolled</p></div>
+        <div class="flex items-center gap-4">
+          <div class="w-12 h-12 rounded-2xl flex items-center justify-center shadow-sm" style="background:linear-gradient(135deg,var(--ry),var(--sg))">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          </div>
+          <div><h1 class="text-2xl font-bold fs">${cls.name}</h1><p class="text-sm mt-1 fm" style="color:var(--mu)">Code: <span style="color:var(--ac)" class="font-bold">${cls.code}</span></p><p class="text-xs mt-1" style="color:var(--fa)">${(cls.students||[]).length} student${(cls.students||[]).length===1?'':'s'} enrolled</p></div>
+        </div>
         <div class="flex gap-2">
           <button onclick="window.app.teacher.exportClassGradebook(window.app.teacher._classDataCache)" class="btnG text-sm flex items-center gap-2"><i data-lucide="file-spreadsheet" class="w-4 h-4"></i>Export Gradebook</button>
           <button onclick="window.app.ui.modal('eb-session-modal','open')" class="btnG text-sm flex items-center gap-2" style="border-color:var(--ac);color:var(--ac)"><i data-lucide="puzzle" class="w-4 h-4"></i>Essay Blocks</button>
@@ -1274,8 +1323,12 @@ views: {
           <button onclick="window.app.ui.resultsBack()" class="text-sm flex items-center gap-1" style="color:var(--mu)"><i data-lucide="arrow-left" class="w-4 h-4"></i>Back</button>
           ${a.demo ? '<button onclick="window.app.router.go(\'demo\')" class="btnP text-xs py-1.5 px-4">Try Again</button>' : ''}
         </div>
-        <h1 class="text-2xl font-bold fs mb-1">Grading Report</h1>
-        <p class="text-xs mb-3" style="color:var(--mu)">${a.title}</p>
+        <div class="flex items-center gap-3 mb-1">
+          <div class="w-10 h-10 rounded-xl flex items-center justify-center" style="background:linear-gradient(135deg,var(--ac),var(--gd))">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="15" x2="15" y2="15"/><line x1="12" y1="18" x2="12" y2="12"/></svg>
+          </div>
+          <div><h1 class="text-2xl font-bold fs">Grading Report</h1><p class="text-xs" style="color:var(--mu)">${a.title}</p></div>
+        </div>
         ${appState._usedMockGrading ? `<div class="mb-4 p-3 rounded-xl text-xs flex items-start gap-2" style="background:rgba(196,149,40,.08);border:1px solid rgba(196,149,40,.2)"><i data-lucide="info" class="w-4 h-4 flex-shrink-0 mt-0.5" style="color:var(--gd)"></i><div><span class="font-bold" style="color:var(--gd)">Demo Feedback</span><span style="color:var(--mu)"> — No Claude API key is set, so this is sample feedback. Add your API key in <button onclick="window.app.ui.toggleSettings()" class="font-bold underline" style="color:var(--ac)">Settings</button> for real AI grading.</span></div></div>` : ''}
         <div class="hcard p-6 md:p-8 fs text-base md:text-lg leading-relaxed" style="white-space:pre-wrap">${html}</div>
         <div class="mt-4 p-4 rounded-xl text-xs" style="background:var(--elev);border:1px solid var(--bd);color:var(--mu)">
@@ -1366,7 +1419,10 @@ views: {
     <div class="max-w-4xl mx-auto px-4 py-8 pageEnter">
       <button onclick="window.app.router.go(appState.userData?.role==='teacher'?'teacher-dash':'student-dash')" class="mb-4 text-sm flex items-center gap-1" style="color:var(--mu)"><i data-lucide="arrow-left" class="w-4 h-4"></i>Back</button>
       <div class="eb-lobby">
-        <div class="mb-6">
+        <div class="mb-4">
+          <svg width="64" height="64" viewBox="0 0 64 64" fill="none" style="margin:0 auto"><circle cx="32" cy="32" r="28" stroke="var(--ac)" stroke-width="2" opacity=".15"/><circle cx="32" cy="32" r="18" stroke="var(--gd)" stroke-width="1.5" opacity=".2"/><circle cx="22" cy="28" r="5" fill="var(--ac)" opacity=".2"/><circle cx="42" cy="28" r="5" fill="var(--sg)" opacity=".2"/><circle cx="32" cy="42" r="5" fill="var(--ry)" opacity=".2"/><line x1="22" y1="28" x2="42" y2="28" stroke="var(--bd2)" stroke-width="1" stroke-dasharray="3 3"/><line x1="22" y1="28" x2="32" y2="42" stroke="var(--bd2)" stroke-width="1" stroke-dasharray="3 3"/><line x1="42" y1="28" x2="32" y2="42" stroke="var(--bd2)" stroke-width="1" stroke-dasharray="3 3"/></svg>
+        </div>
+        <div class="mb-4">
           <span class="text-[10px] font-bold fm uppercase px-3 py-1.5 rounded-lg" style="background:var(--acs);color:var(--ac)">Multiplayer Essay Blocks</span>
         </div>
         <h1 class="text-3xl font-bold fs mb-2" id="lobby-title">Waiting for players...</h1>
@@ -2886,9 +2942,12 @@ blocks: {
     window.app.blocks._renderSoloBlock();
   },
 
+  _esc: (s) => (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'),
+
   _renderConsolidated: () => {
     const st = window.app.blocks._state;
     const { blocks, responses, prompt } = st;
+    const esc = window.app.blocks._esc;
 
     document.getElementById('eb-current-block')?.classList.add('hidden');
     const el = document.getElementById('eb-consolidated');
@@ -2899,13 +2958,13 @@ blocks: {
     const wordCount = fullEssay.split(/\s+/).filter(w => w).length;
 
     const blockBreakdown = blocks.map((b, i) =>
-      `<div class="mb-3"><div class="eb-block-label">${b.emoji} ${b.label}</div><p class="text-sm fs leading-relaxed" style="color:var(--tx)">${responses[i]}</p></div>`
+      `<div class="mb-3"><div class="eb-block-label">${b.emoji} ${b.label}</div><p class="text-sm fs leading-relaxed" style="color:var(--tx)">${esc(responses[i])}</p></div>`
     ).join('<hr style="border-color:var(--bd);margin:12px 0">');
 
     el.innerHTML = `<div class="eb-consolidated">
-      <div class="text-center mb-6">
-        <span class="text-5xl score-reveal">🎉</span>
-        <h2 class="text-2xl font-bold fs mt-3">Essay Complete!</h2>
+      <div class="text-center mb-6 relative">
+        <svg width="80" height="80" viewBox="0 0 80 80" fill="none" style="margin:0 auto;margin-bottom:8px"><circle cx="40" cy="40" r="36" stroke="var(--gd)" stroke-width="2" opacity=".15" stroke-dasharray="6 4"/><circle cx="40" cy="40" r="24" stroke="var(--sg)" stroke-width="1.5" opacity=".2"/><text x="40" y="46" text-anchor="middle" font-size="28">🎉</text></svg>
+        <h2 class="text-2xl font-bold fs">Essay Complete!</h2>
         <p class="text-sm mt-1" style="color:var(--mu)">You just wrote a ${wordCount}-word ${prompt.type.toUpperCase()} — block by block!</p>
       </div>
 
@@ -2917,7 +2976,7 @@ blocks: {
       </div>
 
       <div id="eb-tab-blocks" class="eb-final">${blockBreakdown}</div>
-      <div id="eb-tab-full" class="eb-final hidden" style="white-space:pre-wrap">${fullEssay}</div>
+      <div id="eb-tab-full" class="eb-final hidden" style="white-space:pre-wrap">${esc(fullEssay)}</div>
 
       <div class="flex gap-3 mt-6">
         <button onclick="window.app.blocks.gradeEssay()" class="btnP flex-1 flex items-center justify-center gap-2" id="eb-grade-btn"><i data-lucide="sparkles" class="w-4 h-4"></i>Grade with AI</button>
@@ -3298,6 +3357,7 @@ blocks: {
       const essaysEl = document.getElementById('review-essays');
       if (!essaysEl) return;
 
+      const esc = (s) => (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
       const groupEssays = groups.map((groupPlayerIds, gi) => {
         // Consolidate blocks — sort by block index
         const memberData = groupPlayerIds.map(pid => players[pid]).filter(Boolean);
@@ -3305,7 +3365,7 @@ blocks: {
 
         const parts = memberData.map(m => {
           const block = blocks[m.blockIndex] || { label: 'Block', emoji: '📝' };
-          return { label: block.label, emoji: block.emoji, text: m.response || '(no response)', author: m.name };
+          return { label: block.label, emoji: block.emoji, text: esc(m.response) || '(no response)', author: esc(m.name) };
         });
 
         const fullText = parts.map(p => p.text).join('\n\n');
