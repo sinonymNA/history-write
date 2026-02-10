@@ -354,6 +354,43 @@ a, [onclick] { transition:opacity .2s, color .2s; }
 .eb-vote-btn:hover { border-color:var(--ac); color:var(--ac); }
 .eb-vote-btn.voted { border-color:var(--ac); background:var(--acs); color:var(--ac); }
 
+/* ═══ TEACHER TOUR ═══ */
+.tour-step { opacity:0; transform:translateY(20px); transition:opacity .5s var(--ease-out-expo),transform .5s var(--ease-out-expo); }
+.tour-step.visible { opacity:1; transform:translateY(0); }
+.tour-nav { display:flex; gap:6px; justify-content:center; margin:20px 0; }
+.tour-dot { width:10px; height:10px; border-radius:50%; background:var(--bd); cursor:pointer; transition:background .2s,transform .2s; }
+.tour-dot.active { background:var(--ac); transform:scale(1.3); }
+.tour-mock { border-radius:16px; overflow:hidden; border:1px solid var(--bd); background:var(--card); }
+.tour-mock-header { padding:8px 12px; background:var(--elev); border-bottom:1px solid var(--bd); display:flex; align-items:center; gap:6px; }
+.tour-mock-dot { width:8px; height:8px; border-radius:50%; }
+.tour-mock-body { padding:16px; }
+@keyframes tourType { from { width:0; } to { width:100%; } }
+@keyframes tourFadeSlide { from { opacity:0; transform:translateX(8px); } to { opacity:1; transform:translateX(0); } }
+.tour-typing { display:inline-block; overflow:hidden; white-space:nowrap; border-right:2px solid var(--ac); animation:tourType 2s steps(30) forwards, blink .8s step-end infinite; max-width:100%; }
+.tour-pop { animation:tourFadeSlide .4s var(--ease-out-expo) forwards; opacity:0; }
+.tour-pop-d1 { animation-delay:.3s; }
+.tour-pop-d2 { animation-delay:.6s; }
+.tour-pop-d3 { animation-delay:.9s; }
+.tour-pop-d4 { animation-delay:1.2s; }
+.tour-pop-d5 { animation-delay:1.5s; }
+
+/* ═══ BLOCK BLAST ═══ */
+.bb-grid { display:grid; grid-template-columns:repeat(8,1fr); gap:2px; max-width:320px; margin:0 auto; }
+.bb-cell { aspect-ratio:1; border-radius:6px; cursor:pointer; transition:transform .15s var(--ease-out-expo),opacity .2s,box-shadow .15s; position:relative; border:1px solid rgba(255,255,255,.1); }
+.bb-cell:hover { transform:scale(1.08); z-index:1; box-shadow:0 0 12px rgba(255,255,255,.15); }
+.bb-cell.clearing { animation:bbPop .35s var(--ease-out-expo) forwards; }
+.bb-cell.empty { background:rgba(255,255,255,.03)!important; border-color:rgba(255,255,255,.04)!important; cursor:default; pointer-events:none; }
+.bb-cell.dropping { animation:bbDrop .3s var(--ease-out-expo); }
+@keyframes bbPop { 0% { transform:scale(1);opacity:1; } 50% { transform:scale(1.3);opacity:.8; } 100% { transform:scale(0);opacity:0; } }
+@keyframes bbDrop { 0% { transform:translateY(-100%);opacity:.5; } 100% { transform:translateY(0);opacity:1; } }
+.bb-modal { position:fixed; inset:0; background:rgba(0,0,0,.7); display:flex; align-items:center; justify-content:center; z-index:100; backdrop-filter:blur(4px); }
+.bb-qcard { max-width:360px; width:90%; padding:20px; border-radius:16px; background:#2a2620; border:1px solid #3d382f; }
+.bb-choice { display:block; width:100%; text-align:left; padding:10px 14px; margin-top:6px; border-radius:10px; font-size:12px; background:rgba(255,255,255,.05); color:#e8e6e1; border:1px solid rgba(255,255,255,.08); cursor:pointer; transition:background .15s,border-color .15s; }
+.bb-choice:hover { background:rgba(255,255,255,.1); border-color:rgba(255,255,255,.15); }
+.bb-choice.correct { background:rgba(77,128,96,.3)!important; border-color:var(--sg)!important; color:var(--sg)!important; }
+.bb-choice.wrong { background:rgba(212,98,47,.2)!important; border-color:var(--ac)!important; color:var(--ac)!important; }
+.bb-cat-label { display:inline-block; font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; padding:2px 6px; border-radius:4px; }
+
 /* ═══ ILLUSTRATIONS ═══ */
 .illus { opacity:.12; transition:opacity .4s; }
 .illus:hover { opacity:.2; }
@@ -796,6 +833,41 @@ const EVIDENCE_BANK = [
   { claim: "Gunpowder empires maintained control through military technology.", evidence: "Empires used guns and cannons to conquer other places.", verdict: "weak", why: "Which empires? Which places? When? This is a category description, not evidence. AP readers want you to show you know specific history." }
 ];
 
+// ═══ BLOCK BLAST — AP MCQ BANK ═══
+const BB_QUESTIONS = [
+  { q:"Which best explains the political success of the Mongol Empire in the 13th century?", c:["Adoption of a single state religion","A meritocratic military structure and psychological warfare","Reliance on naval superiority","Centralized bureaucracy modeled on the Song dynasty"], a:1, cat:"political" },
+  { q:"Indian Ocean trade (1200-1450) was most facilitated by:", c:["European joint-stock companies","Collapse of overland Silk Road routes","Monsoon winds and lateen sail technology","Chinese naval dominance after Zheng He"], a:2, cat:"economic" },
+  { q:"Mansa Musa's 1324 pilgrimage to Mecca demonstrates:", c:["Mali's isolation from Islamic civilization","Decline of trans-Saharan gold trade","Extraordinary wealth of West African kingdoms integrated into the Islamic world","European economic dominance over Africa"], a:2, cat:"economic" },
+  { q:"The caste system in South Asia (1200-1450) primarily functioned to:", c:["Provide social mobility for merchants","Organize society into hereditary occupational groups","Ensure equal political representation","Prevent the spread of Islam"], a:1, cat:"social" },
+  { q:"Which best illustrates cultural syncretism along Silk Road routes?", c:["Theravada Buddhism spreading to Japan","Adoption of cuneiform by Persians","Greco-Buddhist artistic styles in Central Asian sculptures","Replacement of Hinduism with Islam in all of Southeast Asia"], a:2, cat:"cultural" },
+  { q:"Aztec tribute from conquered city-states most directly served to:", c:["Spread Nahuatl as a universal language","Sustain Tenochtitlan and reinforce hierarchical political structure","Establish a uniform legal code","Promote religious tolerance"], a:1, cat:"political" },
+  { q:"Great Zimbabwe's stone enclosures evidence:", c:["Portuguese architectural influence","A prosperous Bantu-speaking state in long-distance trade","Nomadic pastoralist settlements","Egyptian cultural diffusion"], a:1, cat:"cultural" },
+  { q:"The Black Death's demographic impact (1347-1400) most directly caused:", c:["Strengthening of feudal obligations","Labor shortage increasing peasant bargaining power","Expansion of Byzantine Empire westward","Decline of Christianity in Europe"], a:1, cat:"social" },
+  { q:"The Columbian Exchange most significantly altered demographics through:", c:["Voluntary European migration","Old World diseases devastating indigenous Americans","Maize cultivation in sub-Saharan Africa","Forced relocation of Asian laborers"], a:1, cat:"social" },
+  { q:"The encomienda system was most similar to:", c:["European feudal manorialism","Chinese examination system","Ottoman devshirme","Inca mit'a labor system"], a:0, cat:"political" },
+  { q:"Atlantic slave trade growth (1500-1750) was best explained by:", c:["African rulers universally resisting traders","European demand for plantation labor plus African slave-trading networks","Enslaved Africans used as European domestic servants","Catholic Church mandating enslaved labor"], a:1, cat:"economic" },
+  { q:"The Ottoman devshirme system is best characterized as:", c:["A tax on non-Muslim merchants","Recruiting Christian boys as elite soldiers/administrators","Diplomatic hostage exchange","Land grants to Turkish nobility"], a:1, cat:"political" },
+  { q:"Silver flow from Americas to China (1500-1750) primarily resulted in:", c:["Collapse of Chinese economy","China's total isolation from commerce","Integration of Americas into global trade and Spanish inflation","Replacement of silver with paper currency"], a:2, cat:"economic" },
+  { q:"The Protestant Reformation most directly challenged Catholic authority by arguing:", c:["Pope should share power with monarchs","Salvation through faith alone without Church intermediaries","All denominations should merge","Science should replace doctrine"], a:1, cat:"cultural" },
+  { q:"Akbar's sulh-i-kul (universal peace) primarily aimed to:", c:["Convert all Hindus to Islam","Eliminate jizya and promote tolerance to consolidate diverse subjects","Establish Sikhism as state religion","Forge Mughal-Safavid alliance"], a:1, cat:"cultural" },
+  { q:"The Haitian Revolution was historically significant because it:", c:["Was the first European settler revolt","Showed enslaved people could overthrow colonialism and establish independence","Led directly to US abolition","Was driven by French Enlightenment philosophers"], a:1, cat:"political" },
+  { q:"The primary cause of the Opium Wars was:", c:["China colonizing British territories","British insistence on opium trade that China tried to suppress","Religious conflict","Competition for Japanese markets"], a:1, cat:"economic" },
+  { q:"A direct social consequence of 19th-century British industrialization:", c:["Decline of the nuclear family","Rapid urbanization and factory working class in poor conditions","Population decrease from factory mortality","Immediate elimination of child labor"], a:1, cat:"social" },
+  { q:"Bolivar's South American campaigns were most inspired by:", c:["Marxist class struggle theories","Enlightenment ideals of popular sovereignty and natural rights","Meiji Restoration model","Ottoman Tanzimat reforms"], a:1, cat:"political" },
+  { q:"The Berlin Conference (1884-1885) established rules for:", c:["Unified European currency","Partition and colonization of Africa","Granting independence to Asian colonies","Regulating the slave trade"], a:1, cat:"political" },
+  { q:"The Meiji Restoration (1868) is best characterized as:", c:["A communist revolution","State-directed rapid industrialization and Western-style modernization","A Shinto theocracy revival","A democratic universal suffrage movement"], a:1, cat:"economic" },
+  { q:"Social Darwinism was most commonly used to justify:", c:["International labor rights","European imperialism arguing racial superiority","Abolition of slavery","Women's suffrage movements"], a:1, cat:"cultural" },
+  { q:"The League of Nations mandate system primarily functioned to:", c:["Grant immediate independence","Place former colonies under Allied administration","Create a Middle East free-trade zone","Establish democracies in Europe"], a:1, cat:"political" },
+  { q:"Gandhi's satyagraha was most directly influenced by:", c:["Marxist-Leninist vanguardism","Hindu/Jain ahimsa combined with Thoreau's civil disobedience","Irish Republican Army tactics","Wilson's Fourteen Points"], a:1, cat:"cultural" },
+  { q:"The Green Revolution most directly resulted in:", c:["Transition to renewable energy","Increased agricultural yields through high-yield crops and fertilizers","Widespread organic farming in Asia","Global population decline"], a:1, cat:"economic" },
+  { q:"The Bandung Conference (1955) was significant because it:", c:["Formalized US-Western Europe alliance","Brought together Asian/African leaders for solidarity and non-alignment","Established the EEC","Ended the Korean War"], a:1, cat:"political" },
+  { q:"'Asian Tigers' rapid growth was best explained by:", c:["Abundant natural resources","State-directed export-oriented manufacturing and education","Soviet economic aid","Complete absence of government"], a:1, cat:"economic" },
+  { q:"South African apartheid (1948-1994) was a system of:", c:["UN economic sanctions","Institutionalized racial segregation by white-minority government","Voluntary cultural separation","British military rule"], a:1, cat:"social" },
+  { q:"Ming China ended Zheng He's voyages because:", c:["Devastating naval defeats","Confucian officials prioritized internal threats and agriculture","Maritime routes were less profitable","A pandemic destroyed shipbuilding"], a:1, cat:"political" },
+  { q:"Late 20th-century global feminism was most characterized by:", c:["A single unified movement","Diverse movements addressing inequality through culturally specific approaches","Exclusive focus on Western voting rights","Rejection of all traditional practices"], a:1, cat:"social" }
+];
+const BB_CAT_COLORS = { political:'#4A90D9', economic:'#D4A843', social:'#5AAF6E', cultural:'#9B6FC3' };
+
 window.app = {
 
 // ═══ ROUTER ═══
@@ -825,6 +897,7 @@ router: {
       'editor': () => { appState.activeAssignment = params.assignment; root.innerHTML = V.editor(params.assignment); window.app.student.initEditor(); },
       'demo': () => { appState.demoMode = true; const a = DEMO_ASSIGNMENT; appState.activeAssignment = a; localStorage.setItem('draft_demo', DEMO_ESSAY); root.innerHTML = V.editor(a); window.app.student.initEditor(); },
       'results': () => { appState._lastViewedAssignment = params.assignment; root.innerHTML = V.results(params.submission, params.assignment); },
+      'teacher-tour': () => { root.innerHTML = V.teacherTour(); window.app.teacher.initTour(); },
       'blocks-solo': () => { root.innerHTML = V.blocksSolo(params.prompt); window.app.blocks.initSolo(params.prompt); },
       'blocks-lobby': () => { root.innerHTML = V.blocksLobby(params.sessionId); window.app.blocks.initLobby(params.sessionId); },
       'blocks-play': () => { root.innerHTML = V.blocksPlay(params.sessionId); window.app.blocks.initMultiPlay(params.sessionId); },
@@ -1068,6 +1141,7 @@ views: {
           <div><h2 class="text-2xl font-bold fs">My Classes</h2><p class="text-sm mt-1" style="color:var(--mu)">Create classes and assign writing tasks.</p></div>
         </div>
         <div class="flex gap-2">
+          <button onclick="window.app.router.go('teacher-tour')" class="btnG text-sm py-2 px-4 flex items-center gap-2" style="border-color:var(--ac);color:var(--ac)"><i data-lucide="play-circle" class="w-4 h-4"></i>Tour</button>
           <button onclick="window.app.router.go('library')" class="btnG text-sm py-2 px-4 flex items-center gap-2"><i data-lucide="library" class="w-4 h-4"></i>Library</button>
           <button onclick="window.app.ui.modal('create-class','open')" class="btnP text-sm py-2 px-4 flex items-center gap-2"><i data-lucide="plus" class="w-4 h-4"></i>New Class</button>
         </div>
@@ -1443,6 +1517,9 @@ views: {
           <button onclick="if(confirm('Leave the game? Your block will be submitted as-is.')){window.app.blocks.submitMultiBlock('${sessionId}');window.app.router.go('student-dash')}" class="text-xs flex items-center gap-1" style="color:var(--fa)"><i data-lucide="arrow-left" class="w-3 h-3"></i>Exit</button>
           ${appState.userData?.role === 'teacher' ? '<button onclick="window.app.blocks.endSession(\''+sessionId+'\')" class="btnG text-xs py-1 px-3" style="border-color:var(--ac);color:var(--ac)">End Game</button>' : ''}
         </div>
+        <div id="mp-prompt-bar" class="mb-3 p-3 rounded-xl text-xs" style="background:var(--elev);border:1px solid var(--bd)">
+          <span class="font-bold" style="color:var(--ac)">Prompt:</span> <span id="mp-prompt-text" class="fs" style="color:var(--mu)">Loading...</span>
+        </div>
         <div class="text-center mb-4">
           <div class="eb-timer" id="mp-timer">--:--</div>
           <p class="text-xs mt-1" style="color:var(--fa)">Time remaining</p>
@@ -1467,6 +1544,24 @@ views: {
       </div>
       <div id="review-essays" class="space-y-6 stagger"></div>
       <div id="review-results" class="hidden mt-8"></div>
+    </div>`,
+
+  teacherTour: () => `
+    <div class="max-w-4xl mx-auto px-4 py-6 pageEnter">
+      <button onclick="window.app.router.go('teacher-dash')" class="mb-4 text-sm flex items-center gap-1" style="color:var(--mu)"><i data-lucide="arrow-left" class="w-4 h-4"></i>Back to Dashboard</button>
+      <div class="text-center mb-8">
+        <div class="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-sm" style="background:linear-gradient(135deg,var(--ac),var(--gd))">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
+        </div>
+        <h1 class="text-2xl font-bold fs">Feature Tour</h1>
+        <p class="text-sm mt-1" style="color:var(--mu)">See how each feature works with animated walkthroughs</p>
+      </div>
+      <div class="tour-nav" id="tour-nav"></div>
+      <div id="tour-container" style="min-height:400px"></div>
+      <div class="flex justify-center gap-3 mt-6">
+        <button onclick="window.app.teacher.tourPrev()" class="btnG text-sm py-2 px-5" id="tour-prev">← Previous</button>
+        <button onclick="window.app.teacher.tourNext()" class="btnP text-sm py-2 px-5" id="tour-next">Next →</button>
+      </div>
     </div>`
 },
 
@@ -1872,6 +1967,173 @@ teacher: {
       XLSX.writeFile(wb, filename);
       window.app.ui.toast('Exported gradebook with ' + rows.length + ' students!', 'success');
     } catch(e) { console.error(e); window.app.ui.toast('Export error: ' + e.message, 'error'); }
+  },
+
+  // ── TEACHER TOUR ──
+  _tourStep: 0,
+  _tourSteps: [
+    {
+      title: '1. Create a Class',
+      desc: 'Give your class a name and you get a unique join code. Students enter the code to enroll.',
+      mock: `<div class="tour-mock"><div class="tour-mock-header"><div class="tour-mock-dot" style="background:#ff5f57"></div><div class="tour-mock-dot" style="background:#febc2e"></div><div class="tour-mock-dot" style="background:#28c840"></div><span class="text-[10px] fm" style="color:var(--fa)">Create Class</span></div><div class="tour-mock-body">
+        <div class="mb-3"><label class="text-[10px] font-bold uppercase" style="color:var(--fa)">Class Name</label><div class="hinp text-sm" style="padding:8px 12px;background:var(--elev)"><span class="tour-typing">Period 3 — AP World History</span></div></div>
+        <div class="tour-pop tour-pop-d2 flex items-center gap-3 p-3 rounded-xl" style="background:var(--acs)"><span class="text-2xl">🔑</span><div><p class="text-xs font-bold" style="color:var(--ac)">Class Code Generated</p><p class="text-lg fm font-bold" style="color:var(--ac)">XK7M2P</p><p class="text-[10px]" style="color:var(--mu)">Share this with your students</p></div></div>
+      </div></div>`
+    },
+    {
+      title: '2. Create Assignments',
+      desc: 'Choose SAQ, LEQ, or DBQ. Write a prompt, attach documents for DBQs, set max attempts. Students see a live preview.',
+      mock: `<div class="tour-mock"><div class="tour-mock-header"><div class="tour-mock-dot" style="background:#ff5f57"></div><div class="tour-mock-dot" style="background:#febc2e"></div><div class="tour-mock-dot" style="background:#28c840"></div><span class="text-[10px] fm" style="color:var(--fa)">Assignment Builder</span></div><div class="tour-mock-body">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <div class="mb-2"><span class="text-[10px] font-bold uppercase" style="color:var(--fa)">Type</span><div class="tour-pop tour-pop-d1 flex gap-2 mt-1"><span class="text-[10px] px-2 py-1 rounded" style="background:var(--elev)">SAQ</span><span class="text-[10px] px-2 py-1 rounded font-bold" style="background:var(--acs);color:var(--ac);border:1px solid var(--ac)">LEQ</span><span class="text-[10px] px-2 py-1 rounded" style="background:var(--elev)">DBQ</span></div></div>
+            <div class="mb-2"><span class="text-[10px] font-bold uppercase" style="color:var(--fa)">Prompt</span><div class="hinp text-[11px] mt-1" style="padding:8px;background:var(--elev);min-height:60px"><span class="tour-typing" style="animation-duration:3s">Evaluate the extent to which maritime empires transformed global trade...</span></div></div>
+          </div>
+          <div class="tour-pop tour-pop-d3 rounded-xl p-3" style="background:var(--elev);border:1px solid var(--bd)">
+            <p class="text-[9px] font-bold uppercase mb-2" style="color:var(--fa)">Student Preview</p>
+            <span class="text-[9px] px-1.5 py-0.5 rounded font-bold" style="background:var(--acs);color:var(--ac)">LEQ</span>
+            <p class="text-[10px] font-bold mt-1 fs">Maritime Empires LEQ</p>
+            <p class="text-[9px] mt-1" style="color:var(--mu)">Evaluate the extent to which...</p>
+          </div>
+        </div>
+      </div></div>`
+    },
+    {
+      title: '3. Students Write & Get AI Feedback',
+      desc: 'Students write essays in a split-pane editor. On submit, Claude AI grades against the AP rubric with color-coded annotations and improvement tips.',
+      mock: `<div class="tour-mock"><div class="tour-mock-header"><div class="tour-mock-dot" style="background:#ff5f57"></div><div class="tour-mock-dot" style="background:#febc2e"></div><div class="tour-mock-dot" style="background:#28c840"></div><span class="text-[10px] fm" style="color:var(--fa)">AI Grading Report</span></div><div class="tour-mock-body">
+        <div class="text-center mb-3"><div class="text-3xl font-bold fs tour-pop" style="color:var(--ac)">5<span class="text-lg" style="color:var(--fa)">/6</span></div><p class="text-[10px]" style="color:var(--mu)">Proficient</p></div>
+        <div class="space-y-2">
+          <div class="tour-pop tour-pop-d1 p-2 rounded-lg" style="border-left:3px solid var(--sg);background:var(--elev)"><div class="flex items-center gap-1"><span class="w-3 h-3 rounded-full text-[7px] text-white flex items-center justify-center font-bold" style="background:var(--sg)">1</span><span class="text-[9px] font-bold" style="color:var(--sg)">THESIS — Point Earned</span></div><p class="text-[9px] mt-1" style="color:var(--mu)">Clear argument with line of reasoning.</p></div>
+          <div class="tour-pop tour-pop-d2 p-2 rounded-lg" style="border-left:3px solid var(--gd);background:var(--elev)"><div class="flex items-center gap-1"><span class="w-3 h-3 rounded-full text-[7px] text-white flex items-center justify-center font-bold" style="background:var(--gd)">2</span><span class="text-[9px] font-bold" style="color:var(--gd)">EVIDENCE — Almost There</span></div><p class="text-[9px] mt-1" style="color:var(--mu)">Good evidence — add one more specific example.</p><div class="mt-1 p-1.5 rounded text-[8px]" style="background:rgba(196,149,40,.06);color:var(--gd)">💡 Name a specific treaty or leader.</div></div>
+          <div class="tour-pop tour-pop-d3 p-2 rounded-lg" style="border-left:3px solid var(--sg);background:var(--elev)"><div class="flex items-center gap-1"><span class="w-3 h-3 rounded-full text-[7px] text-white flex items-center justify-center font-bold" style="background:var(--sg)">3</span><span class="text-[9px] font-bold" style="color:var(--sg)">REASONING — Point Earned</span></div><p class="text-[9px] mt-1" style="color:var(--mu)">Excellent cause-and-effect analysis.</p></div>
+        </div>
+      </div></div>`
+    },
+    {
+      title: '4. Start an Essay Blocks Session',
+      desc: 'Pick a prompt and timer, then share the session code. Students join the lobby and click Ready. When you start, they\'re grouped randomly.',
+      mock: `<div class="tour-mock"><div class="tour-mock-header"><div class="tour-mock-dot" style="background:#ff5f57"></div><div class="tour-mock-dot" style="background:#febc2e"></div><div class="tour-mock-dot" style="background:#28c840"></div><span class="text-[10px] fm" style="color:var(--fa)">Essay Blocks Lobby</span></div><div class="tour-mock-body text-center">
+        <p class="text-[9px] font-bold uppercase" style="color:var(--fa)">Session Code</p>
+        <p class="text-xl fm font-bold mb-3 tour-pop" style="color:var(--ac)">X7KM2P</p>
+        <div class="space-y-1.5 mb-3" style="max-width:200px;margin:0 auto;text-align:left">
+          <div class="tour-pop tour-pop-d1 flex items-center gap-2 py-1.5 px-2 rounded-lg" style="background:rgba(77,128,96,.06);border:1px solid rgba(77,128,96,.15)"><div class="w-2 h-2 rounded-full" style="background:var(--sg)"></div><span class="text-[10px] font-semibold flex-1">Alex M.</span><span class="text-[8px] fm" style="color:var(--sg)">Ready!</span></div>
+          <div class="tour-pop tour-pop-d2 flex items-center gap-2 py-1.5 px-2 rounded-lg" style="background:rgba(77,128,96,.06);border:1px solid rgba(77,128,96,.15)"><div class="w-2 h-2 rounded-full" style="background:var(--sg)"></div><span class="text-[10px] font-semibold flex-1">Jamie K.</span><span class="text-[8px] fm" style="color:var(--sg)">Ready!</span></div>
+          <div class="tour-pop tour-pop-d3 flex items-center gap-2 py-1.5 px-2 rounded-lg" style="background:var(--elev);border:1px solid var(--bd)"><div class="w-2 h-2 rounded-full" style="background:var(--bd)"></div><span class="text-[10px] font-semibold flex-1">Sam T.</span><span class="text-[8px] fm" style="color:var(--fa)">Joining...</span></div>
+          <div class="tour-pop tour-pop-d4 flex items-center gap-2 py-1.5 px-2 rounded-lg" style="background:rgba(77,128,96,.06);border:1px solid rgba(77,128,96,.15)"><div class="w-2 h-2 rounded-full" style="background:var(--sg)"></div><span class="text-[10px] font-semibold flex-1">Riley P.</span><span class="text-[8px] fm" style="color:var(--sg)">Ready!</span></div>
+        </div>
+        <div class="tour-pop tour-pop-d5"><span class="text-[10px] px-4 py-2 rounded-lg font-bold text-white" style="background:var(--ac)">Start Game →</span></div>
+      </div></div>`
+    },
+    {
+      title: '5. Multiplayer: Each Student Writes a Block',
+      desc: 'Each student sees the prompt and gets assigned one block (thesis, evidence, analysis, etc). They write blindly — teammates are working on other blocks at the same time!',
+      mock: `<div class="tour-mock"><div class="tour-mock-header"><div class="tour-mock-dot" style="background:#ff5f57"></div><div class="tour-mock-dot" style="background:#febc2e"></div><div class="tour-mock-dot" style="background:#28c840"></div><span class="text-[10px] fm" style="color:var(--fa)">Student View — Block Play</span></div><div class="tour-mock-body">
+        <div class="p-2 rounded-lg mb-2 text-[10px]" style="background:var(--elev);border:1px solid var(--bd)"><span class="font-bold" style="color:var(--ac)">Prompt:</span> <span style="color:var(--mu)">Evaluate the extent to which maritime empires transformed trade 1450-1750.</span></div>
+        <div class="text-center mb-2"><span class="text-lg fm font-bold" style="color:var(--ac)">3:42</span><p class="text-[8px]" style="color:var(--fa)">Time remaining</p></div>
+        <div class="flex flex-wrap justify-center gap-1 mb-2">
+          <span class="text-[8px] px-1.5 py-0.5 rounded" style="background:var(--elev);color:var(--fa)">🌍 Context</span>
+          <span class="text-[8px] px-1.5 py-0.5 rounded font-bold" style="background:var(--acs);color:var(--ac);border:1px solid var(--ac)">⚔️ Thesis ← You</span>
+          <span class="text-[8px] px-1.5 py-0.5 rounded" style="background:var(--elev);color:var(--fa)">📜 Evidence</span>
+          <span class="text-[8px] px-1.5 py-0.5 rounded" style="background:var(--elev);color:var(--fa)">🧠 Analysis</span>
+        </div>
+        <div class="tour-pop tour-pop-d1 p-3 rounded-xl" style="background:var(--elev);border:1px solid var(--bd)">
+          <p class="text-[10px] font-bold fs mb-1">What's your main argument?</p>
+          <div class="p-2 rounded-lg text-[10px]" style="background:var(--card);border:2px solid var(--ac)"><span class="tour-typing" style="animation-duration:3s">Maritime empires fundamentally transformed trade because...</span></div>
+        </div>
+      </div></div>`
+    },
+    {
+      title: '6. Review & Grade Together',
+      desc: 'After time is up, all blocks are combined into full essays. Students vote for the best group essay, and AI grades each one. Results show which group won!',
+      mock: `<div class="tour-mock"><div class="tour-mock-header"><div class="tour-mock-dot" style="background:#ff5f57"></div><div class="tour-mock-dot" style="background:#febc2e"></div><div class="tour-mock-dot" style="background:#28c840"></div><span class="text-[10px] fm" style="color:var(--fa)">Review Phase</span></div><div class="tour-mock-body">
+        <div class="tour-pop p-3 rounded-xl mb-2" style="border:1px solid var(--bd)">
+          <div class="flex items-center justify-between mb-2"><span class="text-[10px] font-bold">Group 1's Essay</span><span class="text-[10px] px-2 py-0.5 rounded-full" style="background:rgba(77,128,96,.1);color:var(--sg)">5/6 — Proficient</span></div>
+          <div class="space-y-1 text-[9px]" style="color:var(--mu)">
+            <div class="tour-pop tour-pop-d1"><span class="font-bold" style="color:var(--ac)">🌍 Context (Alex):</span> Before 1450, trade was primarily regional...</div>
+            <div class="tour-pop tour-pop-d2"><span class="font-bold" style="color:var(--ac)">⚔️ Thesis (Jamie):</span> Maritime empires fundamentally transformed...</div>
+            <div class="tour-pop tour-pop-d3"><span class="font-bold" style="color:var(--ac)">📜 Evidence (Sam):</span> The Portuguese established trading posts...</div>
+          </div>
+        </div>
+        <div class="tour-pop tour-pop-d4 flex gap-2 justify-center">
+          <span class="text-[10px] px-3 py-1.5 rounded-lg font-bold text-white" style="background:var(--sg)">👍 3 votes</span>
+          <span class="text-[10px] px-3 py-1.5 rounded-lg font-bold" style="background:var(--elev);color:var(--fa)">Grade with AI</span>
+        </div>
+      </div></div>`
+    },
+    {
+      title: '7. Export Grades',
+      desc: 'Export all scores to Excel with one click. Includes a Synergy-compatible sheet with student IDs for direct import into your gradebook.',
+      mock: `<div class="tour-mock"><div class="tour-mock-header"><div class="tour-mock-dot" style="background:#ff5f57"></div><div class="tour-mock-dot" style="background:#febc2e"></div><div class="tour-mock-dot" style="background:#28c840"></div><span class="text-[10px] fm" style="color:var(--fa)">Gradebook Export</span></div><div class="tour-mock-body">
+        <div class="tour-pop flex items-center gap-3 mb-3">
+          <div class="w-10 h-10 rounded-xl flex items-center justify-center" style="background:rgba(77,128,96,.1)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--sg)" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+          <div><p class="text-xs font-bold fs">Period_3_AP_World_gradebook.xlsx</p><p class="text-[10px]" style="color:var(--mu)">2 sheets · 24 students</p></div>
+        </div>
+        <div class="rounded-lg overflow-hidden" style="border:1px solid var(--bd)">
+          <table class="w-full text-[9px]" style="border-collapse:collapse">
+            <tr style="background:var(--elev)"><th class="p-1.5 text-left" style="border-bottom:1px solid var(--bd)">Student</th><th class="p-1.5" style="border-bottom:1px solid var(--bd)">LEQ #1</th><th class="p-1.5" style="border-bottom:1px solid var(--bd)">DBQ #1</th><th class="p-1.5" style="border-bottom:1px solid var(--bd)">SAQ #1</th></tr>
+            <tr class="tour-pop tour-pop-d1"><td class="p-1.5" style="border-bottom:1px solid var(--bd)">Alex M.</td><td class="p-1.5 text-center" style="border-bottom:1px solid var(--bd);color:var(--sg)">5/6</td><td class="p-1.5 text-center" style="border-bottom:1px solid var(--bd);color:var(--gd)">4/7</td><td class="p-1.5 text-center" style="border-bottom:1px solid var(--bd);color:var(--sg)">3/3</td></tr>
+            <tr class="tour-pop tour-pop-d2"><td class="p-1.5" style="border-bottom:1px solid var(--bd)">Jamie K.</td><td class="p-1.5 text-center" style="border-bottom:1px solid var(--bd);color:var(--sg)">4/6</td><td class="p-1.5 text-center" style="border-bottom:1px solid var(--bd);color:var(--sg)">6/7</td><td class="p-1.5 text-center" style="border-bottom:1px solid var(--bd);color:var(--gd)">2/3</td></tr>
+            <tr class="tour-pop tour-pop-d3"><td class="p-1.5">Sam T.</td><td class="p-1.5 text-center" style="color:var(--gd)">3/6</td><td class="p-1.5 text-center" style="color:var(--sg)">5/7</td><td class="p-1.5 text-center" style="color:var(--sg)">3/3</td></tr>
+          </table>
+        </div>
+        <div class="tour-pop tour-pop-d4 mt-2 p-2 rounded-lg text-[9px]" style="background:rgba(77,128,96,.06);color:var(--sg)">✓ Includes Synergy-compatible sheet for direct gradebook import</div>
+      </div></div>`
+    }
+  ],
+
+  initTour: () => {
+    window.app.teacher._tourStep = 0;
+    window.app.teacher._renderTourStep();
+    lucide.createIcons();
+  },
+
+  _renderTourStep: () => {
+    const steps = window.app.teacher._tourSteps;
+    const idx = window.app.teacher._tourStep;
+    const step = steps[idx];
+
+    // Render dots
+    const nav = document.getElementById('tour-nav');
+    if (nav) nav.innerHTML = steps.map((_,i) => `<div class="tour-dot ${i===idx?'active':''}" onclick="window.app.teacher._tourStep=${i};window.app.teacher._renderTourStep()"></div>`).join('');
+
+    // Render step
+    const container = document.getElementById('tour-container');
+    if (container) {
+      container.innerHTML = `<div class="tour-step" id="tour-current">
+        <div class="text-center mb-4">
+          <h2 class="text-lg font-bold fs">${step.title}</h2>
+          <p class="text-sm mt-1" style="color:var(--mu);max-width:500px;margin:0 auto">${step.desc}</p>
+        </div>
+        <div style="max-width:480px;margin:0 auto">${step.mock}</div>
+      </div>`;
+      // Trigger animation
+      requestAnimationFrame(() => document.getElementById('tour-current')?.classList.add('visible'));
+    }
+
+    // Update buttons
+    const prev = document.getElementById('tour-prev');
+    const next = document.getElementById('tour-next');
+    if (prev) prev.style.visibility = idx === 0 ? 'hidden' : 'visible';
+    if (next) next.textContent = idx === steps.length - 1 ? 'Back to Dashboard' : 'Next →';
+    lucide.createIcons();
+  },
+
+  tourNext: () => {
+    const steps = window.app.teacher._tourSteps;
+    if (window.app.teacher._tourStep >= steps.length - 1) {
+      window.app.router.go('teacher-dash');
+    } else {
+      window.app.teacher._tourStep++;
+      window.app.teacher._renderTourStep();
+    }
+  },
+
+  tourPrev: () => {
+    if (window.app.teacher._tourStep > 0) {
+      window.app.teacher._tourStep--;
+      window.app.teacher._renderTourStep();
+    }
   }
 },
 
@@ -2214,12 +2476,14 @@ game: {
     <div class="arcP h-full flex flex-col">
       <div class="flex overflow-x-auto" style="border-bottom:1px solid #332f26">
         <button onclick="window.app.game.switchArcade('chrono')" class="arcTab on flex-1" id="atab-chrono"><i data-lucide="clock" class="w-3 h-3"></i><span>Timeline</span></button>
-        <button onclick="window.app.game.switchArcade('thesis')" class="arcTab flex-1" id="atab-thesis"><i data-lucide="scale" class="w-3 h-3"></i><span>Thesis Judge</span></button>
-        <button onclick="window.app.game.switchArcade('evidence')" class="arcTab flex-1" id="atab-evidence"><i data-lucide="check-square" class="w-3 h-3"></i><span>Evidence?</span></button>
-        <button onclick="window.app.game.switchArcade('source')" class="arcTab flex-1" id="atab-source"><i data-lucide="search" class="w-3 h-3"></i><span>Source ID</span></button>
+        <button onclick="window.app.game.switchArcade('blast')" class="arcTab flex-1" id="atab-blast"><i data-lucide="grid-3x3" class="w-3 h-3"></i><span>Block Blast</span></button>
+        <button onclick="window.app.game.switchArcade('thesis')" class="arcTab flex-1" id="atab-thesis"><i data-lucide="scale" class="w-3 h-3"></i><span>Thesis</span></button>
+        <button onclick="window.app.game.switchArcade('evidence')" class="arcTab flex-1" id="atab-evidence"><i data-lucide="check-square" class="w-3 h-3"></i><span>Evidence</span></button>
+        <button onclick="window.app.game.switchArcade('source')" class="arcTab flex-1" id="atab-source"><i data-lucide="search" class="w-3 h-3"></i><span>Source</span></button>
       </div>
       <div class="flex-1 relative overflow-hidden">
         <div id="arc-chrono" class="absolute inset-0 overflow-y-auto csc">${window.app.game.renderChrono()}</div>
+        <div id="arc-blast" class="absolute inset-0 overflow-y-auto csc hidden">${window.app.game.renderBlockBlast()}</div>
         <div id="arc-thesis" class="absolute inset-0 overflow-y-auto csc hidden">${window.app.game.renderThesisJudge()}</div>
         <div id="arc-evidence" class="absolute inset-0 overflow-y-auto csc hidden">${window.app.game.renderEvidenceOrNah()}</div>
         <div id="arc-source" class="absolute inset-0 overflow-y-auto csc hidden">${window.app.game.renderSourceDetective()}</div>
@@ -2227,7 +2491,7 @@ game: {
     </div>`,
 
   switchArcade: (mode) => {
-    ['chrono', 'thesis', 'evidence', 'source'].forEach(m => { document.getElementById('arc-' + m)?.classList.toggle('hidden', m !== mode); document.getElementById('atab-' + m)?.classList.toggle('on', m === mode); });
+    ['chrono', 'blast', 'thesis', 'evidence', 'source'].forEach(m => { document.getElementById('arc-' + m)?.classList.toggle('hidden', m !== mode); document.getElementById('atab-' + m)?.classList.toggle('on', m === mode); });
     lucide.createIcons();
   },
 
@@ -2558,6 +2822,197 @@ game: {
       if (pur !== c.purpose) wrong.push('Purpose');
       window.app.ui.toast(score + '/3 — Check: ' + wrong.join(', ') + '. Read the attribution carefully!', 'error');
     }
+  },
+
+  // ── BLOCK BLAST ──
+  bbState: { grid:null, score:0, combo:0, used:[], best:0, active:false, selected:null },
+
+  renderBlockBlast: () => `
+    <div class="h-full flex flex-col text-white">
+      <div id="bb-start" class="flex-1 flex flex-col items-center justify-center p-6 text-center">
+        <div class="w-14 h-14 rounded-2xl flex items-center justify-center mb-4" style="background:linear-gradient(135deg,#4A90D9,#9B6FC3)"><i data-lucide="grid-3x3" class="w-7 h-7 text-white"></i></div>
+        <h3 class="text-xl font-bold mb-1 fs">BLOCK BLAST</h3>
+        <p class="text-xs mb-2 max-w-xs" style="color:#9a9385">Tap blocks, answer AP MCQs, clear connected groups!</p>
+        <div class="flex gap-3 mb-3 text-[10px]" style="color:#7f7868">
+          <span><span class="inline-block w-3 h-3 rounded" style="background:#4A90D9"></span> Political</span>
+          <span><span class="inline-block w-3 h-3 rounded" style="background:#D4A843"></span> Economic</span>
+          <span><span class="inline-block w-3 h-3 rounded" style="background:#5AAF6E"></span> Social</span>
+          <span><span class="inline-block w-3 h-3 rounded" style="background:#9B6FC3"></span> Cultural</span>
+        </div>
+        <div class="text-xs mb-3" style="color:#7f7868">Best: <span id="bb-best" class="font-bold text-white">${window.app.game.bbState.best}</span></div>
+        <button onclick="window.app.game.startBlockBlast()" class="btnP text-xs px-6 py-2.5">START GAME</button>
+      </div>
+      <div id="bb-game" class="hidden flex-1 flex flex-col">
+        <div class="flex justify-between items-center px-4 py-2" style="background:rgba(255,255,255,.03)">
+          <div class="text-xs"><span style="color:#9a9385">Score</span> <span class="font-bold text-lg text-white ml-1" id="bb-score">0</span></div>
+          <div class="text-xs"><span style="color:#9a9385">Combo</span> <span class="font-bold text-white ml-1" id="bb-combo">0</span>x</div>
+          <button onclick="window.app.game.endBlockBlast()" class="text-xs" style="color:#655f52">End</button>
+        </div>
+        <div class="flex-1 flex items-center justify-center p-3">
+          <div class="bb-grid" id="bb-grid"></div>
+        </div>
+      </div>
+      <div id="bb-over" class="hidden flex-1 flex flex-col items-center justify-center p-6 text-center" style="background:rgba(0,0,0,.6)">
+        <h3 class="text-xl font-bold mb-2 fs">GAME OVER</h3>
+        <p class="text-sm mb-1" style="color:#9a9385">Score: <span class="text-white font-bold" id="bb-final">0</span></p>
+        <p class="text-xs mb-4" style="color:#7f7868" id="bb-final-msg"></p>
+        <button onclick="window.app.game.startBlockBlast()" class="btnP text-xs px-6 py-2.5">PLAY AGAIN</button>
+      </div>
+    </div>`,
+
+  startBlockBlast: () => {
+    const s = window.app.game.bbState;
+    s.score = 0; s.combo = 0; s.used = []; s.active = true; s.selected = null;
+    const cats = Object.keys(BB_CAT_COLORS);
+    s.grid = Array.from({length:8}, () => Array.from({length:8}, () => cats[Math.floor(Math.random()*4)]));
+    // Leave top 2 rows empty to start
+    for(let r=0;r<2;r++) for(let c=0;c<8;c++) s.grid[r][c] = null;
+    document.getElementById('bb-start')?.classList.add('hidden');
+    document.getElementById('bb-over')?.classList.add('hidden');
+    document.getElementById('bb-game')?.classList.remove('hidden');
+    window.app.game.bbRender();
+    lucide.createIcons();
+  },
+
+  endBlockBlast: () => {
+    const s = window.app.game.bbState;
+    s.active = false;
+    s.best = Math.max(s.best, s.score);
+    document.getElementById('bb-game')?.classList.add('hidden');
+    document.getElementById('bb-over')?.classList.remove('hidden');
+    document.getElementById('bb-final').textContent = s.score;
+    document.getElementById('bb-best').textContent = s.best;
+    const msg = s.score >= 500 ? 'AP Scholar with Distinction! 🏆' : s.score >= 300 ? 'AP Scholar! Great work! ⭐' : s.score >= 150 ? 'Solid knowledge — keep practicing! 📚' : 'History takes time — play again! 💪';
+    document.getElementById('bb-final-msg').textContent = msg;
+    // Award XP
+    if (s.score > 0 && appState.userData?.gamification) {
+      const xp = Math.round(s.score / 10) * 2;
+      appState.userData.gamification.xp += xp;
+      if (appState.user) { try { updateDoc(doc(db,"users",appState.user.uid),{"gamification.xp":appState.userData.gamification.xp}); } catch(e){} }
+      window.app.ui.toast(`+${xp} XP earned!`, 'success');
+    }
+  },
+
+  bbRender: () => {
+    const s = window.app.game.bbState;
+    const el = document.getElementById('bb-grid');
+    if (!el) return;
+    el.innerHTML = s.grid.map((row,r) => row.map((cat,c) => {
+      if (!cat) return `<div class="bb-cell empty"></div>`;
+      return `<div class="bb-cell" style="background:${BB_CAT_COLORS[cat]}" onclick="window.app.game.bbTap(${r},${c})" title="${cat}"></div>`;
+    }).join('')).join('');
+    document.getElementById('bb-score').textContent = s.score;
+    document.getElementById('bb-combo').textContent = s.combo;
+  },
+
+  bbFloodFill: (r,c,cat,grid) => {
+    const visited = new Set();
+    const stack = [[r,c]];
+    while(stack.length) {
+      const [cr,cc] = stack.pop();
+      const key = cr*8+cc;
+      if(visited.has(key)) continue;
+      if(cr<0||cr>=8||cc<0||cc>=8) continue;
+      if(grid[cr][cc] !== cat) continue;
+      visited.add(key);
+      stack.push([cr-1,cc],[cr+1,cc],[cr,cc-1],[cr,cc+1]);
+    }
+    return [...visited].map(k => [Math.floor(k/8), k%8]);
+  },
+
+  bbTap: (r,c) => {
+    const s = window.app.game.bbState;
+    if(!s.active || !s.grid[r][c]) return;
+    const cat = s.grid[r][c];
+    const connected = window.app.game.bbFloodFill(r,c,cat,s.grid);
+    if(connected.length < 2) { window.app.ui.toast('Tap a group of 2+ connected blocks!','info'); return; }
+    s.selected = { r, c, cat, connected };
+    // Pick a question matching this category
+    const catQs = BB_QUESTIONS.filter((q,i) => q.cat===cat && !s.used.includes(i));
+    if(!catQs.length) s.used = s.used.filter(i => BB_QUESTIONS[i].cat !== cat); // Reset if exhausted
+    const pool = BB_QUESTIONS.filter((q,i) => q.cat===cat && !s.used.includes(i));
+    const qi = BB_QUESTIONS.indexOf(pool[Math.floor(Math.random()*pool.length)]);
+    const q = BB_QUESTIONS[qi];
+    s.used.push(qi);
+    // Show question modal
+    const catLabel = cat.charAt(0).toUpperCase()+cat.slice(1);
+    const modal = document.createElement('div');
+    modal.className = 'bb-modal';
+    modal.id = 'bb-q-modal';
+    modal.innerHTML = `<div class="bb-qcard">
+      <div class="mb-3"><span class="bb-cat-label" style="background:${BB_CAT_COLORS[cat]}30;color:${BB_CAT_COLORS[cat]}">${catLabel}</span> <span class="text-[10px]" style="color:#7f7868">${connected.length} blocks</span></div>
+      <p class="text-sm font-semibold mb-3" style="color:#e8e6e1">${q.q}</p>
+      ${q.c.map((ch,i) => `<button class="bb-choice" data-idx="${i}">${String.fromCharCode(65+i)}. ${ch}</button>`).join('')}
+    </div>`;
+    document.body.appendChild(modal);
+    // Handle clicks
+    modal.querySelectorAll('.bb-choice').forEach(btn => {
+      btn.onclick = () => {
+        const idx = parseInt(btn.dataset.idx);
+        modal.querySelectorAll('.bb-choice').forEach(b => b.style.pointerEvents='none');
+        if(idx === q.a) {
+          btn.classList.add('correct');
+          s.combo++;
+          const pts = connected.length * 10 * (1 + s.combo * 0.25);
+          s.score += Math.round(pts);
+          setTimeout(() => { modal.remove(); window.app.game.bbClear(connected); }, 600);
+        } else {
+          btn.classList.add('wrong');
+          modal.querySelector(`.bb-choice[data-idx="${q.a}"]`)?.classList.add('correct');
+          s.combo = 0;
+          setTimeout(() => { modal.remove(); window.app.game.bbDropRow(); }, 900);
+        }
+      };
+    });
+  },
+
+  bbClear: (cells) => {
+    const s = window.app.game.bbState;
+    // Mark cells
+    cells.forEach(([r,c]) => s.grid[r][c] = null);
+    // Gravity: collapse each column
+    for(let c=0;c<8;c++){
+      let write=7;
+      for(let r=7;r>=0;r--){
+        if(s.grid[r][c]!==null){ s.grid[write][c]=s.grid[r][c]; if(write!==r) s.grid[r][c]=null; write--; }
+      }
+      for(let r=write;r>=0;r--) s.grid[r][c]=null;
+    }
+    // Check for cleared rows/columns for bonus
+    let bonus=0;
+    for(let r=0;r<8;r++){ if(s.grid[r].every(c=>c===null)) bonus+=100; }
+    for(let c=0;c<8;c++){ if(s.grid.every(row=>row[c]===null)) bonus+=100; }
+    if(bonus>0){ s.score+=bonus; window.app.ui.toast(`Row/column clear! +${bonus} bonus!`,'success'); }
+    window.app.game.bbRender();
+    // Check if any moves left
+    if(!window.app.game.bbHasMoves()) setTimeout(()=>window.app.game.endBlockBlast(),500);
+  },
+
+  bbDropRow: () => {
+    const s = window.app.game.bbState;
+    // Check game over: if bottom row has blocks, can't push down
+    if(s.grid[7].some(c=>c!==null)) { window.app.game.endBlockBlast(); return; }
+    // Shift everything down by 1
+    for(let r=7;r>0;r--) s.grid[r] = [...s.grid[r-1]];
+    // Fill top row with new blocks
+    const cats = Object.keys(BB_CAT_COLORS);
+    s.grid[0] = Array.from({length:8},()=>cats[Math.floor(Math.random()*4)]);
+    window.app.game.bbRender();
+    if(!window.app.game.bbHasMoves()) setTimeout(()=>window.app.game.endBlockBlast(),500);
+  },
+
+  bbHasMoves: () => {
+    const s = window.app.game.bbState;
+    // Check if any cell has a same-color neighbor
+    for(let r=0;r<8;r++) for(let c=0;c<8;c++){
+      const cat = s.grid[r][c];
+      if(!cat) continue;
+      if(r>0 && s.grid[r-1][c]===cat) return true;
+      if(r<7 && s.grid[r+1][c]===cat) return true;
+      if(c>0 && s.grid[r][c-1]===cat) return true;
+      if(c<7 && s.grid[r][c+1]===cat) return true;
+    }
+    return false;
   }
 },
 
@@ -3266,10 +3721,18 @@ blocks: {
         }, 1000);
       }
 
-      // Render block
+      // Show prompt
+      const promptEl = document.getElementById('mp-prompt-text');
+      if (promptEl) promptEl.textContent = session.prompt || '';
+
+      // Render block with context
       const infoEl = document.getElementById('mp-block-info');
       if (infoEl) {
+        // Show all blocks as progress so the student sees how their piece fits
+        const allBlocks = session.blocks || [];
+        const pips = allBlocks.map((b, i) => `<span class="inline-flex items-center gap-1 text-[10px] px-2 py-1 rounded-lg fm" style="background:${i === me.blockIndex ? 'var(--acs)' : 'var(--elev)'};${i === me.blockIndex ? 'color:var(--ac);font-weight:700;border:1px solid var(--ac)' : 'color:var(--fa);border:1px solid var(--bd)'}">${b.emoji} ${b.label}${i === me.blockIndex ? ' ← You' : ''}</span>`).join('');
         infoEl.innerHTML = `<div class="text-center">
+          <div class="flex flex-wrap justify-center gap-1.5 mb-3">${pips}</div>
           <span class="eb-block-label">${block.emoji} ${block.label}</span>
           <p class="text-xs mt-1" style="color:var(--fa)">Group ${me.groupIndex + 1} — Your piece of the puzzle</p>
         </div>`;
@@ -3278,10 +3741,12 @@ blocks: {
       const areaEl = document.getElementById('mp-block-area');
       if (areaEl && !st._state.rendered) {
         st._state.rendered = true;
+        const esc = window.app.blocks._esc;
         areaEl.innerHTML = `<div class="eb-card eb-block">
           <h2 class="text-lg font-bold fs mb-2">${block.question}</h2>
-          <p class="text-xs mb-3" style="color:var(--fa)">Write your part — your teammates are working on other blocks right now! You can't see what they're writing. 🤫</p>
-          <textarea id="mp-input" class="eb-textarea" placeholder="Write your block here..." style="min-height:180px">${me.response || ''}</textarea>
+          <p class="text-xs mb-1" style="color:var(--fa)">Your teammates are working on other blocks right now — you can't see what they're writing! 🤫</p>
+          <p class="text-xs mb-3" style="color:var(--mu)"><strong>Tip:</strong> ${block.label === 'Set the Scene' ? 'Describe the historical context before/during the topic of the prompt.' : block.label === 'Your Argument' ? 'Make a clear, defensible claim that answers the prompt with a "because" and 2-3 supporting points.' : block.label.includes('Evidence') ? 'Provide specific historical evidence — names, dates, events — and explain how it connects to the prompt.' : block.label.includes('Document') ? 'Reference specific documents. Explain what each says AND how it supports your argument.' : block.label === 'Beyond the Docs' ? 'Add a piece of outside evidence (not from the documents) that supports the argument.' : block.label === 'So What?' ? 'Analyze HOW your evidence proves the argument. Show cause & effect or comparisons.' : block.label === 'Level Up' ? 'Show nuance! Acknowledge a counterargument or connect to another time period.' : 'Write your response thoughtfully — it all comes together at the end!'}</p>
+          <textarea id="mp-input" class="eb-textarea" placeholder="Write your block here..." style="min-height:180px">${esc(me.response || '')}</textarea>
           <div class="flex items-center justify-between mt-3">
             <span class="text-xs fm" style="color:var(--fa)" id="mp-wc">0 words</span>
             <button onclick="window.app.blocks.submitMultiBlock('${sessionId}')" class="btnP text-sm py-2 px-6" id="mp-submit">Submit Block</button>
