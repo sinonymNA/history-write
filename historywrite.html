@@ -2493,8 +2493,6 @@ ui: {
     if (loading) { btn.disabled = true; btn.dataset.origText = btn.textContent; btn.innerHTML = '<span style="display:inline-flex;align-items:center;gap:8px"><svg width="16" height="16" viewBox="0 0 16 16" style="animation:spin .8s linear infinite"><circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="28" stroke-dashoffset="8" stroke-linecap="round"/></svg>Loading…</span>'; }
     else { btn.disabled = false; btn.textContent = btn.dataset.origText || btn.textContent; }
   }
-}
-
 },
 
 // ═══ ESSAY BLOCKS MODULE ═══
@@ -2516,7 +2514,7 @@ blocks: {
           <h3 class="font-bold text-sm">${p.title}</h3>
           <p class="text-xs mt-1 line-clamp-2" style="color:var(--mu)">${p.prompt.substring(0, 120)}${p.prompt.length > 120 ? '…' : ''}</p>
         </div>
-        <button onclick="window.app.router.go('blocks-solo',{prompt:ESSAY_BLOCKS_PROMPTS[${i}]})" class="btnP text-xs w-full flex items-center justify-center gap-2"><i data-lucide="puzzle" class="w-3.5 h-3.5"></i>Start Blocks</button>
+        <button onclick="window.app.blocks.startSoloByIndex(${i})" class="btnP text-xs w-full flex items-center justify-center gap-2"><i data-lucide="puzzle" class="w-3.5 h-3.5"></i>Start Blocks</button>
       </div>`;
     }).join('');
 
@@ -2536,6 +2534,10 @@ blocks: {
       <h4 class="text-xs font-bold uppercase tracking-wider mb-3" style="color:var(--fa)">Solo Practice</h4>
       <div class="grid sm:grid-cols-2 gap-3 stagger">${practiceCards}</div>
     </div>`;
+  },
+
+  startSoloByIndex: (idx) => {
+    window.app.router.go('blocks-solo', { prompt: ESSAY_BLOCKS_PROMPTS[idx] });
   },
 
   // ─── SOLO MODE ───
