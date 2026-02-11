@@ -427,6 +427,42 @@ a, [onclick] { transition:opacity .2s, color .2s; }
 .story-lib-card .story-lib-cover::after { content:''; position:absolute; inset:0; background:linear-gradient(transparent 50%,rgba(0,0,0,.4)); }
 .story-lib-card .story-lib-cover > * { position:relative; z-index:1; }
 
+/* Story images */
+.story-img { width:100%; max-height:280px; object-fit:cover; border-radius:16px; margin-bottom:20px; border:1px solid var(--bd); }
+.story-img-edit { position:absolute; top:8px; right:8px; z-index:2; background:rgba(0,0,0,.6); color:#fff; border:none; border-radius:8px; padding:4px 10px; font-size:11px; cursor:pointer; backdrop-filter:blur(4px); transition:background .2s; }
+.story-img-edit:hover { background:rgba(0,0,0,.8); }
+
+/* ═══ LIVE QUIZ (Blooket-style) ═══ */
+.qz-wrap { min-height:100vh; background:#0d0b1a; color:#e8e6e1; }
+.qz-lobby-code { font-size:48px; font-weight:800; letter-spacing:.15em; color:#fff; text-shadow:0 0 30px rgba(212,98,47,.5); }
+.qz-player-grid { display:flex; flex-wrap:wrap; gap:8px; justify-content:center; max-width:600px; margin:0 auto; }
+.qz-player-chip { padding:6px 14px; border-radius:10px; font-size:13px; font-weight:600; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.06); animation:storyUnlock .3s var(--ease-spring); }
+.qz-timer { width:80px; height:80px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:32px; font-weight:800; font-family:'JetBrains Mono',monospace; border:4px solid; transition:border-color .3s,color .3s; }
+.qz-timer.urgent { border-color:#e74c3c; color:#e74c3c; animation:qzPulse .5s ease-in-out infinite; }
+@keyframes qzPulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.08)} }
+.qz-choices { display:grid; grid-template-columns:1fr 1fr; gap:10px; max-width:560px; margin:0 auto; }
+.qz-choice { padding:16px 14px; border-radius:14px; font-size:14px; font-weight:600; text-align:left; cursor:pointer; border:2px solid transparent; transition:transform .15s,box-shadow .15s,opacity .15s; position:relative; overflow:hidden; }
+.qz-choice:hover { transform:scale(1.03); box-shadow:0 6px 20px rgba(0,0,0,.3); }
+.qz-choice:active { transform:scale(.97); }
+.qz-choice.picked { opacity:.7; pointer-events:none; }
+.qz-choice.picked.right { opacity:1; border-color:#fff; box-shadow:0 0 24px rgba(46,204,113,.4); }
+.qz-choice.picked.wrong { opacity:.5; }
+.qz-choice:nth-child(1) { background:#c0392b; }
+.qz-choice:nth-child(2) { background:#2980b9; }
+.qz-choice:nth-child(3) { background:#27ae60; }
+.qz-choice:nth-child(4) { background:#d35400; }
+.qz-score-pop { position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); font-size:36px; font-weight:800; color:#2ecc71; text-shadow:0 0 20px rgba(46,204,113,.5); animation:qzScorePop .8s var(--ease-out-expo) forwards; pointer-events:none; z-index:50; }
+@keyframes qzScorePop { 0%{opacity:0;transform:translate(-50%,-50%) scale(.5)} 30%{opacity:1;transform:translate(-50%,-50%) scale(1.2)} 100%{opacity:0;transform:translate(-50%,-70%) scale(1)} }
+.qz-lb-row { display:flex; align-items:center; gap:12px; padding:10px 16px; border-radius:12px; margin-bottom:6px; transition:all .4s var(--ease-out-expo); }
+.qz-lb-row:nth-child(1) { background:linear-gradient(90deg,rgba(255,215,0,.15),transparent); }
+.qz-lb-row:nth-child(2) { background:linear-gradient(90deg,rgba(192,192,192,.1),transparent); }
+.qz-lb-row:nth-child(3) { background:linear-gradient(90deg,rgba(205,127,50,.1),transparent); }
+.qz-podium { display:flex; align-items:flex-end; justify-content:center; gap:12px; margin:30px 0; }
+.qz-pod { text-align:center; border-radius:14px 14px 0 0; padding:16px 20px 12px; min-width:100px; }
+.qz-pod-1 { background:linear-gradient(180deg,rgba(255,215,0,.2),rgba(255,215,0,.05)); min-height:160px; }
+.qz-pod-2 { background:linear-gradient(180deg,rgba(192,192,192,.15),rgba(192,192,192,.03)); min-height:120px; }
+.qz-pod-3 { background:linear-gradient(180deg,rgba(205,127,50,.12),rgba(205,127,50,.03)); min-height:90px; }
+
 /* ═══ ILLUSTRATIONS ═══ */
 .illus { opacity:.12; transition:opacity .4s; }
 .illus:hover { opacity:.2; }
@@ -912,6 +948,7 @@ const STORY_LESSONS = {
   chapters:[
     { title:'The Forge of Britain', date:'Manchester, England — 1790s',
       bg:'linear-gradient(135deg,#1a1a2e 0%,#2d1b3d 40%,#4a1c1c 100%)',icon:'🏭',
+      img:'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/Cottonopolis1.jpg/800px-Cottonopolis1.jpg',
       text:`<p>The air tastes of iron and coal. You stand at the edge of Manchester, a city that barely existed a generation ago, now swelling with tens of thousands of souls drawn by the promise of wages. Through the predawn fog, smokestacks rise like the masts of some great industrial fleet, and from inside the brick mills comes the relentless clatter of <span class="story-term">power looms</span> — machines that do in minutes what a hand-weaver needed days to accomplish.</p>
 <p>Britain did not stumble into this revolution by accident. Beneath its green hills lay vast deposits of <span class="story-term">coal and iron ore</span> — the twin fuels of mechanization. Its <span class="story-term">Agricultural Revolution</span> had already pushed surplus laborers off enclosed farms and into cities hungry for factory hands. Centuries of global trade — from Caribbean sugar to Indian cotton — had filled merchant coffers with <span class="story-term">capital</span> ready to invest. And a stable Parliament, friendly to property rights, meant inventors like James Watt could patent a <span class="story-term">steam engine</span> and profit from it.</p>
 <p>By 1800, Britain produced more manufactured goods than any nation on Earth. Its rivers were bridged with iron, its fields crossed by canals, and its cities lit — just barely — by gaslight. The world had never seen anything like it. And it was only the beginning.</p>`,
@@ -921,6 +958,7 @@ const STORY_LESSONS = {
     },
     { title:'Smoke Over the Channel', date:'Continental Europe — 1820s–1860s',
       bg:'linear-gradient(135deg,#1c2841 0%,#2c3e50 50%,#4a6274 100%)',icon:'⚙️',
+      img:'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b8/Krupp_works.JPG/800px-Krupp_works.JPG',
       text:`<p>It was only a matter of time. British entrepreneurs tried desperately to guard their secrets — Parliament even banned the export of textile machinery and the emigration of skilled mechanics. But ideas, like smoke, cannot be contained. A mechanic named Samuel Slater memorized factory designs and sailed to America. Belgian investors lured British engineers across the Channel. The industrial fire had escaped.</p>
 <p><span class="story-term">Belgium</span> industrialized first on the continent, blessed with its own coal fields and a government eager to build railroads. <span class="story-term">France</span> followed more cautiously — its revolution had redistributed land to peasants who were reluctant to leave, so French industry grew around luxury goods and smaller workshops. <span class="story-term">Germany</span> was the surprise. Fragmented into dozens of states, it formed the <span class="story-term">Zollverein</span> (customs union) in 1834, erasing trade barriers. When Otto von Bismarck unified Germany in 1871, the nation erupted into an industrial powerhouse, surpassing Britain in steel production by 1900.</p>
 <p>Each nation found its own path. But the pattern was unmistakable: governments that invested in <span class="story-term">railroads</span>, <span class="story-term">education</span>, and <span class="story-term">banking systems</span> industrialized faster. The state was not a bystander — it was a catalyst.</p>`,
@@ -930,6 +968,7 @@ const STORY_LESSONS = {
     },
     { title:'Iron Horse Across America', date:'United States — 1820s–1870s',
       bg:'linear-gradient(135deg,#2c1810 0%,#6b4423 40%,#c4923a 100%)',icon:'🚂',
+      img:'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5d/East_and_West_Shaking_hands_at_the_laying_of_last_rail_Union_Pacific_Railroad_-_Restoration.jpg/800px-East_and_West_Shaking_hands_at_the_laying_of_last_rail_Union_Pacific_Railroad_-_Restoration.jpg',
       text:`<p>In 1790, America was a nation of farmers. By 1890, it was the world's largest industrial economy. The transformation was staggering. It began in places like <span class="story-term">Lowell, Massachusetts</span>, where young farm women — the "Lowell Mill Girls" — tended power looms in carefully planned factory towns. It accelerated when the <span class="story-term">transcontinental railroad</span> was completed in 1869 at Promontory Summit, Utah, stitching a continent together with iron and steam.</p>
 <p>America had advantages Britain could only dream of: seemingly limitless <span class="story-term">natural resources</span> — coal, iron, timber, oil — and wave after wave of <span class="story-term">immigrant labor</span> pouring through Ellis Island, desperate for work. Inventors like Eli Whitney championed <span class="story-term">interchangeable parts</span>, and later Henry Ford would perfect the <span class="story-term">assembly line</span>. The government handed millions of acres to railroad companies, and tariffs shielded infant industries from British competition.</p>
 <p>But the human cost was enormous. Workers labored twelve-hour days in dangerous factories. Children as young as eight worked in coal mines. And the railroad was built on the backs of exploited Chinese and Irish immigrants, across land taken from Indigenous peoples. Progress had a price, and not everyone paid equally.</p>`,
@@ -939,6 +978,7 @@ const STORY_LESSONS = {
     },
     { title:'The Meiji Miracle', date:'Japan — 1868–1900',
       bg:'linear-gradient(135deg,#1a0a0a 0%,#6b1a1a 40%,#c24848 80%,#f0a0a0 100%)',icon:'🌸',
+      img:'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/Brooklyn_Museum_-_Commodore_Matthew_Perry%27s_%22Black_Ship%22.jpg/800px-Brooklyn_Museum_-_Commodore_Matthew_Perry%27s_%22Black_Ship%22.jpg',
       text:`<p>In 1853, American Commodore Matthew Perry sailed four warships into Edo Bay and demanded Japan open to trade. The shock was existential. For over two centuries, the Tokugawa shogunate had kept Japan isolated. Now, staring at Perry's steam-powered "Black Ships," Japan's leaders saw a terrifying truth: industrialize, or be colonized like China and India.</p>
 <p>The response was revolutionary. In 1868, young samurai overthrew the shogun and restored Emperor Meiji to power. The <span class="story-term">Meiji Restoration</span> was not a return to the past — it was a sprint into the future. The new government sent delegations worldwide to study Western technology, law, and military systems. They adopted what worked and adapted it to Japanese culture. A <span class="story-term">national education system</span> was created virtually overnight. The government built <span class="story-term">state-owned factories</span> (model factories), then sold them cheaply to powerful family business groups called <span class="story-term">zaibatsu</span> like Mitsubishi and Mitsui.</p>
 <p>By 1895 Japan defeated China in war. By 1905 it stunned the world by defeating <em>Russia</em>. In barely forty years, Japan had transformed from a feudal society into an industrial and military power — the only non-Western nation to do so in this era. The Meiji slogan said it all: <em>"Rich nation, strong army."</em></p>`,
@@ -948,6 +988,7 @@ const STORY_LESSONS = {
     },
     { title:'The Sleeping Giant Stirs', date:'Russia — 1860s–1900s',
       bg:'linear-gradient(135deg,#0d1b2a 0%,#1b2838 40%,#415a77 100%)',icon:'🐻',
+      img:'https://upload.wikimedia.org/wikipedia/commons/thumb/4/49/Construction_of_the_Transsiberian_Railway.jpg/800px-Construction_of_the_Transsiberian_Railway.jpg',
       text:`<p>Russia was an empire of contradictions. It stretched across eleven time zones and commanded the largest army in Europe, yet in 1860 it was still a land of <span class="story-term">serfs</span> — peasants legally bound to the land, practically enslaved. While Britain built railroads, Russian nobles debated whether their peasants should be allowed to read. The humiliating defeat in the <span class="story-term">Crimean War</span> (1853–1856) against industrialized Britain and France forced a reckoning.</p>
 <p>Tsar Alexander II <span class="story-term">emancipated the serfs</span> in 1861, but freedom came with crushing debt payments that kept most peasants poor and tied to their villages. Real industrial push came under Finance Minister <span class="story-term">Sergei Witte</span> in the 1890s. Witte courted foreign investment (especially French capital), raised tariffs, and poured resources into a single spectacular project: the <span class="story-term">Trans-Siberian Railroad</span>, stretching 5,772 miles from Moscow to the Pacific — the longest railroad on Earth.</p>
 <p>Factories sprouted in Moscow and St. Petersburg, but Russia's industrialization was uneven and late. By 1900, the vast majority of Russians were still peasant farmers. The cities that did industrialize bred a new class of factory workers living in miserable conditions — workers who would soon have a revolution of their own. Russia had begun to industrialize, but the social tensions it unleashed would reshape the 20th century.</p>`,
@@ -963,6 +1004,7 @@ const STORY_LESSONS = {
   chapters:[
     { title:'Workshop of the World', date:'The British Empire — 1820s–1870s',
       bg:'linear-gradient(135deg,#1a1506 0%,#4a3b10 40%,#c49528 100%)',icon:'🚢',
+      img:'https://upload.wikimedia.org/wikipedia/commons/thumb/e/ed/East_Indiaman_Surat_Castle_1790.jpg/800px-East_Indiaman_Surat_Castle_1790.jpg',
       text:`<p>By the mid-1800s, the phrase was not a boast — it was a fact. Britain manufactured roughly a third of the world's industrial output. Its ships carried cheap textiles, iron tools, and machinery to every inhabited continent, and returned laden with <span class="story-term">raw materials</span>: cotton from Egypt and India, rubber from Malaya, copper from Chile, wool from Australia. The sheer scale of this exchange was unprecedented in human history.</p>
 <p>The key to British dominance was <span class="story-term">comparative advantage</span> backed by military power. British factories could produce cotton cloth so cheaply that Indian hand-weavers — who had supplied Europe with fine textiles for centuries — could not compete. British trade policy, enforced by the Royal Navy, pried open markets worldwide. <span class="story-term">Free trade</span> sounded fair in theory, but in practice it meant industrial nations exported expensive manufactured goods while non-industrial nations were locked into exporting cheap raw materials.</p>
 <p>This was the birth of a truly <span class="story-term">global economy</span> — interconnected, efficient, and deeply unequal. The profits flowed overwhelmingly in one direction: toward the industrialized core of Western Europe and, increasingly, the United States.</p>`,
@@ -972,6 +1014,7 @@ const STORY_LESSONS = {
     },
     { title:'Rivers of Cotton, Mountains of Ore', date:'Colonial Economies — 1800s',
       bg:'linear-gradient(135deg,#1a120a 0%,#3d2b1a 40%,#8b6b3d 100%)',icon:'🌾',
+      img:'https://upload.wikimedia.org/wikipedia/commons/thumb/7/71/Processes_in_the_Manufacture_of_Dacca_Muslins.png/800px-Processes_in_the_Manufacture_of_Dacca_Muslins.png',
       text:`<p>Before the Industrial Revolution, India was the world's leading textile exporter. Bengali weavers produced muslins so fine they were called "woven wind." But the machine changed everything. British-made cotton cloth, produced at a fraction of the cost, flooded Indian markets after the East India Company eliminated tariffs on British imports while taxing Indian textiles. By 1850, <span class="story-term">India had reversed</span> from textile exporter to raw cotton exporter — feeding British mills with fiber and buying back the finished cloth.</p>
 <p>This pattern — <span class="story-term">deindustrialization</span> of colonies — repeated worldwide. Egyptian farmers were pushed to grow <span class="story-term">cash crops</span> like cotton instead of food, making them dependent on global prices they could not control. African colonies exported palm oil, rubber, and minerals. Latin American nations shipped guano, nitrates, and coffee. Each region was integrated into the global economy, but on terms dictated by industrialized powers.</p>
 <p>The result was a new form of <span class="story-term">economic imperialism</span>. You didn't always need to conquer a country with soldiers — you could control it through trade dependency, debt, and infrastructure built to extract resources rather than develop local economies. Railroads in India, for instance, ran from mines and plantations straight to ports — they connected India to Britain, not to itself.</p>`,
@@ -981,6 +1024,7 @@ const STORY_LESSONS = {
     },
     { title:'Poison and Profit', date:'China & the Opium Wars — 1839–1860',
       bg:'linear-gradient(135deg,#0a0a1a 0%,#1a1a3a 40%,#3a1a2a 100%)',icon:'💨',
+      img:'https://upload.wikimedia.org/wikipedia/commons/thumb/8/89/Destroying_Chinese_war_junks%2C_by_E._Duncan_%281843%29.jpg/800px-Destroying_Chinese_war_junks%2C_by_E._Duncan_%281843%29.jpg',
       text:`<p>Britain had a problem. It was addicted to Chinese tea — importing millions of pounds annually — but China wanted almost nothing in return. Silver drained out of Britain at an alarming rate. The solution the British found was as profitable as it was devastating: <span class="story-term">opium</span>.</p>
 <p>Grown on plantations in British-controlled India, opium was smuggled into China by private traders with a wink and nod from the East India Company. By the 1830s, an estimated <span class="story-term">twelve million Chinese</span> were addicted. Silver now flowed the other direction — out of China — causing economic chaos. When the Qing emperor sent Commissioner <span class="story-term">Lin Zexu</span> to Canton to destroy 20,000 chests of opium and halt the trade, Britain declared war.</p>
 <p>The <span class="story-term">First Opium War</span> (1839–1842) was no contest. British steam-powered gunboats devastated Chinese coastal defenses. The resulting <span class="story-term">Treaty of Nanjing</span> was the first of the <span class="story-term">unequal treaties</span>: China ceded Hong Kong, opened five ports to foreign trade, paid a massive indemnity, and granted <span class="story-term">extraterritoriality</span> — the right of British citizens to be tried under British, not Chinese, law. A second war (1856–1860) forced even harsher terms. China's "Century of Humiliation" had begun — a story still taught in Chinese schools today.</p>`,
@@ -990,6 +1034,7 @@ const STORY_LESSONS = {
     },
     { title:'Cutting Through Continents', date:'Suez Canal & Panama Canal — 1860s–1910s',
       bg:'linear-gradient(135deg,#0c2340 0%,#1a5276 40%,#2ecc71 80%,#d4a843 100%)',icon:'⚓',
+      img:'https://upload.wikimedia.org/wikipedia/commons/thumb/e/eb/Suez_Canal_drawing_1881.jpg/800px-Suez_Canal_drawing_1881.jpg',
       text:`<p>In 1869, a French-designed, Egyptian-built miracle opened for business. The <span class="story-term">Suez Canal</span> cut through 120 miles of Egyptian desert, connecting the Mediterranean to the Red Sea. Suddenly, the voyage from London to Mumbai shrank from four months around Africa to mere weeks. Global trade accelerated overnight.</p>
 <p>But the canal came at a price. Egypt's ruler, Khedive Ismail, had borrowed massively from European banks to fund the project and his modernization dreams. When Egypt couldn't repay its debts, <span class="story-term">Britain bought Egypt's shares</span> in the canal in 1875 and effectively took control of the country by 1882 — a textbook case of <span class="story-term">debt imperialism</span>. The canal built to connect Egypt to the world instead connected Egypt to a foreign master.</p>
 <p>Forty-five years later, the same story played out in Central America. The <span class="story-term">Panama Canal</span> (completed 1914) slashed the journey between the Atlantic and Pacific. The United States, after engineering Panama's independence from Colombia, built the canal and controlled a ten-mile-wide <span class="story-term">Canal Zone</span> as sovereign American territory. These engineering marvels were monuments to industrial progress — and to the power of industrial nations to reshape the world's geography for their own strategic benefit.</p>`,
@@ -999,6 +1044,7 @@ const STORY_LESSONS = {
     },
     { title:'The Great Divergence', date:'The Global Economy by 1900',
       bg:'linear-gradient(135deg,#0a0a0a 0%,#1a1a1a 30%,#d4622f 70%,#c49528 100%)',icon:'⚖️',
+      img:'https://upload.wikimedia.org/wikipedia/commons/thumb/6/6b/Kongokonferenz.jpg/800px-Kongokonferenz.jpg',
       text:`<p>Stand at the turn of the twentieth century and look at the world the Industrial Revolution made. A handful of nations — Britain, Germany, France, the United States, Japan — produce the vast majority of the world's manufactured goods. They control most of the world's shipping, banking, and military power. Their citizens enjoy rising living standards, longer lives, and more material comfort than any previous generation.</p>
 <p>Now look at the other side. India, once producing 25% of global GDP, has been <span class="story-term">deindustrialized</span> into a raw-material colony. China, humiliated by unequal treaties, has fractured. Africa has been carved up at the <span class="story-term">Berlin Conference</span> of 1884 with no African voice at the table. Latin American nations are technically independent but economically dependent on exporting coffee, bananas, and minerals to the industrialized north. Historians call this gap <span class="story-term">The Great Divergence</span>.</p>
 <p>This was not just about technology. It was about power — the power to set the terms of trade, to control shipping lanes, to lend money and foreclose on nations, to draw borders and extract resources. The global economy of 1900 was more connected than ever, but its connections were not between equals. They were between the <span class="story-term">industrial core</span> and the <span class="story-term">dependent periphery</span> — a pattern whose echoes still shape our world today.</p>`,
@@ -1025,6 +1071,9 @@ router: {
       if (bl._state?.timerInterval) { clearInterval(bl._state.timerInterval); bl._state.timerInterval = null; }
       if (bl._state) bl._state.rendered = false;
     }
+    // Cleanup quiz listeners on navigation
+    const qz = window.app.quiz;
+    if (qz) { clearInterval(qz._timer); if(qz._unsub){qz._unsub();qz._unsub=null;} if(qz._unsub2){qz._unsub2();qz._unsub2=null;} }
     const V = window.app.views;
     const routes = {
       'home': () => { if (appState.user) return window.app.router.go(appState.userData?.role === 'teacher' ? 'teacher-dash' : 'student-dash'); root.innerHTML = V.landing(); },
@@ -1044,7 +1093,8 @@ router: {
       'blocks-lobby': () => { root.innerHTML = V.blocksLobby(params.sessionId); window.app.blocks.initLobby(params.sessionId); },
       'blocks-play': () => { root.innerHTML = V.blocksPlay(params.sessionId); window.app.blocks.initMultiPlay(params.sessionId); },
       'blocks-review': () => { root.innerHTML = V.blocksReview(params.sessionId); window.app.blocks.initReview(params.sessionId); },
-      'story-lesson': () => { root.innerHTML = V.storyLesson(params.storyId); window.app.story.init(params.storyId, params.assignmentId); }
+      'story-lesson': () => { root.innerHTML = V.storyLesson(params.storyId); window.app.story.init(params.storyId, params.assignmentId); },
+      'quiz-game': () => { root.innerHTML = V.quizGame(); window.app.quiz.init(params.gameId, params.isHost); }
     };
     if (routes[view]) routes[view]();
     lucide.createIcons();
@@ -1284,6 +1334,7 @@ views: {
           <div><h2 class="text-2xl font-bold fs">My Classes</h2><p class="text-sm mt-1" style="color:var(--mu)">Create classes and assign writing tasks.</p></div>
         </div>
         <div class="flex gap-2">
+          <button onclick="window.app.quiz.hostGame()" class="btnG text-sm py-2 px-4 flex items-center gap-2" style="border-color:#c0392b;color:#c0392b"><i data-lucide="zap" class="w-4 h-4"></i>Host Quiz</button>
           <button onclick="window.app.router.go('teacher-tour')" class="btnG text-sm py-2 px-4 flex items-center gap-2" style="border-color:var(--ac);color:var(--ac)"><i data-lucide="play-circle" class="w-4 h-4"></i>Tour</button>
           <button onclick="window.app.router.go('library')" class="btnG text-sm py-2 px-4 flex items-center gap-2"><i data-lucide="library" class="w-4 h-4"></i>Library</button>
           <button onclick="window.app.ui.modal('create-class','open')" class="btnP text-sm py-2 px-4 flex items-center gap-2"><i data-lucide="plus" class="w-4 h-4"></i>New Class</button>
@@ -1316,6 +1367,7 @@ views: {
             <div class="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold" style="background:var(--acs);color:var(--ac)">Lv${level}</div>
             <div><div class="text-xs font-semibold">${stats.xp} XP</div><div class="xpBar w-20 mt-1"><div class="xpFill" style="width:${pct}%"></div></div></div>
           </div>
+          <button onclick="window.app.ui.modal('join-quiz','open')" class="btnG text-xs py-2 px-3" style="border-color:#c0392b;color:#c0392b"><i data-lucide="zap" class="w-3 h-3 inline mr-1"></i>Join Quiz</button>
           <button onclick="window.app.ui.modal('join-class','open')" class="btnP text-xs py-2 px-4">Join Class</button>
         </div>
       </div>
@@ -1333,6 +1385,12 @@ views: {
         <h3 class="text-lg font-bold mb-4">Join Class</h3>
         <input id="class-code" placeholder="Enter class code" class="hinp mb-4 uppercase fm">
         <div class="flex gap-2"><button onclick="window.app.ui.closeModal('join-class')" class="btnG flex-1">Cancel</button><button onclick="window.app.student.joinClass()" class="btnP flex-1">Join</button></div>
+      </div></div></div>
+      <div id="join-quiz" class="hidden"><div class="modalBg" onclick="event.target===this&&window.app.ui.closeModal('join-quiz')"><div class="modalBox" style="max-width:380px">
+        <h3 class="text-lg font-bold mb-2">Join Live Quiz</h3>
+        <p class="text-xs mb-3" style="color:var(--mu)">Enter the game code from your teacher.</p>
+        <input id="quiz-code" placeholder="Game code" class="hinp mb-4 uppercase fm" maxlength="6">
+        <div class="flex gap-2"><button onclick="window.app.ui.closeModal('join-quiz')" class="btnG flex-1">Cancel</button><button onclick="window.app.quiz.joinGame(document.getElementById('quiz-code').value)" class="btnP flex-1" style="background:#c0392b">Join Game</button></div>
       </div></div></div>
     </div>`;
   },
@@ -1739,7 +1797,44 @@ views: {
       <div class="story-progress" id="story-progress"></div>
       <div id="story-content"></div>
     </div>`;
-  }
+  },
+
+  quizGame: () => `
+    <div class="qz-wrap flex flex-col items-center justify-center p-6 text-center" id="qz-root">
+      <div id="qz-lobby" class="w-full max-w-lg">
+        <div class="mb-6">
+          <div class="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4" style="background:linear-gradient(135deg,#c0392b,#d35400)"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+          <h1 class="text-2xl font-bold fs mb-1">AP History Live Quiz</h1>
+          <p class="text-xs" style="color:#9a9385" id="qz-subtitle">Loading...</p>
+        </div>
+        <div class="mb-6"><p class="text-xs mb-1" style="color:#655f52">Game Code</p><div class="qz-lobby-code fm" id="qz-code">----</div></div>
+        <div class="qz-player-grid mb-6" id="qz-players"></div>
+        <div id="qz-lobby-actions"></div>
+      </div>
+      <div id="qz-question" class="hidden w-full max-w-xl">
+        <div class="flex justify-between items-center mb-4 px-2">
+          <span class="text-xs fm" style="color:#655f52" id="qz-qnum">Q1/10</span>
+          <div class="qz-timer" id="qz-timer" style="border-color:var(--ac);color:var(--ac)">20</div>
+          <span class="text-xs fm" style="color:#655f52">Score: <span class="text-white font-bold" id="qz-my-score">0</span></span>
+        </div>
+        <div class="mb-6 p-5 rounded-2xl" style="background:rgba(255,255,255,.05)">
+          <p class="text-sm font-semibold" id="qz-q-text" style="line-height:1.6"></p>
+        </div>
+        <div class="qz-choices" id="qz-choices"></div>
+        <div class="mt-4 text-center hidden" id="qz-answer-feedback"></div>
+      </div>
+      <div id="qz-leaderboard" class="hidden w-full max-w-md">
+        <h2 class="text-xl font-bold fs mb-4">Leaderboard</h2>
+        <div id="qz-lb-list" class="mb-4"></div>
+        <div id="qz-lb-actions"></div>
+      </div>
+      <div id="qz-podium" class="hidden w-full max-w-lg">
+        <h2 class="text-2xl font-bold fs mb-2">Final Results!</h2>
+        <div class="qz-podium" id="qz-podium-display"></div>
+        <div id="qz-podium-full" class="mb-4"></div>
+        <button onclick="window.app.quiz.exit()" class="btnP text-sm px-8 py-3">Back to Dashboard</button>
+      </div>
+    </div>`
 },
 
 // ═══ AUTH ═══
@@ -3253,6 +3348,253 @@ game: {
   }
 },
 
+// ═══ LIVE QUIZ ═══
+quiz: {
+  _gameId: null, _isHost: false, _unsub: null, _unsub2: null, _timer: null, _players: [],
+
+  hostGame: async () => {
+    if (!appState.user) return;
+    const code = Math.random().toString(36).substring(2,8).toUpperCase();
+    // Pick 12 random questions from BB_QUESTIONS
+    const shuffled = [...BB_QUESTIONS].sort(()=>Math.random()-.5).slice(0,12);
+    try {
+      const ref = await addDoc(collection(db,'quizGames'),{
+        hostId: appState.user.uid, code, status:'lobby', currentQ:0,
+        questions: shuffled.map(q=>({q:q.q,c:q.c,a:q.a,cat:q.cat})),
+        numQuestions: shuffled.length, timePerQ:15,
+        questionStartedAt:null, createdAt:serverTimestamp()
+      });
+      window.app.router.go('quiz-game',{gameId:ref.id,isHost:true});
+    } catch(e) { window.app.ui.toast('Error creating quiz: '+e.message,'error'); }
+  },
+
+  joinGame: async (code) => {
+    if (!appState.user || !code) return;
+    try {
+      const snap = await getDocs(query(collection(db,'quizGames'),where('code','==',code.toUpperCase()),where('status','==','lobby')));
+      if (snap.empty) return window.app.ui.toast('No game found with that code.','error');
+      const gameDoc = snap.docs[0];
+      // Add player
+      await setDoc(doc(db,'quizGames',gameDoc.id,'players',appState.user.uid),{
+        name: appState.userData?.name||'Player', score:0, streak:0, answered:false, answer:null, answerTime:null
+      });
+      window.app.router.go('quiz-game',{gameId:gameDoc.id,isHost:false});
+    } catch(e) { window.app.ui.toast('Error joining: '+e.message,'error'); }
+  },
+
+  init: (gameId, isHost) => {
+    const qz = window.app.quiz;
+    qz._gameId = gameId; qz._isHost = !!isHost; qz._players = [];
+    // Listen to game doc
+    qz._unsub = onSnapshot(doc(db,'quizGames',gameId), snap => {
+      if (!snap.exists()) return;
+      qz._gameData = snap.data();
+      qz._render();
+    });
+    // Listen to players
+    qz._unsub2 = onSnapshot(collection(db,'quizGames',gameId,'players'), snap => {
+      qz._players = snap.docs.map(d=>({id:d.id,...d.data()}));
+      qz._render();
+    });
+  },
+
+  _render: () => {
+    const qz = window.app.quiz, g = qz._gameData;
+    if (!g) return;
+    const status = g.status;
+    document.getElementById('qz-lobby')?.classList.toggle('hidden', status!=='lobby');
+    document.getElementById('qz-question')?.classList.toggle('hidden', status!=='question');
+    document.getElementById('qz-leaderboard')?.classList.toggle('hidden', status!=='leaderboard');
+    document.getElementById('qz-podium')?.classList.toggle('hidden', status!=='podium');
+
+    if (status==='lobby') qz._renderLobby();
+    else if (status==='question') qz._renderQuestion();
+    else if (status==='leaderboard') qz._renderLeaderboard();
+    else if (status==='podium') qz._renderPodium();
+  },
+
+  _renderLobby: () => {
+    const qz = window.app.quiz, g = qz._gameData;
+    document.getElementById('qz-code').textContent = g.code;
+    document.getElementById('qz-subtitle').textContent = `${g.numQuestions} questions · ${g.timePerQ}s each · ${qz._players.length} player${qz._players.length!==1?'s':''}`;
+    document.getElementById('qz-players').innerHTML = qz._players.map(p =>
+      `<div class="qz-player-chip">${p.name}</div>`
+    ).join('') || '<p class="text-xs" style="color:#655f52">Waiting for players to join...</p>';
+    document.getElementById('qz-lobby-actions').innerHTML = qz._isHost
+      ? `<button onclick="window.app.quiz.startGame()" class="btnP text-sm px-8 py-3" ${qz._players.length<1?'disabled':''}>${qz._players.length<1?'Need at least 1 player':'Start Game!'}</button>`
+      : `<p class="text-xs" style="color:#9a9385">Waiting for host to start...</p>`;
+  },
+
+  startGame: async () => {
+    const qz = window.app.quiz;
+    // Reset all player scores
+    for (const p of qz._players) {
+      await updateDoc(doc(db,'quizGames',qz._gameId,'players',p.id),{score:0,streak:0,answered:false,answer:null,answerTime:null});
+    }
+    await updateDoc(doc(db,'quizGames',qz._gameId),{status:'question',currentQ:0,questionStartedAt:serverTimestamp()});
+  },
+
+  _renderQuestion: () => {
+    const qz = window.app.quiz, g = qz._gameData;
+    const qi = g.currentQ, q = g.questions[qi];
+    if (!q) return;
+    document.getElementById('qz-qnum').textContent = `Q${qi+1}/${g.numQuestions}`;
+    document.getElementById('qz-q-text').textContent = q.q;
+    const me = qz._players.find(p=>p.id===appState.user?.uid);
+    if (me) document.getElementById('qz-my-score').textContent = me.score;
+
+    // Check if already answered
+    const answered = me?.answered;
+    const choicesEl = document.getElementById('qz-choices');
+    if (choicesEl && !answered) {
+      choicesEl.innerHTML = q.c.map((c,i) =>
+        `<button class="qz-choice" onclick="window.app.quiz.answer(${i})">${String.fromCharCode(65+i)}. ${c}</button>`
+      ).join('');
+    } else if (choicesEl && answered) {
+      choicesEl.innerHTML = q.c.map((c,i) => {
+        const cls = i===q.a ? 'picked right' : (i===me.answer ? 'picked wrong' : 'picked');
+        return `<button class="qz-choice ${cls}" disabled>${String.fromCharCode(65+i)}. ${c}</button>`;
+      }).join('');
+    }
+    const fb = document.getElementById('qz-answer-feedback');
+    if (fb) fb.classList.toggle('hidden', !answered);
+    if (fb && answered) {
+      fb.innerHTML = me.answer===q.a
+        ? `<span class="text-sm font-bold" style="color:#2ecc71">Correct! 🔥 Streak: ${me.streak}</span>`
+        : `<span class="text-sm font-bold" style="color:#e74c3c">Wrong — answer was ${String.fromCharCode(65+q.a)}</span>`;
+    }
+
+    // Timer
+    qz._startTimer();
+
+    // Host: if all answered or time up, show leaderboard
+    if (qz._isHost) {
+      const allAnswered = qz._players.length > 0 && qz._players.every(p=>p.answered);
+      if (allAnswered) { clearInterval(qz._timer); setTimeout(()=>qz.showLeaderboard(),1500); }
+    }
+  },
+
+  _startTimer: () => {
+    const qz = window.app.quiz, g = qz._gameData;
+    clearInterval(qz._timer);
+    const timerEl = document.getElementById('qz-timer');
+    if (!timerEl || !g.questionStartedAt) return;
+    const startMs = g.questionStartedAt.toMillis ? g.questionStartedAt.toMillis() : (g.questionStartedAt.seconds*1000);
+    qz._timer = setInterval(() => {
+      const elapsed = (Date.now()-startMs)/1000;
+      const remaining = Math.max(0, g.timePerQ - elapsed);
+      timerEl.textContent = Math.ceil(remaining);
+      timerEl.classList.toggle('urgent', remaining <= 5);
+      if (remaining <= 0) {
+        clearInterval(qz._timer);
+        timerEl.textContent = '0';
+        if (qz._isHost) setTimeout(()=>qz.showLeaderboard(), 1000);
+      }
+    }, 200);
+  },
+
+  answer: async (choice) => {
+    const qz = window.app.quiz, g = qz._gameData;
+    if (!appState.user) return;
+    const q = g.questions[g.currentQ];
+    const startMs = g.questionStartedAt.toMillis ? g.questionStartedAt.toMillis() : (g.questionStartedAt.seconds*1000);
+    const answerTime = (Date.now()-startMs)/1000;
+    const correct = choice === q.a;
+    const me = qz._players.find(p=>p.id===appState.user.uid);
+    const streak = correct ? (me?.streak||0)+1 : 0;
+    const multiplier = streak >= 10 ? 3 : streak >= 5 ? 2 : streak >= 3 ? 1.5 : 1;
+    const speedBonus = Math.round(Math.max(0, (g.timePerQ - answerTime) / g.timePerQ * 500));
+    const pts = correct ? Math.round((1000 + speedBonus) * multiplier) : 0;
+    const newScore = (me?.score||0) + pts;
+
+    await updateDoc(doc(db,'quizGames',qz._gameId,'players',appState.user.uid),{
+      answered:true, answer:choice, answerTime: Math.round(answerTime*10)/10,
+      score:newScore, streak
+    });
+
+    // Score popup
+    if (correct) {
+      const pop = document.createElement('div');
+      pop.className = 'qz-score-pop';
+      pop.textContent = `+${pts}`;
+      document.body.appendChild(pop);
+      setTimeout(()=>pop.remove(),1000);
+    }
+  },
+
+  showLeaderboard: async () => {
+    const qz = window.app.quiz;
+    if (!qz._isHost) return;
+    await updateDoc(doc(db,'quizGames',qz._gameId),{status:'leaderboard'});
+  },
+
+  _renderLeaderboard: () => {
+    const qz = window.app.quiz, g = qz._gameData;
+    const sorted = [...qz._players].sort((a,b)=>b.score-a.score);
+    const medals = ['🥇','🥈','🥉'];
+    document.getElementById('qz-lb-list').innerHTML = sorted.map((p,i) =>
+      `<div class="qz-lb-row"><span class="text-lg">${medals[i]||`<span class="text-xs fm" style="color:#655f52">${i+1}</span>`}</span><span class="flex-1 text-sm font-semibold text-left">${p.name}</span><span class="fm text-sm font-bold">${p.score.toLocaleString()}</span>${p.streak>=3?`<span class="text-xs">🔥${p.streak}</span>`:''}</div>`
+    ).join('');
+    document.getElementById('qz-lb-actions').innerHTML = qz._isHost
+      ? (g.currentQ < g.numQuestions - 1
+        ? `<button onclick="window.app.quiz.nextQuestion()" class="btnP text-sm px-8 py-3 mt-2">Next Question →</button>`
+        : `<button onclick="window.app.quiz.finish()" class="btnP text-sm px-8 py-3 mt-2">Show Final Results!</button>`)
+      : `<p class="text-xs mt-2" style="color:#9a9385">Host is advancing...</p>`;
+  },
+
+  nextQuestion: async () => {
+    const qz = window.app.quiz, g = qz._gameData;
+    // Reset answered for all players
+    for (const p of qz._players) {
+      await updateDoc(doc(db,'quizGames',qz._gameId,'players',p.id),{answered:false,answer:null,answerTime:null});
+    }
+    await updateDoc(doc(db,'quizGames',qz._gameId),{status:'question',currentQ:g.currentQ+1,questionStartedAt:serverTimestamp()});
+  },
+
+  finish: async () => {
+    const qz = window.app.quiz;
+    await updateDoc(doc(db,'quizGames',qz._gameId),{status:'podium'});
+  },
+
+  _renderPodium: () => {
+    const qz = window.app.quiz;
+    const sorted = [...qz._players].sort((a,b)=>b.score-a.score);
+    const medals = ['🥇','🥈','🥉'], podCls = ['qz-pod-1','qz-pod-2','qz-pod-3'];
+    // Podium (reorder: 2nd, 1st, 3rd)
+    const podOrder = sorted.length>=3 ? [sorted[1],sorted[0],sorted[2]] : sorted.length===2 ? [sorted[1],sorted[0]] : sorted.slice(0,1);
+    const podClsOrder = sorted.length>=3 ? [1,0,2] : sorted.length===2 ? [1,0] : [0];
+    document.getElementById('qz-podium-display').innerHTML = podOrder.map((p,i) =>
+      `<div class="qz-pod ${podCls[podClsOrder[i]]}"><div class="text-3xl mb-1">${medals[podClsOrder[i]]}</div><div class="text-sm font-bold mb-1">${p.name}</div><div class="fm text-xs" style="color:#9a9385">${p.score.toLocaleString()}</div></div>`
+    ).join('');
+    // Full list
+    document.getElementById('qz-podium-full').innerHTML = sorted.slice(3).map((p,i) =>
+      `<div class="flex items-center gap-3 py-2 px-4 text-xs"><span class="fm" style="color:#655f52">${i+4}</span><span class="flex-1 font-semibold">${p.name}</span><span class="fm">${p.score.toLocaleString()}</span></div>`
+    ).join('');
+    // Award XP to current user
+    const me = sorted.find(p=>p.id===appState.user?.uid);
+    if (me && me.score > 0 && appState.userData?.gamification && !qz._xpAwarded) {
+      qz._xpAwarded = true;
+      const xp = Math.round(me.score/20);
+      appState.userData.gamification.xp += xp;
+      if (appState.user) { try { updateDoc(doc(db,"users",appState.user.uid),{"gamification.xp":appState.userData.gamification.xp}); } catch(e){} }
+      window.app.ui.toast(`+${xp} XP from quiz!`,'success');
+    }
+    // Confetti for winner
+    if (sorted[0]?.id === appState.user?.uid && typeof confetti !== 'undefined') {
+      confetti({particleCount:120,spread:90,origin:{y:.6}});
+    }
+  },
+
+  exit: () => {
+    const qz = window.app.quiz;
+    clearInterval(qz._timer);
+    if (qz._unsub) { qz._unsub(); qz._unsub=null; }
+    if (qz._unsub2) { qz._unsub2(); qz._unsub2=null; }
+    qz._xpAwarded = false;
+    window.app.router.go(appState.userData?.role==='teacher'?'teacher-dash':'student-dash');
+  }
+},
+
 // ═══ STORY LESSONS ═══
 story: {
   _storyId: null, _chapter: 0, _assignmentId: null, _completed: [],
@@ -3298,13 +3640,28 @@ story: {
 
     const isComplete = st._completed.includes(st._chapter);
     const isLastChapter = st._chapter === story.chapters.length - 1;
+    const isTeacher = appState.userData?.role === 'teacher';
+    // Check for custom image override
+    const customKey = `story_img_${st._storyId}_${st._chapter}`;
+    const imgUrl = localStorage.getItem(customKey) || ch.img;
 
     container.innerHTML = `
-      <div class="story-scene mb-6" style="background:${ch.bg}">
-        <div class="story-icon">${ch.icon}</div>
+      ${imgUrl ? `<div style="position:relative" class="mb-4">
+        <img src="${imgUrl}" alt="${ch.title}" class="story-img" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+        <div class="story-scene" style="background:${ch.bg};display:none">
+          <div class="story-icon">${ch.icon}</div>
+          <div class="story-chnum">Chapter ${st._chapter + 1} of ${story.chapters.length}</div>
+          <div class="story-chtitle">${ch.title}</div>
+          <div class="story-date">${ch.date}</div>
+        </div>
+        ${isTeacher ? `<button class="story-img-edit" onclick="window.app.story.editImage()">✏️ Edit Image</button>` : ''}
+      </div>` : ''}
+      <div class="story-scene mb-6" style="background:${ch.bg}${imgUrl ? ';min-height:auto;padding:20px 16px' : ''}">
+        ${!imgUrl ? `<div class="story-icon">${ch.icon}</div>` : ''}
         <div class="story-chnum">Chapter ${st._chapter + 1} of ${story.chapters.length}</div>
         <div class="story-chtitle">${ch.title}</div>
         <div class="story-date">${ch.date}</div>
+        ${isTeacher && !imgUrl ? `<button class="story-img-edit" onclick="window.app.story.editImage()" style="margin-top:8px">✏️ Add Image</button>` : ''}
       </div>
       <div class="story-body mb-6">
         ${ch.text}
@@ -3464,6 +3821,18 @@ story: {
   prevChapter: () => {
     const st = window.app.story;
     if (st._chapter > 0) { st._chapter--; st.renderChapter(); }
+  },
+
+  editImage: () => {
+    const st = window.app.story;
+    const customKey = `story_img_${st._storyId}_${st._chapter}`;
+    const current = localStorage.getItem(customKey) || STORY_LESSONS[st._storyId]?.chapters[st._chapter]?.img || '';
+    const url = prompt('Paste a public image URL for this chapter:', current);
+    if (url !== null) {
+      if (url.trim()) localStorage.setItem(customKey, url.trim());
+      else localStorage.removeItem(customKey);
+      st.renderChapter();
+    }
   }
 },
 
