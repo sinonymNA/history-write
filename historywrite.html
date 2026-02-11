@@ -396,6 +396,37 @@ a, [onclick] { transition:opacity .2s, color .2s; }
 .bb-choice.correct { background:rgba(77,128,96,.3)!important; border-color:var(--sg)!important; color:var(--sg)!important; }
 .bb-choice.wrong { background:rgba(212,98,47,.2)!important; border-color:var(--ac)!important; color:var(--ac)!important; }
 
+/* ═══ STORY LESSON ═══ */
+.story-scene { position:relative; overflow:hidden; border-radius:20px; padding:48px 24px 36px; text-align:center; min-height:240px; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+.story-scene::after { content:''; position:absolute; inset:0; background:linear-gradient(transparent 40%,rgba(0,0,0,.5)); pointer-events:none; }
+.story-scene > * { position:relative; z-index:1; }
+.story-icon { font-size:56px; margin-bottom:12px; filter:drop-shadow(0 4px 16px rgba(0,0,0,.4)); animation:float 4s ease-in-out infinite; }
+.story-chnum { font-size:10px; text-transform:uppercase; letter-spacing:.2em; color:rgba(255,255,255,.5); font-family:'DM Sans',sans-serif; font-weight:700; }
+.story-chtitle { font-size:24px; font-weight:700; color:#fff; text-shadow:0 2px 16px rgba(0,0,0,.5); font-family:'Crimson Pro',serif; margin-top:2px; }
+.story-date { font-size:11px; color:rgba(255,255,255,.45); margin-top:6px; font-family:'JetBrains Mono',monospace; }
+.story-body { font-family:'Crimson Pro',Georgia,serif; font-size:17px; line-height:1.85; color:var(--tx); max-width:640px; margin:0 auto; }
+.story-body p { margin-bottom:18px; text-indent:1.5em; }
+.story-body p:first-child { text-indent:0; }
+.story-body p:first-child::first-letter { font-size:2.8em; float:left; line-height:.85; margin-right:6px; margin-top:4px; font-weight:700; color:var(--ac); }
+.story-term { font-weight:600; color:var(--ac); border-bottom:1px dotted rgba(212,98,47,.4); }
+.story-quote { border-left:3px solid var(--ac); padding:12px 16px; margin:20px 0; background:var(--acs); border-radius:0 12px 12px 0; font-style:italic; }
+.story-quote cite { display:block; font-size:12px; font-style:normal; color:var(--mu); margin-top:6px; font-family:'DM Sans',sans-serif; }
+.story-check { max-width:560px; margin:32px auto 0; padding:24px; border-radius:16px; background:var(--elev); border:1px solid var(--bd); }
+.story-progress { display:flex; gap:4px; margin-bottom:20px; }
+.story-pip { flex:1; height:5px; border-radius:3px; background:var(--bd); transition:background .4s var(--ease-out-expo); }
+.story-pip.done { background:var(--sg); }
+.story-pip.current { background:var(--ac); box-shadow:0 0 8px rgba(212,98,47,.4); }
+.story-narrator { display:flex; gap:12px; align-items:flex-start; margin-bottom:16px; }
+.story-narrator-avi { width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0; background:linear-gradient(135deg,var(--ac),var(--gd)); }
+.story-narrator-bubble { background:var(--card); border:1px solid var(--bd); border-radius:4px 14px 14px 14px; padding:12px 16px; font-size:14px; line-height:1.6; }
+.story-unlock { animation:storyUnlock .6s var(--ease-spring); }
+@keyframes storyUnlock { 0%{transform:scale(.9);opacity:0} 100%{transform:scale(1);opacity:1} }
+.story-lib-card { position:relative; overflow:hidden; border-radius:16px; border:1px solid var(--bd); transition:all .35s var(--ease-out-expo); }
+.story-lib-card:hover { border-color:var(--bd2); box-shadow:0 12px 40px rgba(0,0,0,.08); transform:translateY(-3px); }
+.story-lib-card .story-lib-cover { height:140px; display:flex; align-items:center; justify-content:center; flex-direction:column; position:relative; }
+.story-lib-card .story-lib-cover::after { content:''; position:absolute; inset:0; background:linear-gradient(transparent 50%,rgba(0,0,0,.4)); }
+.story-lib-card .story-lib-cover > * { position:relative; z-index:1; }
+
 /* ═══ ILLUSTRATIONS ═══ */
 .illus { opacity:.12; transition:opacity .4s; }
 .illus:hover { opacity:.2; }
@@ -873,6 +904,112 @@ const BB_QUESTIONS = [
 ];
 const BB_CAT_COLORS = { political:'#4A90D9', economic:'#D4A843', social:'#5AAF6E', cultural:'#9B6FC3' };
 
+// ═══ STORY LESSONS ═══
+const STORY_LESSONS = {
+'apwh-6.3': {
+  title:'Industrialization Spreads',unit:'6.3',period:'1750–1900',
+  desc:'Follow the fire of industry as it leaps from Britain across oceans and continents, forever changing how humans live and work.',
+  chapters:[
+    { title:'The Forge of Britain', date:'Manchester, England — 1790s',
+      bg:'linear-gradient(135deg,#1a1a2e 0%,#2d1b3d 40%,#4a1c1c 100%)',icon:'🏭',
+      text:`<p>The air tastes of iron and coal. You stand at the edge of Manchester, a city that barely existed a generation ago, now swelling with tens of thousands of souls drawn by the promise of wages. Through the predawn fog, smokestacks rise like the masts of some great industrial fleet, and from inside the brick mills comes the relentless clatter of <span class="story-term">power looms</span> — machines that do in minutes what a hand-weaver needed days to accomplish.</p>
+<p>Britain did not stumble into this revolution by accident. Beneath its green hills lay vast deposits of <span class="story-term">coal and iron ore</span> — the twin fuels of mechanization. Its <span class="story-term">Agricultural Revolution</span> had already pushed surplus laborers off enclosed farms and into cities hungry for factory hands. Centuries of global trade — from Caribbean sugar to Indian cotton — had filled merchant coffers with <span class="story-term">capital</span> ready to invest. And a stable Parliament, friendly to property rights, meant inventors like James Watt could patent a <span class="story-term">steam engine</span> and profit from it.</p>
+<p>By 1800, Britain produced more manufactured goods than any nation on Earth. Its rivers were bridged with iron, its fields crossed by canals, and its cities lit — just barely — by gaslight. The world had never seen anything like it. And it was only the beginning.</p>`,
+      quote:{text:'England is the workshop of the world.',attr:'— British saying, early 1800s'},
+      question:'What specific advantages allowed Britain to industrialize before any other country? Name at least two.',
+      keyConcept:'Britain industrialized first due to coal/iron deposits, capital accumulated from global trade, labor freed by the Agricultural Revolution, a stable government protecting property/patents, and geographic advantages like rivers and ports.'
+    },
+    { title:'Smoke Over the Channel', date:'Continental Europe — 1820s–1860s',
+      bg:'linear-gradient(135deg,#1c2841 0%,#2c3e50 50%,#4a6274 100%)',icon:'⚙️',
+      text:`<p>It was only a matter of time. British entrepreneurs tried desperately to guard their secrets — Parliament even banned the export of textile machinery and the emigration of skilled mechanics. But ideas, like smoke, cannot be contained. A mechanic named Samuel Slater memorized factory designs and sailed to America. Belgian investors lured British engineers across the Channel. The industrial fire had escaped.</p>
+<p><span class="story-term">Belgium</span> industrialized first on the continent, blessed with its own coal fields and a government eager to build railroads. <span class="story-term">France</span> followed more cautiously — its revolution had redistributed land to peasants who were reluctant to leave, so French industry grew around luxury goods and smaller workshops. <span class="story-term">Germany</span> was the surprise. Fragmented into dozens of states, it formed the <span class="story-term">Zollverein</span> (customs union) in 1834, erasing trade barriers. When Otto von Bismarck unified Germany in 1871, the nation erupted into an industrial powerhouse, surpassing Britain in steel production by 1900.</p>
+<p>Each nation found its own path. But the pattern was unmistakable: governments that invested in <span class="story-term">railroads</span>, <span class="story-term">education</span>, and <span class="story-term">banking systems</span> industrialized faster. The state was not a bystander — it was a catalyst.</p>`,
+      quote:{text:'The Zollverein has done more for German unity than fifty years of diplomacy.',attr:'— Contemporary observation, 1840s'},
+      question:'How did the paths to industrialization differ between Belgium, France, and Germany? What role did governments play?',
+      keyConcept:'Belgium had coal and government railroad investment. France industrialized cautiously due to peasant landholding. Germany used the Zollverein customs union and state-directed investment to rapidly industrialize after unification. Government support for infrastructure, education, and banking was crucial everywhere.'
+    },
+    { title:'Iron Horse Across America', date:'United States — 1820s–1870s',
+      bg:'linear-gradient(135deg,#2c1810 0%,#6b4423 40%,#c4923a 100%)',icon:'🚂',
+      text:`<p>In 1790, America was a nation of farmers. By 1890, it was the world's largest industrial economy. The transformation was staggering. It began in places like <span class="story-term">Lowell, Massachusetts</span>, where young farm women — the "Lowell Mill Girls" — tended power looms in carefully planned factory towns. It accelerated when the <span class="story-term">transcontinental railroad</span> was completed in 1869 at Promontory Summit, Utah, stitching a continent together with iron and steam.</p>
+<p>America had advantages Britain could only dream of: seemingly limitless <span class="story-term">natural resources</span> — coal, iron, timber, oil — and wave after wave of <span class="story-term">immigrant labor</span> pouring through Ellis Island, desperate for work. Inventors like Eli Whitney championed <span class="story-term">interchangeable parts</span>, and later Henry Ford would perfect the <span class="story-term">assembly line</span>. The government handed millions of acres to railroad companies, and tariffs shielded infant industries from British competition.</p>
+<p>But the human cost was enormous. Workers labored twelve-hour days in dangerous factories. Children as young as eight worked in coal mines. And the railroad was built on the backs of exploited Chinese and Irish immigrants, across land taken from Indigenous peoples. Progress had a price, and not everyone paid equally.</p>`,
+      quote:{text:'What hath God wrought!',attr:'— Samuel Morse, first telegraph message, 1844'},
+      question:'What factors drove American industrialization, and what were its human costs?',
+      keyConcept:'US industrialization was driven by abundant natural resources, immigrant labor, innovations like interchangeable parts and assembly lines, government support through land grants and tariffs, and the transcontinental railroad. Human costs included dangerous working conditions, child labor, exploitation of immigrants, and displacement of Indigenous peoples.'
+    },
+    { title:'The Meiji Miracle', date:'Japan — 1868–1900',
+      bg:'linear-gradient(135deg,#1a0a0a 0%,#6b1a1a 40%,#c24848 80%,#f0a0a0 100%)',icon:'🌸',
+      text:`<p>In 1853, American Commodore Matthew Perry sailed four warships into Edo Bay and demanded Japan open to trade. The shock was existential. For over two centuries, the Tokugawa shogunate had kept Japan isolated. Now, staring at Perry's steam-powered "Black Ships," Japan's leaders saw a terrifying truth: industrialize, or be colonized like China and India.</p>
+<p>The response was revolutionary. In 1868, young samurai overthrew the shogun and restored Emperor Meiji to power. The <span class="story-term">Meiji Restoration</span> was not a return to the past — it was a sprint into the future. The new government sent delegations worldwide to study Western technology, law, and military systems. They adopted what worked and adapted it to Japanese culture. A <span class="story-term">national education system</span> was created virtually overnight. The government built <span class="story-term">state-owned factories</span> (model factories), then sold them cheaply to powerful family business groups called <span class="story-term">zaibatsu</span> like Mitsubishi and Mitsui.</p>
+<p>By 1895 Japan defeated China in war. By 1905 it stunned the world by defeating <em>Russia</em>. In barely forty years, Japan had transformed from a feudal society into an industrial and military power — the only non-Western nation to do so in this era. The Meiji slogan said it all: <em>"Rich nation, strong army."</em></p>`,
+      quote:{text:'Fukoku kyōhei — Rich country, strong military.',attr:'— Meiji government slogan'},
+      question:'How did Japan\'s approach to industrialization differ from European nations? Why was it motivated by more than just economic growth?',
+      keyConcept:'Japan industrialized through state-directed modernization after Perry\'s forced opening. The Meiji government studied and selectively borrowed Western systems, built model factories, created national education, and sold industries to zaibatsu. Motivation was survival — avoiding colonization — making it a defensive modernization. Japan was the only non-Western nation to fully industrialize in this period.'
+    },
+    { title:'The Sleeping Giant Stirs', date:'Russia — 1860s–1900s',
+      bg:'linear-gradient(135deg,#0d1b2a 0%,#1b2838 40%,#415a77 100%)',icon:'🐻',
+      text:`<p>Russia was an empire of contradictions. It stretched across eleven time zones and commanded the largest army in Europe, yet in 1860 it was still a land of <span class="story-term">serfs</span> — peasants legally bound to the land, practically enslaved. While Britain built railroads, Russian nobles debated whether their peasants should be allowed to read. The humiliating defeat in the <span class="story-term">Crimean War</span> (1853–1856) against industrialized Britain and France forced a reckoning.</p>
+<p>Tsar Alexander II <span class="story-term">emancipated the serfs</span> in 1861, but freedom came with crushing debt payments that kept most peasants poor and tied to their villages. Real industrial push came under Finance Minister <span class="story-term">Sergei Witte</span> in the 1890s. Witte courted foreign investment (especially French capital), raised tariffs, and poured resources into a single spectacular project: the <span class="story-term">Trans-Siberian Railroad</span>, stretching 5,772 miles from Moscow to the Pacific — the longest railroad on Earth.</p>
+<p>Factories sprouted in Moscow and St. Petersburg, but Russia's industrialization was uneven and late. By 1900, the vast majority of Russians were still peasant farmers. The cities that did industrialize bred a new class of factory workers living in miserable conditions — workers who would soon have a revolution of their own. Russia had begun to industrialize, but the social tensions it unleashed would reshape the 20th century.</p>`,
+      quote:{text:'We must make up in decades what other countries took centuries to achieve.',attr:'— Sergei Witte, Russian Finance Minister'},
+      question:'What held Russia back from industrializing earlier, and how did Witte attempt to catch up?',
+      keyConcept:'Russia was held back by serfdom, lack of capital, and conservative nobility. After Crimean War defeat exposed weakness, serfs were emancipated (1861) but remained poor. Witte drove industrialization in 1890s through foreign investment, tariffs, and the Trans-Siberian Railroad. Industrialization was late and uneven — cities industrialized while most remained peasant farmers, creating social tensions.'
+    }
+  ]
+},
+'apwh-6.4': {
+  title:'Trade and the Global Economy',unit:'6.4',period:'1750–1900',
+  desc:'Trace the flows of cotton, opium, and silver as industrial nations reshape global trade — creating unprecedented wealth for some and devastating dependency for others.',
+  chapters:[
+    { title:'Workshop of the World', date:'The British Empire — 1820s–1870s',
+      bg:'linear-gradient(135deg,#1a1506 0%,#4a3b10 40%,#c49528 100%)',icon:'🚢',
+      text:`<p>By the mid-1800s, the phrase was not a boast — it was a fact. Britain manufactured roughly a third of the world's industrial output. Its ships carried cheap textiles, iron tools, and machinery to every inhabited continent, and returned laden with <span class="story-term">raw materials</span>: cotton from Egypt and India, rubber from Malaya, copper from Chile, wool from Australia. The sheer scale of this exchange was unprecedented in human history.</p>
+<p>The key to British dominance was <span class="story-term">comparative advantage</span> backed by military power. British factories could produce cotton cloth so cheaply that Indian hand-weavers — who had supplied Europe with fine textiles for centuries — could not compete. British trade policy, enforced by the Royal Navy, pried open markets worldwide. <span class="story-term">Free trade</span> sounded fair in theory, but in practice it meant industrial nations exported expensive manufactured goods while non-industrial nations were locked into exporting cheap raw materials.</p>
+<p>This was the birth of a truly <span class="story-term">global economy</span> — interconnected, efficient, and deeply unequal. The profits flowed overwhelmingly in one direction: toward the industrialized core of Western Europe and, increasingly, the United States.</p>`,
+      quote:{text:'Trade follows the flag.',attr:'— Victorian-era British proverb'},
+      question:'How did industrialization change the nature of global trade? Why was "free trade" not equally beneficial to all nations?',
+      keyConcept:'Industrial nations like Britain exported cheap manufactured goods while importing raw materials from non-industrial regions. Free trade enforced by naval power destroyed local industries (like Indian textiles) and locked colonies into raw material dependency. The global economy became interconnected but deeply unequal, with profits flowing toward industrialized nations.'
+    },
+    { title:'Rivers of Cotton, Mountains of Ore', date:'Colonial Economies — 1800s',
+      bg:'linear-gradient(135deg,#1a120a 0%,#3d2b1a 40%,#8b6b3d 100%)',icon:'🌾',
+      text:`<p>Before the Industrial Revolution, India was the world's leading textile exporter. Bengali weavers produced muslins so fine they were called "woven wind." But the machine changed everything. British-made cotton cloth, produced at a fraction of the cost, flooded Indian markets after the East India Company eliminated tariffs on British imports while taxing Indian textiles. By 1850, <span class="story-term">India had reversed</span> from textile exporter to raw cotton exporter — feeding British mills with fiber and buying back the finished cloth.</p>
+<p>This pattern — <span class="story-term">deindustrialization</span> of colonies — repeated worldwide. Egyptian farmers were pushed to grow <span class="story-term">cash crops</span> like cotton instead of food, making them dependent on global prices they could not control. African colonies exported palm oil, rubber, and minerals. Latin American nations shipped guano, nitrates, and coffee. Each region was integrated into the global economy, but on terms dictated by industrialized powers.</p>
+<p>The result was a new form of <span class="story-term">economic imperialism</span>. You didn't always need to conquer a country with soldiers — you could control it through trade dependency, debt, and infrastructure built to extract resources rather than develop local economies. Railroads in India, for instance, ran from mines and plantations straight to ports — they connected India to Britain, not to itself.</p>`,
+      quote:{text:'The bones of the cotton weavers are bleaching the plains of India.',attr:'— William Bentinck, British Governor-General of India, 1835'},
+      question:'How did British industrial trade transform India\'s economy? What is "deindustrialization" and how did it work?',
+      keyConcept:'India went from leading textile exporter to raw cotton exporter as cheap British machine-made cloth destroyed Indian handloom industry — this is deindustrialization. Colonial economies were restructured to export cash crops and raw materials while importing manufactured goods. Economic imperialism used trade dependency, debt, and extraction-focused infrastructure to control regions without direct military conquest.'
+    },
+    { title:'Poison and Profit', date:'China & the Opium Wars — 1839–1860',
+      bg:'linear-gradient(135deg,#0a0a1a 0%,#1a1a3a 40%,#3a1a2a 100%)',icon:'💨',
+      text:`<p>Britain had a problem. It was addicted to Chinese tea — importing millions of pounds annually — but China wanted almost nothing in return. Silver drained out of Britain at an alarming rate. The solution the British found was as profitable as it was devastating: <span class="story-term">opium</span>.</p>
+<p>Grown on plantations in British-controlled India, opium was smuggled into China by private traders with a wink and nod from the East India Company. By the 1830s, an estimated <span class="story-term">twelve million Chinese</span> were addicted. Silver now flowed the other direction — out of China — causing economic chaos. When the Qing emperor sent Commissioner <span class="story-term">Lin Zexu</span> to Canton to destroy 20,000 chests of opium and halt the trade, Britain declared war.</p>
+<p>The <span class="story-term">First Opium War</span> (1839–1842) was no contest. British steam-powered gunboats devastated Chinese coastal defenses. The resulting <span class="story-term">Treaty of Nanjing</span> was the first of the <span class="story-term">unequal treaties</span>: China ceded Hong Kong, opened five ports to foreign trade, paid a massive indemnity, and granted <span class="story-term">extraterritoriality</span> — the right of British citizens to be tried under British, not Chinese, law. A second war (1856–1860) forced even harsher terms. China's "Century of Humiliation" had begun — a story still taught in Chinese schools today.</p>`,
+      quote:{text:'If we allow this trade to continue, there will be no soldiers to defend our borders and no money to pay them.',attr:'— Lin Zexu, letter to Queen Victoria, 1839'},
+      question:'What caused the Opium Wars, and what were the consequences for China? What are "unequal treaties"?',
+      keyConcept:'Britain smuggled Indian-grown opium into China to reverse its trade deficit from tea imports. When China tried to stop the trade, Britain used military force. The Treaty of Nanjing forced China to cede Hong Kong, open ports, pay indemnities, and accept extraterritoriality. Unequal treaties imposed terms that benefited Western powers while stripping Chinese sovereignty — beginning China\'s Century of Humiliation.'
+    },
+    { title:'Cutting Through Continents', date:'Suez Canal & Panama Canal — 1860s–1910s',
+      bg:'linear-gradient(135deg,#0c2340 0%,#1a5276 40%,#2ecc71 80%,#d4a843 100%)',icon:'⚓',
+      text:`<p>In 1869, a French-designed, Egyptian-built miracle opened for business. The <span class="story-term">Suez Canal</span> cut through 120 miles of Egyptian desert, connecting the Mediterranean to the Red Sea. Suddenly, the voyage from London to Mumbai shrank from four months around Africa to mere weeks. Global trade accelerated overnight.</p>
+<p>But the canal came at a price. Egypt's ruler, Khedive Ismail, had borrowed massively from European banks to fund the project and his modernization dreams. When Egypt couldn't repay its debts, <span class="story-term">Britain bought Egypt's shares</span> in the canal in 1875 and effectively took control of the country by 1882 — a textbook case of <span class="story-term">debt imperialism</span>. The canal built to connect Egypt to the world instead connected Egypt to a foreign master.</p>
+<p>Forty-five years later, the same story played out in Central America. The <span class="story-term">Panama Canal</span> (completed 1914) slashed the journey between the Atlantic and Pacific. The United States, after engineering Panama's independence from Colombia, built the canal and controlled a ten-mile-wide <span class="story-term">Canal Zone</span> as sovereign American territory. These engineering marvels were monuments to industrial progress — and to the power of industrial nations to reshape the world's geography for their own strategic benefit.</p>`,
+      quote:{text:'The canal is the property of the Egyptian government. But its benefits belong to the world — especially to Britain.',attr:'— Paraphrase of British PM Disraeli after buying Suez shares, 1875'},
+      question:'How did the Suez and Panama Canals change global trade? How did they become tools of imperialism?',
+      keyConcept:'The Suez Canal (1869) dramatically shortened trade routes from Europe to Asia. Egypt went into debt building it, allowing Britain to buy control and effectively colonize Egypt — an example of debt imperialism. The Panama Canal (1914) was built by the US after engineering Panama\'s independence. Both canals show how infrastructure projects could be tools of imperial control, not just trade efficiency.'
+    },
+    { title:'The Great Divergence', date:'The Global Economy by 1900',
+      bg:'linear-gradient(135deg,#0a0a0a 0%,#1a1a1a 30%,#d4622f 70%,#c49528 100%)',icon:'⚖️',
+      text:`<p>Stand at the turn of the twentieth century and look at the world the Industrial Revolution made. A handful of nations — Britain, Germany, France, the United States, Japan — produce the vast majority of the world's manufactured goods. They control most of the world's shipping, banking, and military power. Their citizens enjoy rising living standards, longer lives, and more material comfort than any previous generation.</p>
+<p>Now look at the other side. India, once producing 25% of global GDP, has been <span class="story-term">deindustrialized</span> into a raw-material colony. China, humiliated by unequal treaties, has fractured. Africa has been carved up at the <span class="story-term">Berlin Conference</span> of 1884 with no African voice at the table. Latin American nations are technically independent but economically dependent on exporting coffee, bananas, and minerals to the industrialized north. Historians call this gap <span class="story-term">The Great Divergence</span>.</p>
+<p>This was not just about technology. It was about power — the power to set the terms of trade, to control shipping lanes, to lend money and foreclose on nations, to draw borders and extract resources. The global economy of 1900 was more connected than ever, but its connections were not between equals. They were between the <span class="story-term">industrial core</span> and the <span class="story-term">dependent periphery</span> — a pattern whose echoes still shape our world today.</p>`,
+      quote:{text:'When they arrived, they had the Bible and we had the land. They said, "Let us close our eyes and pray." When we opened our eyes, we had the Bible and they had the land.',attr:'— Attributed to Desmond Tutu'},
+      question:'What is "The Great Divergence" and what forces created the gap between industrial and non-industrial nations by 1900?',
+      keyConcept:'The Great Divergence describes the growing economic gap between industrialized nations and the rest of the world by 1900. It was caused by deindustrialization of colonies, unequal trade terms, debt imperialism, extraction of raw materials, and political control through unequal treaties and direct colonization. The global economy divided into an industrial core (Europe, US, Japan) and a dependent periphery (Asia, Africa, Latin America).'
+    }
+  ]
+}
+};
+
 window.app = {
 
 // ═══ ROUTER ═══
@@ -906,7 +1043,8 @@ router: {
       'blocks-solo': () => { root.innerHTML = V.blocksSolo(params.prompt); window.app.blocks.initSolo(params.prompt); },
       'blocks-lobby': () => { root.innerHTML = V.blocksLobby(params.sessionId); window.app.blocks.initLobby(params.sessionId); },
       'blocks-play': () => { root.innerHTML = V.blocksPlay(params.sessionId); window.app.blocks.initMultiPlay(params.sessionId); },
-      'blocks-review': () => { root.innerHTML = V.blocksReview(params.sessionId); window.app.blocks.initReview(params.sessionId); }
+      'blocks-review': () => { root.innerHTML = V.blocksReview(params.sessionId); window.app.blocks.initReview(params.sessionId); },
+      'story-lesson': () => { root.innerHTML = V.storyLesson(params.storyId); window.app.story.init(params.storyId, params.assignmentId); }
     };
     if (routes[view]) routes[view]();
     lucide.createIcons();
@@ -1341,6 +1479,26 @@ views: {
         <span class="text-xs font-bold" style="color:var(--mu)">Clone into:</span>
         <span class="text-xs" style="color:var(--fa)">Loading classes…</span>
       </div>
+      <h2 class="text-lg font-bold fs mb-3 flex items-center gap-2"><span class="w-7 h-7 rounded-lg flex items-center justify-center" style="background:linear-gradient(135deg,var(--ac),var(--gd))"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></span> Story Lessons <span class="text-[10px] fm font-bold px-2 py-0.5 rounded-full" style="background:rgba(77,128,96,.1);color:var(--sg)">NEW</span></h2>
+      <p class="text-xs mb-4" style="color:var(--mu)">AI-driven immersive stories that teach through narrative. Students read, experience history, and prove they understand before moving on.</p>
+      <div class="grid sm:grid-cols-2 gap-4 mb-8 stagger">
+        ${Object.entries(STORY_LESSONS).map(([id, s]) => `<div class="story-lib-card">
+          <div class="story-lib-cover" style="background:${s.chapters[0].bg}">
+            <span style="font-size:36px;filter:drop-shadow(0 2px 8px rgba(0,0,0,.4))">${s.chapters[0].icon}</span>
+            <p class="text-[10px] font-bold uppercase tracking-widest mt-2" style="color:rgba(255,255,255,.5)">Unit ${s.unit} · ${s.period}</p>
+            <h3 class="font-bold text-lg fs" style="color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.4)">${s.title}</h3>
+          </div>
+          <div class="p-4" style="background:var(--card)">
+            <p class="text-xs mb-3" style="color:var(--mu)">${s.desc}</p>
+            <p class="text-[10px] mb-3" style="color:var(--fa)">${s.chapters.length} chapters · AI retention checks · ~15 min</p>
+            <div class="flex gap-2">
+              <button onclick="window.app.teacher.assignStory('${id}')" class="btnP text-xs flex-1">Assign to Class</button>
+              <button onclick="window.app.router.go('story-lesson',{storyId:'${id}'})" class="btnG text-xs flex-1">Preview</button>
+            </div>
+          </div>
+        </div>`).join('')}
+      </div>
+      <h2 class="text-lg font-bold fs mb-3">Essay Assignments</h2>
       <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 stagger">
         ${LIBRARY_TEMPLATES.map((t, idx) => `<div class="hcard p-5 flex flex-col justify-between"><div class="mb-4"><span class="text-[10px] font-bold fm uppercase px-2 py-1 rounded" style="background:var(--acs);color:var(--ac)">${t.type}</span><h3 class="font-bold mt-2 text-sm">${t.title}</h3><p class="text-xs mt-1 line-clamp-3" style="color:var(--mu)">${t.prompt}</p>${t.sources?.length ? `<p class="text-[10px] mt-1" style="color:var(--fa)">${t.sources.length} document${t.sources.length > 1 ? 's' : ''} attached</p>` : ''}</div><button onclick="window.app.teacher.cloneTemplate(${idx})" class="btnP text-xs w-full">Clone to Class</button></div>`).join('')}
       </div>
@@ -1567,7 +1725,21 @@ views: {
         <button onclick="window.app.teacher.tourPrev()" class="btnG text-sm py-2 px-5" id="tour-prev">← Previous</button>
         <button onclick="window.app.teacher.tourNext()" class="btnP text-sm py-2 px-5" id="tour-next">Next →</button>
       </div>
-    </div>`
+    </div>`,
+
+  storyLesson: (storyId) => {
+    const story = STORY_LESSONS[storyId];
+    if (!story) return `<div class="p-8 text-center"><p>Story not found.</p></div>`;
+    return `
+    <div class="max-w-3xl mx-auto px-4 py-6 pageEnter" id="story-root" data-story="${storyId}">
+      <div class="flex items-center justify-between mb-4">
+        <button onclick="window.app.story.exit()" class="text-sm flex items-center gap-1" style="color:var(--mu)"><i data-lucide="arrow-left" class="w-4 h-4"></i>Back</button>
+        <div class="text-right"><span class="text-[10px] fm font-bold px-2 py-1 rounded" style="background:var(--acs);color:var(--ac)">Unit ${story.unit}</span></div>
+      </div>
+      <div class="story-progress" id="story-progress"></div>
+      <div id="story-content"></div>
+    </div>`;
+  }
 },
 
 // ═══ AUTH ═══
@@ -1682,6 +1854,20 @@ teacher: {
       const cls = window.app.teacher._teacherClasses.find(c => c.id === classId);
       window.app.ui.toast(`"${t.title}" added to ${cls?.name || 'class'}!`, 'success');
     } catch(e) { console.error(e); window.app.ui.toast('Clone failed: ' + e.message, 'error'); }
+  },
+  assignStory: async (storyId) => {
+    const story = STORY_LESSONS[storyId]; if (!story) return;
+    const classId = window.app.teacher._selectedClassId;
+    if (!classId) return window.app.ui.toast('Select a class first.', 'error');
+    try {
+      await addDoc(collection(db, 'assignments'), {
+        classId, title: `📖 ${story.title} (Unit ${story.unit})`, type: 'story', prompt: story.desc,
+        storyId, maxAttempts: 99, teacherId: appState.user.uid, createdAt: serverTimestamp(), submissionsCount: 0,
+        structure: { kind: 'story', storyId, chapters: story.chapters.length }
+      });
+      const cls = window.app.teacher._teacherClasses.find(c => c.id === classId);
+      window.app.ui.toast(`Story "${story.title}" assigned to ${cls?.name || 'class'}!`, 'success');
+    } catch(e) { console.error(e); window.app.ui.toast('Assign failed: ' + e.message, 'error'); }
   },
   // ── Builder functions ──
   initBuilder: () => {
@@ -2169,10 +2355,27 @@ student: {
           const a = d.data(), sub = subsMap[d.id], done = !!sub;
           const subPayload = sub ? JSON.stringify(sub).replace(/'/g, "&#39;") : '';
           const aPayload = JSON.stringify({ id: d.id, ...a }).replace(/'/g, "&#39;");
+          if (a.type === 'story') {
+            const sid = a.storyId || a.structure?.storyId;
+            const storyData = sid ? STORY_LESSONS[sid] : null;
+            const saved = localStorage.getItem(`story_${sid}_${appState.user.uid}`);
+            const progress = saved ? JSON.parse(saved) : [];
+            const total = storyData?.chapters?.length || a.structure?.chapters || 5;
+            const pct = Math.round((progress.length / total) * 100);
+            return `<div class="hcard p-4" style="border-left:3px solid ${done?'var(--sg)':'var(--ac)'}">
+              <div class="flex items-center justify-between gap-3 mb-2">
+                <div><span class="text-[10px] font-bold fm uppercase px-2 py-1 rounded" style="background:linear-gradient(135deg,rgba(212,98,47,.1),rgba(196,149,40,.1));color:var(--ac)">📖 story</span><h3 class="font-bold text-sm mt-1.5">${a.title}</h3></div>
+                ${done ? `<div class="text-xs font-bold px-2 py-1 rounded" style="background:rgba(77,128,96,.1);color:var(--sg)">Complete ✓</div>` : progress.length > 0 ? `<div class="text-xs font-bold" style="color:var(--ac)">${pct}%</div>` : ''}
+              </div>
+              <p class="text-xs mb-2" style="color:var(--mu)">${a.prompt}</p>
+              ${!done && progress.length > 0 ? `<div class="flex gap-1 mb-2">${Array.from({length:total},(_,i)=>`<div style="flex:1;height:3px;border-radius:2px;background:${progress.includes(i)?'var(--sg)':'var(--bd)'}"></div>`).join('')}</div>` : ''}
+              <button onclick='window.app.router.go("story-lesson",{storyId:"${sid}",assignmentId:"${d.id}"})' class="btnP w-full text-xs">${done ? 'Re-read Story' : progress.length > 0 ? 'Continue Reading' : 'Begin Story'}</button>
+            </div>`;
+          }
           return `<div class="hcard p-4">
             <div class="flex items-center justify-between gap-3 mb-2">
               <div><span class="text-[10px] font-bold fm uppercase px-2 py-1 rounded" style="background:var(--acs);color:var(--ac)">${a.type}</span><h3 class="font-bold text-sm mt-1.5">${a.title}</h3></div>
-              ${done ? `<div class="text-sm font-bold" style="color:var(--sg)">${sub.grading.score}/${sub.grading.maxScore}</div>` : ''}
+              ${done ? `<div class="text-sm font-bold" style="color:var(--sg)">${sub.grading?.score||0}/${sub.grading?.maxScore||0}</div>` : ''}
             </div>
             <p class="text-xs mb-3 line-clamp-2" style="color:var(--mu)">${a.prompt}</p>
             ${done
@@ -3047,6 +3250,220 @@ game: {
         }
       };
     });
+  }
+},
+
+// ═══ STORY LESSONS ═══
+story: {
+  _storyId: null, _chapter: 0, _assignmentId: null, _completed: [],
+
+  init: (storyId, assignmentId) => {
+    const st = window.app.story;
+    st._storyId = storyId;
+    st._chapter = 0;
+    st._assignmentId = assignmentId || null;
+    // Load progress from localStorage
+    const saved = localStorage.getItem(`story_${storyId}_${appState.user?.uid||'preview'}`);
+    st._completed = saved ? JSON.parse(saved) : [];
+    // If they've completed some chapters, start at the first incomplete
+    const story = STORY_LESSONS[storyId];
+    if (story) {
+      const firstIncomplete = story.chapters.findIndex((_,i) => !st._completed.includes(i));
+      st._chapter = firstIncomplete >= 0 ? firstIncomplete : 0;
+    }
+    st.renderChapter();
+    lucide.createIcons();
+  },
+
+  exit: () => {
+    const role = appState.userData?.role;
+    if (!appState.user || role === 'teacher') window.app.router.go('library');
+    else window.app.router.go('student-dash');
+  },
+
+  renderChapter: () => {
+    const st = window.app.story;
+    const story = STORY_LESSONS[st._storyId]; if (!story) return;
+    const ch = story.chapters[st._chapter];
+    const container = document.getElementById('story-content');
+    const progEl = document.getElementById('story-progress');
+    if (!container) return;
+
+    // Progress pips
+    if (progEl) {
+      progEl.innerHTML = story.chapters.map((_,i) =>
+        `<div class="story-pip ${st._completed.includes(i)?'done':''} ${i===st._chapter?'current':''}"></div>`
+      ).join('');
+    }
+
+    const isComplete = st._completed.includes(st._chapter);
+    const isLastChapter = st._chapter === story.chapters.length - 1;
+
+    container.innerHTML = `
+      <div class="story-scene mb-6" style="background:${ch.bg}">
+        <div class="story-icon">${ch.icon}</div>
+        <div class="story-chnum">Chapter ${st._chapter + 1} of ${story.chapters.length}</div>
+        <div class="story-chtitle">${ch.title}</div>
+        <div class="story-date">${ch.date}</div>
+      </div>
+      <div class="story-body mb-6">
+        ${ch.text}
+        ${ch.quote ? `<blockquote class="story-quote">"${ch.quote.text}"<cite>${ch.quote.attr}</cite></blockquote>` : ''}
+      </div>
+      <div class="story-check" id="story-check">
+        ${isComplete ? `
+          <div class="text-center story-unlock">
+            <div class="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3" style="background:rgba(77,128,96,.15)"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--sg)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></div>
+            <p class="text-sm font-bold" style="color:var(--sg)">Chapter Complete!</p>
+            <p class="text-xs mt-1 mb-4" style="color:var(--mu)">You demonstrated understanding of this section.</p>
+            ${isLastChapter ? `
+              <div class="p-4 rounded-xl mb-3" style="background:linear-gradient(135deg,rgba(212,98,47,.08),rgba(196,149,40,.08));border:1px solid var(--bd2)">
+                <p class="text-lg font-bold fs" style="color:var(--ac)">Story Complete!</p>
+                <p class="text-xs mt-1" style="color:var(--mu)">You finished all ${story.chapters.length} chapters of Unit ${story.unit}: ${story.title}</p>
+              </div>
+              <button onclick="window.app.story.exit()" class="btnP text-xs px-6 py-2.5">Back to Dashboard</button>
+            ` : `<button onclick="window.app.story.nextChapter()" class="btnP text-xs px-6 py-2.5">Continue to Chapter ${st._chapter + 2} →</button>`}
+          </div>
+        ` : `
+          <div class="story-narrator">
+            <div class="story-narrator-avi">🧑‍🏫</div>
+            <div class="story-narrator-bubble">
+              <p class="text-sm font-semibold mb-1">Before you continue...</p>
+              <p class="text-xs" style="color:var(--mu)">${ch.question}</p>
+            </div>
+          </div>
+          <textarea id="story-answer" class="hinp mt-3 text-sm" rows="4" placeholder="Type your answer here... Show me you understand the key ideas from this chapter."></textarea>
+          <div id="story-feedback" class="hidden mt-3"></div>
+          <button id="story-submit-btn" onclick="window.app.story.checkAnswer()" class="btnP text-xs w-full mt-3">Check My Understanding</button>
+        `}
+      </div>
+      <div class="flex justify-between mt-6">
+        <button onclick="window.app.story.prevChapter()" class="btnG text-xs py-2 px-4" ${st._chapter === 0 ? 'style="visibility:hidden"' : ''}>← Previous</button>
+        <span class="text-[10px] fm" style="color:var(--fa)">${st._chapter + 1} / ${story.chapters.length}</span>
+        ${isComplete && !isLastChapter ? `<button onclick="window.app.story.nextChapter()" class="btnG text-xs py-2 px-4">Next →</button>` : `<div></div>`}
+      </div>
+    `;
+    // Scroll to top
+    document.getElementById('story-root')?.scrollTo(0,0);
+    window.scrollTo(0,0);
+    lucide.createIcons();
+  },
+
+  checkAnswer: async () => {
+    const st = window.app.story;
+    const story = STORY_LESSONS[st._storyId]; if (!story) return;
+    const ch = story.chapters[st._chapter];
+    const answer = document.getElementById('story-answer')?.value?.trim();
+    if (!answer || answer.length < 15) return window.app.ui.toast('Write a more complete answer — at least a sentence or two.', 'info');
+
+    const btn = document.getElementById('story-submit-btn');
+    const fb = document.getElementById('story-feedback');
+    if (btn) { btn.disabled = true; btn.textContent = 'Checking...'; }
+
+    // Resolve API key
+    let key = appState._cachedGlobalKey || appState.apiKey;
+    if (!key && appState.userData?.classIds?.length) {
+      try {
+        const cSnap = await getDocs(query(collection(db,"classes"),where("students","array-contains",appState.user.uid)));
+        for (const d of cSnap.docs) { const cd = d.data(); if (cd.teacherId) { const tDoc = await getDoc(doc(db,"users",cd.teacherId)); if (tDoc.exists() && tDoc.data().apiKey) { key = tDoc.data().apiKey; break; } } }
+      } catch(e){}
+    }
+    if (!key) {
+      try { const cfgDoc = await getDoc(doc(db,"config","api")); if (cfgDoc.exists()) key = cfgDoc.data().key; } catch(e){}
+    }
+
+    if (!key) {
+      // Fallback: simple keyword matching
+      const concepts = ch.keyConcept.toLowerCase().split(/[,.]/).map(s=>s.trim()).filter(s=>s.length>3);
+      const ansLower = answer.toLowerCase();
+      const matches = concepts.filter(c => { const words = c.split(/\s+/).filter(w=>w.length>4); return words.some(w => ansLower.includes(w)); });
+      if (matches.length >= 2) {
+        st._markComplete();
+        if(fb) { fb.classList.remove('hidden'); fb.innerHTML = `<div class="p-3 rounded-xl" style="background:rgba(77,128,96,.08);border:1px solid rgba(77,128,96,.2)"><p class="text-xs font-bold" style="color:var(--sg)">✓ Good understanding!</p><p class="text-xs mt-1" style="color:var(--mu)">You've shown you grasp the key ideas. Moving on!</p></div>`; }
+        setTimeout(() => st.renderChapter(), 1200);
+      } else {
+        if(fb) { fb.classList.remove('hidden'); fb.innerHTML = `<div class="p-3 rounded-xl" style="background:rgba(212,98,47,.08);border:1px solid rgba(212,98,47,.2)"><p class="text-xs font-bold" style="color:var(--ac)">Not quite yet</p><p class="text-xs mt-1" style="color:var(--mu)">Re-read the chapter and try to address: ${ch.question}</p><p class="text-[10px] mt-1" style="color:var(--fa)">Hint: Think about ${concepts.slice(0,2).join(' and ')}.</p></div>`; }
+        if(btn) { btn.disabled = false; btn.textContent = 'Try Again'; }
+      }
+      return;
+    }
+
+    // AI evaluation
+    try {
+      const resp = await fetch('https://api.anthropic.com/v1/messages', {
+        method:'POST',
+        headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+        body:JSON.stringify({
+          model:'claude-sonnet-4-5-20250929', max_tokens:300,
+          system:'You are a friendly AP World History teacher evaluating student understanding. Be encouraging but accurate. Respond in JSON: {"pass":true/false,"feedback":"1-2 sentences of feedback","hint":"if not passing, a helpful hint"}',
+          messages:[{role:'user',content:`Chapter: "${ch.title}"\nKey concept the student should demonstrate understanding of: ${ch.keyConcept}\n\nRetention question: ${ch.question}\n\nStudent's answer: "${answer}"\n\nDoes this answer show basic understanding of the key concept? They don't need to be perfect — just show they grasped the main ideas. Be encouraging.`}]
+        })
+      });
+      const data = await resp.json();
+      const text = data.content?.[0]?.text || '';
+      let result;
+      try { result = JSON.parse(text); } catch { result = text.toLowerCase().includes('"pass":true') || text.toLowerCase().includes('"pass": true') ? {pass:true,feedback:'Great understanding!'} : {pass:false,feedback:'Try reading the chapter again.',hint:'Focus on the key terms.'}; }
+
+      if (result.pass) {
+        st._markComplete();
+        if(fb) { fb.classList.remove('hidden'); fb.innerHTML = `<div class="p-3 rounded-xl" style="background:rgba(77,128,96,.08);border:1px solid rgba(77,128,96,.2)"><p class="text-xs font-bold" style="color:var(--sg)">✓ ${result.feedback || 'Great understanding!'}</p></div>`; }
+        setTimeout(() => st.renderChapter(), 1500);
+      } else {
+        if(fb) { fb.classList.remove('hidden'); fb.innerHTML = `<div class="p-3 rounded-xl" style="background:rgba(212,98,47,.08);border:1px solid rgba(212,98,47,.2)"><p class="text-xs font-bold" style="color:var(--ac)">Almost there!</p><p class="text-xs mt-1" style="color:var(--mu)">${result.feedback || 'Review the chapter and try again.'}</p>${result.hint ? `<p class="text-[10px] mt-1" style="color:var(--fa)">💡 ${result.hint}</p>` : ''}</div>`; }
+        if(btn) { btn.disabled = false; btn.textContent = 'Try Again'; }
+      }
+    } catch(e) {
+      console.error('Story AI check error:', e);
+      // Fallback to keyword matching on API error
+      if(btn) { btn.disabled = false; btn.textContent = 'Try Again'; }
+      window.app.ui.toast('AI check unavailable — trying local check.', 'info');
+      const concepts = ch.keyConcept.toLowerCase().split(/[,.]/).map(s=>s.trim()).filter(s=>s.length>3);
+      const ansLower = answer.toLowerCase();
+      const matches = concepts.filter(c => { const words = c.split(/\s+/).filter(w=>w.length>4); return words.some(w => ansLower.includes(w)); });
+      if (matches.length >= 2) { st._markComplete(); if(fb) { fb.classList.remove('hidden'); fb.innerHTML = `<div class="p-3 rounded-xl" style="background:rgba(77,128,96,.08);border:1px solid rgba(77,128,96,.2)"><p class="text-xs font-bold" style="color:var(--sg)">✓ Good understanding!</p></div>`; } setTimeout(()=>st.renderChapter(),1200); }
+      else { if(fb) { fb.classList.remove('hidden'); fb.innerHTML = `<div class="p-3 rounded-xl" style="background:rgba(212,98,47,.08);border:1px solid rgba(212,98,47,.2)"><p class="text-xs font-bold" style="color:var(--ac)">Not quite</p><p class="text-xs mt-1" style="color:var(--mu)">Re-read the chapter and try to address the question more specifically.</p></div>`; } if(btn){btn.disabled=false;btn.textContent='Try Again';} }
+    }
+  },
+
+  _markComplete: () => {
+    const st = window.app.story;
+    if (!st._completed.includes(st._chapter)) {
+      st._completed.push(st._chapter);
+      localStorage.setItem(`story_${st._storyId}_${appState.user?.uid||'preview'}`, JSON.stringify(st._completed));
+      // XP reward
+      if (appState.userData?.gamification) {
+        appState.userData.gamification.xp += 25;
+        if (appState.user) { try { updateDoc(doc(db,"users",appState.user.uid),{"gamification.xp":appState.userData.gamification.xp}); } catch(e){} }
+        window.app.ui.toast('+25 XP for mastering this chapter!', 'success');
+        window.app.game.checkLevelUp();
+      }
+      // If all chapters complete and there's an assignment, mark it
+      const story = STORY_LESSONS[st._storyId];
+      if (story && st._completed.length >= story.chapters.length && st._assignmentId && appState.user) {
+        try {
+          addDoc(collection(db,'submissions'), {
+            assignmentId: st._assignmentId, studentId: appState.user.uid,
+            studentName: appState.userData?.name || 'Student',
+            completedAt: serverTimestamp(), type: 'story',
+            grading: { score: story.chapters.length, maxScore: story.chapters.length, label:'Complete' }
+          });
+        } catch(e) { console.error(e); }
+      }
+    }
+  },
+
+  nextChapter: () => {
+    const st = window.app.story;
+    const story = STORY_LESSONS[st._storyId];
+    if (story && st._chapter < story.chapters.length - 1) {
+      st._chapter++;
+      st.renderChapter();
+    }
+  },
+
+  prevChapter: () => {
+    const st = window.app.story;
+    if (st._chapter > 0) { st._chapter--; st.renderChapter(); }
   }
 },
 
