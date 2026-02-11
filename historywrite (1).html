@@ -260,7 +260,62 @@ const appState = {
   userData: null,
   apiKey: localStorage.getItem('anthropic_key') || '',
   activeAssignment: null,
-  practiceContext: null
+  practiceContext: null,
+  storySession: null,
+  liveQuiz: { gameId: null, gameData: null, players: [], unsubGame: null, unsubPlayers: null, joined: false }
+};
+
+const APWH_63_64_STORY = {
+  unit: '6.3 & 6.4',
+  title: 'Steam & Shadows: The Human Story of Industrialization',
+  subtitle: 'APWH Modern Unit 6.3–6.4 Immersive Story Lesson',
+  intro: 'You are Lena Ortiz, a teen apprentice journalist in 1848. As railways, factories, and reform movements reshape society, your dispatches will determine whether your city embraces exploitation or reform.',
+  scenes: [
+    {
+      title: 'Scene 1 — The Roar of Manchester (6.3)',
+      setting: 'Manchester, 1848',
+      image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/66/Manchester_from_Kersal_Moor%2C_by_William_Wyld%2C_1852.jpg/1280px-Manchester_from_Kersal_Moor%2C_by_William_Wyld%2C_1852.jpg',
+      narrative: 'Smoke hangs over the city like a second sky. You enter Arkwright Mill with a notebook hidden in your coat. Steam engines hammer from below while children your age tie snapped threads for pennies. The owner brags that mechanization has doubled cloth output and enriched Britain\'s global trade. Outside, families crowd into cramped tenements because factory wages, however low, still beat losing work to machines in the countryside.',
+      checkpoint: {
+        question: 'How did industrialization simultaneously increase production and worsen urban social conditions in places like Manchester?',
+        keyIdeas: ['mechanization', 'factory output', 'urbanization', 'crowded housing', 'poor working conditions', 'low wages'],
+        successHint: 'Yes — you connected economic growth (more factory output) with social strain (urban crowding + harsh labor).'
+      }
+    },
+    {
+      title: 'Scene 2 — Coal, Steel, and Empires (6.3)',
+      setting: 'Rail junction near the Ruhr, 1856',
+      image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/ea/Bessemer_converter%2C_Kelham_Island_Museum%2C_Sheffield.jpg/1280px-Bessemer_converter%2C_Kelham_Island_Museum%2C_Sheffield.jpg',
+      narrative: 'Weeks later, you ride a rail line carrying coal and iron to new steel works. Engineers celebrate the Bessemer process as they pour molten metal for rails, warships, and bridges. Government officials whisper that industrial power now decides which states can project military force overseas. Investors cheer expanding markets, but workers describe dangerous blast furnaces and exhausting shifts that leave little room for family life.',
+      checkpoint: {
+        question: 'Why did coal-and-steel industrial growth strengthen state power in the nineteenth century?',
+        keyIdeas: ['steel', 'railroads', 'industrial capacity', 'military power', 'state expansion', 'infrastructure'],
+        successHint: 'Great — you tied industrial capacity to transport, military production, and stronger states.'
+      }
+    },
+    {
+      title: 'Scene 3 — Voices from the Mill Floor (6.4)',
+      setting: 'Textile district assembly hall, 1862',
+      image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e4/Schweizerischer_Arbeiterkongress_1868.jpg/1280px-Schweizerischer_Arbeiterkongress_1868.jpg',
+      narrative: 'Your article spreads, and workers invite you to a night meeting lit by oil lamps. Women describe wage discrimination; men recount injuries with no compensation. A speaker reads from socialist pamphlets arguing that owners profit from laborers\' suffering. Another organizer calls for unions and collective bargaining. Not everyone agrees on revolution, but nearly all demand limits on child labor, safer conditions, and political voice for workers.',
+      checkpoint: {
+        question: 'How did industrial labor conditions help inspire union activism and socialist critiques?',
+        keyIdeas: ['worker exploitation', 'long hours', 'unsafe conditions', 'unions', 'collective action', 'socialism'],
+        successHint: 'Exactly — you explained how exploitation pushed workers toward organized labor and socialist ideas.'
+      }
+    },
+    {
+      title: 'Scene 4 — Reform or Rupture? (6.4)',
+      setting: 'Parliament gallery, 1871',
+      image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/98/House_of_Commons_1834.jpg/1280px-House_of_Commons_1834.jpg',
+      narrative: 'You sit above parliament as lawmakers debate factory acts, sanitation reforms, and expanded male suffrage. Conservatives fear reforms will weaken business; reformers warn that ignoring workers invites uprising. You realize 6.4 is not just protest in the streets — it is the political struggle over how industrial societies should distribute power, rights, and wealth. Your final dispatch asks whether reform can calm social conflict before revolution does.',
+      checkpoint: {
+        question: 'What is one major way governments responded to social tensions created by industrialization?',
+        keyIdeas: ['factory laws', 'labor reform', 'public health', 'suffrage expansion', 'state reform', 'regulation'],
+        successHint: 'Strong understanding — you identified concrete state reforms used to answer industrial-era social pressure.'
+      }
+    }
+  ]
 };
 
 const LIBRARY_TEMPLATES = [
@@ -269,7 +324,19 @@ const LIBRARY_TEMPLATES = [
   { title: "Industrial Rev LEQ", type: "leq", prompt: "Evaluate the extent to which geographic factors caused industrialization differences 1750–1900.", maxAttempts: 3 },
   { title: "Mongol Empire SAQ", type: "saq", prompt: "Identify ONE way the Mongol Empire facilitated cultural exchange across Eurasia 1200–1350.", maxAttempts: 3 },
   { title: "Atlantic Revolutions LEQ", type: "leq", prompt: "Evaluate the extent to which Enlightenment ideas influenced political revolutions 1750–1900.", maxAttempts: 3 },
-  { title: "Imperialism DBQ", type: "dbq", prompt: "Evaluate the extent to which state imperialism was driven by economic motives 1750–1900.", sources: [], maxAttempts: 2 }
+  { title: "Imperialism DBQ", type: "dbq", prompt: "Evaluate the extent to which state imperialism was driven by economic motives 1750–1900.", sources: [], maxAttempts: 2 },
+  { title: APWH_63_64_STORY.title, type: "story", prompt: APWH_63_64_STORY.intro, maxAttempts: 1, structure: { kind: 'story', unit: APWH_63_64_STORY.unit, subtitle: APWH_63_64_STORY.subtitle, scenes: APWH_63_64_STORY.scenes } }
+];
+
+const MCQ_63_64_PACK = [
+  { q: "Which development most directly increased industrial output in 19th-century Europe?", c: ["Mechanized factory production", "Decline in global trade", "End of urban migration", "Elimination of coal use"], a: 0, exp: "Mechanized factories and steam power rapidly increased output." },
+  { q: "How did railroads strengthen industrial states?", c: ["They reduced need for raw materials", "They linked mines, factories, and markets", "They ended imperial competition", "They replaced steel production"], a: 1, exp: "Railroads connected raw materials, production centers, and consumers." },
+  { q: "A major social consequence of rapid industrialization was:", c: ["Rural depopulation with improved village life", "Urban overcrowding and poor sanitation", "Universal labor protections", "Immediate wealth equality"], a: 1, exp: "Rapid urbanization often produced overcrowded and unhealthy city conditions." },
+  { q: "Which ideology grew partly in response to industrial labor exploitation?", c: ["Neoconfucianism", "Socialism", "Mercantilism", "Legalism"], a: 1, exp: "Socialist critiques focused on inequality and worker exploitation." },
+  { q: "Labor unions primarily sought to:", c: ["Expand slavery", "Increase aristocratic privilege", "Negotiate wages and safer conditions", "Abolish manufacturing"], a: 2, exp: "Unions pursued collective bargaining for pay, safety, and hours." },
+  { q: "Which response best reflects governments addressing industrial social tensions?", c: ["Factory acts and sanitation reforms", "Ending all elections", "Banning railways", "Removing public schools"], a: 0, exp: "Many states passed reform laws for labor and public health." },
+  { q: "Industrialization often increased state military power because it improved:", c: ["Textile art", "Shipbuilding and steel production", "Religious unity", "Nomadic mobility"], a: 1, exp: "Industrial steel and manufacturing supported modern militaries." },
+  { q: "In APWH 6.4, social class tensions were most connected to:", c: ["Factory owners vs wage laborers", "Monks vs nuns", "Pirates vs merchants", "Priests vs peasants only"], a: 0, exp: "Industrial capitalism sharpened class conflict between capital owners and workers." }
 ];
 
 const CHRONO_EVENTS = [
@@ -362,6 +429,8 @@ router: {
       'student-dash': () => { root.innerHTML = V.studentDash(); window.app.student.init(); },
       'class-detail': () => { root.innerHTML = V.classDetail(params.classData); window.app.teacher.loadClass(params.classData.id); },
       'library': () => root.innerHTML = V.library(),
+      'story-player': () => { appState.storySession = { assignment: params.assignment, teacherPreview: !!params.teacherPreview }; root.innerHTML = V.storyPlayer(params.assignment, !!params.teacherPreview); window.app.student.initStoryPlayer(params.assignment, !!params.teacherPreview); },
+      'live-quiz': () => { root.innerHTML = appState.userData?.role === 'teacher' ? V.teacherLiveQuiz() : V.studentLiveQuiz(); window.app.liveQuiz.init(); },
       'editor': () => { appState.activeAssignment = params.assignment; root.innerHTML = V.editor(params.assignment); window.app.student.initEditor(); },
       'results': () => root.innerHTML = V.results(params.submission, params.assignment)
     };
@@ -430,7 +499,7 @@ views: {
       <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
         <div><h2 class="text-2xl font-bold fs">My Classes</h2><p class="text-sm mt-1" style="color:var(--mu)">Create classes and assign writing tasks.</p></div>
         <div class="flex gap-2">
-          <button onclick="window.app.router.go('library')" class="btnG text-sm py-2 px-4 flex items-center gap-2"><i data-lucide="library" class="w-4 h-4"></i>Library</button>
+          <button onclick="window.app.router.go('library')" class="btnG text-sm py-2 px-4 flex items-center gap-2"><i data-lucide="library" class="w-4 h-4"></i>Library</button><button onclick="window.app.router.go('live-quiz')" class="btnG text-sm py-2 px-4 flex items-center gap-2"><i data-lucide="swords" class="w-4 h-4"></i>Live MCQ</button>
           <button onclick="window.app.ui.modal('create-class','open')" class="btnP text-sm py-2 px-4 flex items-center gap-2"><i data-lucide="plus" class="w-4 h-4"></i>New Class</button>
         </div>
       </div>
@@ -456,7 +525,7 @@ views: {
             <div class="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold" style="background:var(--acs);color:var(--ac)">Lv${level}</div>
             <div><div class="text-xs font-semibold">${stats.xp} XP</div><div class="xpBar w-20 mt-1"><div class="xpFill" style="width:${pct}%"></div></div></div>
           </div>
-          <button onclick="window.app.ui.modal('join-class','open')" class="btnP text-xs py-2 px-4">Join Class</button>
+          <button onclick="window.app.router.go('live-quiz')" class="btnG text-xs py-2 px-4">Live MCQ</button><button onclick="window.app.ui.modal('join-class','open')" class="btnP text-xs py-2 px-4">Join Class</button>
         </div>
       </div>
       <div class="flex gap-1 mb-3" style="border-bottom:1px solid var(--bd)">
@@ -487,7 +556,7 @@ views: {
     <div id="create-assignment" class="hidden"><div class="modalBg" onclick="event.target===this&&window.app.ui.closeModal('create-assignment')"><div class="modalBox modalLg">
       <h3 class="text-lg font-bold mb-4">Create Assignment</h3>
       <form onsubmit="event.preventDefault();window.app.teacher.createAssignment('${cls.id}')">
-        <div class="grid sm:grid-cols-2 gap-3 mb-3"><input name="title" placeholder="Title" required class="hinp"><select name="type" class="hinp" onchange="window.app.teacher.onTypeChange(this.value)"><option value="saq">SAQ</option><option value="leq">LEQ</option><option value="dbq">DBQ</option></select></div>
+        <div class="grid sm:grid-cols-2 gap-3 mb-3"><input name="title" placeholder="Title" required class="hinp"><select name="type" class="hinp" onchange="window.app.teacher.onTypeChange(this.value)"><option value="saq">SAQ</option><option value="leq">LEQ</option><option value="dbq">DBQ</option><option value="story">Story Lesson</option></select></div>
         <textarea name="prompt" rows="3" placeholder="Prompt" required class="hinp mb-3" style="resize:vertical"></textarea>
         <div id="saq-structure" class="mb-3"><label class="text-xs font-semibold" style="color:var(--mu)">Parts</label><input type="number" name="saqParts" min="1" max="4" value="3" class="hinp mt-1 w-24"></div>
         <div id="leq-structure" class="mb-3 hidden"><label class="text-xs font-semibold mb-2 block" style="color:var(--mu)">Focus</label><div class="grid grid-cols-2 gap-2 text-xs"><label class="flex items-center gap-2"><input type="checkbox" name="leqSkill" value="thesis" checked>Thesis</label><label class="flex items-center gap-2"><input type="checkbox" name="leqSkill" value="context">Context</label><label class="flex items-center gap-2"><input type="checkbox" name="leqSkill" value="evidence">Evidence</label><label class="flex items-center gap-2"><input type="checkbox" name="leqSkill" value="reasoning">Reasoning</label></div></div>
@@ -495,18 +564,78 @@ views: {
           <div class="hcard p-3 mb-2"><div class="grid sm:grid-cols-3 gap-2 mb-2"><select id="dbq-source-type" class="hinp text-xs"><option value="text">Text</option><option value="image">Image</option><option value="chart">Chart</option><option value="map">Map</option></select><input id="dbq-source-label" placeholder="Label" class="hinp text-xs"><input id="dbq-source-content" placeholder="Content/URL" class="hinp text-xs"></div><button type="button" onclick="window.app.teacher.addDbqSource()" class="btnP text-xs py-1.5 px-3">Add Source</button></div>
           <div id="dbq-sources-list" class="text-xs" style="color:var(--fa)">No sources added.</div>
         </div>
+        <div id="story-structure" class="mb-3 hidden"><div class="p-3 rounded-lg text-xs" style="background:var(--elev);border:1px solid var(--bd)"><p class="font-semibold mb-1">Immersive Story Lesson</p><p style="color:var(--mu)">Uses the APWH 6.3 + 6.4 library storyline with AI-gated checkpoints. Students must pass each retention check to continue.</p></div></div>
         <input name="maxAttempts" type="number" value="3" class="hinp mb-4 w-full" placeholder="Max attempts">
         <div class="flex gap-2"><button type="button" onclick="window.app.ui.closeModal('create-assignment')" class="btnG flex-1">Cancel</button><button class="btnP flex-1">Create</button></div>
       </form>
     </div></div></div>`,
 
   library: () => `
+    <div class="max-w-5xl mx-auto px-4 py-6 pageEnter"> 
+      <button onclick="window.app.router.go('teacher-dash')" class="mb-6 text-sm flex items-center gap-1" style="color:var(--mu)"><i data-lucide="arrow-left" class="w-4 h-4"></i>Back</button>
+      <h1 class="text-2xl font-bold fs mb-2">Assignment Library</h1>
+      <p class="text-sm mb-6" style="color:var(--mu)">Includes immersive AI story lessons teachers can assign and preview as students.</p>
+      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        ${LIBRARY_TEMPLATES.map((t, idx) => `<div class="hcard p-5 flex flex-col justify-between"><div class="mb-4"><span class="text-[10px] font-bold fm uppercase px-2 py-1 rounded" style="background:var(--acs);color:var(--ac)">${t.type}</span><h3 class="font-bold mt-2 text-sm">${t.title}</h3><p class="text-xs mt-1 line-clamp-3" style="color:var(--mu)">${t.prompt}</p></div><div class="flex gap-2">${t.type === 'story' ? `<button onclick="window.app.teacher.previewLibraryStory(${idx})" class="btnG text-xs flex-1">Preview</button>` : ''}<button onclick="window.app.teacher.cloneLibraryTemplate(${idx})" class="btnP text-xs ${t.type === 'story' ? 'flex-1' : 'w-full'}">Add to Class</button></div></div>`).join('')}
+      </div>
+    </div>`,
+
+  storyPlayer: (assignment, teacherPreview = false) => {
+    const story = assignment?.structure || { scenes: [] };
+    const roleBadge = teacherPreview ? '<span class="text-[10px] font-bold fm uppercase px-2 py-1 rounded" style="background:rgba(77,128,96,.15);color:var(--sg)">Teacher Preview</span>' : '<span class="text-[10px] font-bold fm uppercase px-2 py-1 rounded" style="background:var(--acs);color:var(--ac)">Student Mode</span>';
+    return `
+    <div class="max-w-6xl mx-auto px-4 py-6 pageEnter">
+      <button onclick="window.app.router.go('${teacherPreview ? 'library' : 'student-dash'}')" class="mb-5 text-sm flex items-center gap-1" style="color:var(--mu)"><i data-lucide="arrow-left" class="w-4 h-4"></i>${teacherPreview ? 'Back to Library' : 'Back to Dashboard'}</button>
+      <div class="hcard p-5 md:p-6 mb-4"> 
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-2">
+          <div>
+            <h1 class="text-2xl font-bold fs">${assignment?.title || APWH_63_64_STORY.title}</h1>
+            <p class="text-sm mt-1" style="color:var(--mu)">${story.subtitle || APWH_63_64_STORY.subtitle}</p>
+          </div>
+          ${roleBadge}
+        </div>
+        <p class="text-sm" style="color:var(--mu)">${assignment?.prompt || APWH_63_64_STORY.intro}</p>
+      </div>
+      <div class="grid lg:grid-cols-[1.3fr_.7fr] gap-4">
+        <div class="hcard overflow-hidden">
+          <img id="story-image" src="" alt="Story scene image" class="w-full h-64 object-cover" loading="lazy">
+          <div class="p-5 md:p-6">
+            <div class="flex items-center justify-between gap-2 mb-3"><p class="text-[10px] uppercase tracking-[.2em] fm" id="story-progress" style="color:var(--fa)">Scene</p><span class="text-xs" id="story-setting" style="color:var(--mu)"></span></div>
+            <h2 id="story-title" class="text-xl font-bold fs mb-3"></h2>
+            <p id="story-text" class="text-sm leading-relaxed" style="color:var(--mu)"></p>
+          </div>
+        </div>
+        <div class="space-y-4">
+          <div class="hcard p-4">
+            <h3 class="font-bold text-sm mb-2">Retention Checkpoint</h3>
+            <p id="story-question" class="text-xs mb-3" style="color:var(--mu)"></p>
+            <textarea id="story-answer" rows="4" class="hinp text-sm" placeholder="Explain in 2-4 sentences..."></textarea>
+            <button onclick="window.app.student.checkStoryAnswer()" class="btnP w-full mt-3 text-sm">Check Understanding</button>
+            <div id="story-feedback" class="text-xs mt-3 p-3 rounded-lg hidden" style="border:1px solid var(--bd)"></div>
+          </div>
+          <div class="hcard p-4">
+            <div class="flex items-center justify-between"><h3 class="font-bold text-sm">Story Path</h3><span id="story-gate" class="text-[11px] fm" style="color:var(--fa)">Locked</span></div>
+            <div class="mt-3 space-y-2" id="story-steps"></div>
+            <button id="story-next-btn" onclick="window.app.student.nextStoryScene()" class="btnG w-full mt-3 text-sm" disabled>Next Scene</button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  },
+
+
+  teacherLiveQuiz: () => `
     <div class="max-w-5xl mx-auto px-4 py-6 pageEnter">
       <button onclick="window.app.router.go('teacher-dash')" class="mb-6 text-sm flex items-center gap-1" style="color:var(--mu)"><i data-lucide="arrow-left" class="w-4 h-4"></i>Back</button>
-      <h1 class="text-2xl font-bold fs mb-6">Assignment Library</h1>
-      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        ${LIBRARY_TEMPLATES.map(t => `<div class="hcard p-5 flex flex-col justify-between"><div class="mb-4"><span class="text-[10px] font-bold fm uppercase px-2 py-1 rounded" style="background:var(--acs);color:var(--ac)">${t.type}</span><h3 class="font-bold mt-2 text-sm">${t.title}</h3><p class="text-xs mt-1 line-clamp-3" style="color:var(--mu)">${t.prompt}</p></div><button onclick="window.app.ui.toast('Clone to class coming soon.','info')" class="btnG text-xs w-full">Clone to Class</button></div>`).join('')}
-      </div>
+      <div class="hcard p-5 mb-4"><div class="flex flex-wrap items-center justify-between gap-3"><div><h1 class="text-2xl font-bold fs">Blooket-Style Live MCQ</h1><p class="text-xs mt-1" style="color:var(--mu)">Host a fast-paced APWH 6.3/6.4 multiplayer battle.</p></div><button onclick="window.app.liveQuiz.createGame()" class="btnP text-sm">Create Lobby</button></div></div>
+      <div id="live-teacher-panel" class="hcard p-5"><p class="text-sm" style="color:var(--mu)">Create a lobby to begin.</p></div>
+    </div>`,
+
+  studentLiveQuiz: () => `
+    <div class="max-w-5xl mx-auto px-4 py-6 pageEnter">
+      <button onclick="window.app.router.go('student-dash')" class="mb-6 text-sm flex items-center gap-1" style="color:var(--mu)"><i data-lucide="arrow-left" class="w-4 h-4"></i>Back</button>
+      <div class="hcard p-5 mb-4"><h1 class="text-2xl font-bold fs">Join Live MCQ Battle</h1><p class="text-xs mt-1" style="color:var(--mu)">Enter teacher game code and race for points.</p><div class="flex gap-2 mt-3"><input id="live-join-code" class="hinp fm uppercase" placeholder="GAME CODE"><button onclick="window.app.liveQuiz.joinGame()" class="btnP">Join</button></div></div>
+      <div id="live-student-panel" class="hcard p-5"><p class="text-sm" style="color:var(--mu)">Join a lobby to play.</p></div>
     </div>`,
 
   editor: (a) => {
@@ -674,8 +803,8 @@ teacher: {
     });
   },
   onTypeChange: (type) => {
-    ['saq-structure', 'leq-structure', 'dbq-structure'].forEach(id => document.getElementById(id)?.classList.add('hidden'));
-    const map = { saq: 'saq-structure', leq: 'leq-structure', dbq: 'dbq-structure' };
+    ['saq-structure', 'leq-structure', 'dbq-structure', 'story-structure'].forEach(id => document.getElementById(id)?.classList.add('hidden'));
+    const map = { saq: 'saq-structure', leq: 'leq-structure', dbq: 'dbq-structure', story: 'story-structure' };
     document.getElementById(map[type])?.classList.remove('hidden');
   },
   addDbqSource: () => {
@@ -697,8 +826,28 @@ teacher: {
     if (type === 'saq') structure = { kind: 'saq', parts: parseInt(form.saqParts?.value) || 3 };
     else if (type === 'leq') structure = { kind: 'leq', focusSkills: Array.from(form.querySelectorAll('input[name="leqSkill"]:checked')).map(i => i.value) };
     else if (type === 'dbq') structure = { kind: 'dbq', sources: window.app.teacher.dbqSources || [] };
+    else if (type === 'story') {
+      const template = LIBRARY_TEMPLATES.find(t => t.type === 'story') || {};
+      structure = template.structure || { kind: 'story', scenes: APWH_63_64_STORY.scenes, unit: APWH_63_64_STORY.unit, subtitle: APWH_63_64_STORY.subtitle };
+    }
     await addDoc(collection(db, 'assignments'), { classId, title, type, prompt, maxAttempts, teacherId: appState.user.uid, createdAt: serverTimestamp(), submissionsCount: 0, structure });
     window.app.ui.closeModal('create-assignment'); window.app.ui.toast('Assignment created!', 'success'); window.app.teacher.dbqSources = [];
+  },
+  previewLibraryStory: (templateIdx) => {
+    const t = LIBRARY_TEMPLATES[templateIdx];
+    if (!t || t.type !== 'story') return;
+    const assignment = { id: `preview_${Date.now()}`, title: t.title, type: 'story', prompt: t.prompt, structure: t.structure };
+    window.app.router.go('story-player', { assignment, teacherPreview: true });
+  },
+  cloneLibraryTemplate: async (templateIdx) => {
+    const t = LIBRARY_TEMPLATES[templateIdx];
+    if (!t) return;
+    const classesSnap = await getDocs(query(collection(db, "classes"), where("teacherId", "==", appState.user.uid)));
+    if (classesSnap.empty) return window.app.ui.toast('Create a class before adding from library.', 'error');
+    const classId = classesSnap.docs[0].id;
+    const structure = t.structure || (t.sources ? { kind: 'dbq', sources: t.sources } : null);
+    await addDoc(collection(db, 'assignments'), { classId, title: t.title, type: t.type, prompt: t.prompt, maxAttempts: t.maxAttempts || 3, teacherId: appState.user.uid, createdAt: serverTimestamp(), submissionsCount: 0, structure });
+    window.app.ui.toast(`Added "${t.title}" to your first class.`, 'success');
   }
 },
 
@@ -737,7 +886,9 @@ student: {
             <p class="text-xs mb-3 line-clamp-2" style="color:var(--mu)">${a.prompt}</p>
             ${done
               ? `<button onclick='window.app.router.go("results",{submission:${subPayload},assignment:${aPayload}})' class="btnG w-full text-xs">View Report</button>`
-              : `<button onclick='window.app.router.go("editor",{assignment:${aPayload}})' class="btnP w-full text-xs">Start Writing</button>`
+              : (a.type === 'story'
+                ? `<button onclick='window.app.router.go("story-player",{assignment:${aPayload}})' class="btnP w-full text-xs">Start Story Lesson</button>`
+                : `<button onclick='window.app.router.go("editor",{assignment:${aPayload}})' class="btnP w-full text-xs">Start Writing</button>`)
             }
           </div>`;
         }).join('');
@@ -752,6 +903,87 @@ student: {
       const update = () => { const wc = document.getElementById('word-count'); if (wc) wc.textContent = (el.value.trim().split(/\s+/).filter(Boolean).length) + ' words'; };
       el.addEventListener('input', update); update();
     }
+  },
+
+
+  initStoryPlayer: (assignment, teacherPreview = false) => {
+    const scenes = assignment?.structure?.scenes || APWH_63_64_STORY.scenes;
+    appState.storySession = { assignment, teacherPreview, idx: 0, unlockedNext: false, checksPassed: 0, scenes, responses: [] };
+    window.app.student.renderStoryScene();
+  },
+
+  renderStoryScene: () => {
+    const ss = appState.storySession;
+    if (!ss || !ss.scenes?.length) return;
+    const scene = ss.scenes[ss.idx];
+    const pct = `${ss.idx + 1}/${ss.scenes.length}`;
+    const img = document.getElementById('story-image'); if (img) img.src = scene.image;
+    const progress = document.getElementById('story-progress'); if (progress) progress.textContent = `Scene ${pct}`;
+    const st = document.getElementById('story-title'); if (st) st.textContent = scene.title;
+    const setEl = document.getElementById('story-setting'); if (setEl) setEl.textContent = scene.setting;
+    const txt = document.getElementById('story-text'); if (txt) txt.textContent = scene.narrative;
+    const q = document.getElementById('story-question'); if (q) q.textContent = scene.checkpoint.question;
+    const feedback = document.getElementById('story-feedback'); if (feedback) { feedback.classList.add('hidden'); feedback.textContent = ''; }
+    const ans = document.getElementById('story-answer'); if (ans) ans.value = '';
+    ss.unlockedNext = false;
+    window.app.student.updateStoryStepRail();
+  },
+
+  updateStoryStepRail: () => {
+    const ss = appState.storySession;
+    const rail = document.getElementById('story-steps'); if (!rail || !ss) return;
+    rail.innerHTML = ss.scenes.map((scene, i) => `<div class="text-xs p-2 rounded-lg" style="background:${i===ss.idx ? 'var(--acs)' : 'var(--elev)'};border:1px solid var(--bd);color:${i===ss.idx ? 'var(--ac)' : 'var(--mu)'}">${i + 1}. ${scene.title}</div>`).join('');
+    const gate = document.getElementById('story-gate'); if (gate) gate.textContent = ss.unlockedNext ? 'Checkpoint Passed' : 'Locked Until Understanding';
+    const nextBtn = document.getElementById('story-next-btn');
+    if (nextBtn) {
+      const finalScene = ss.idx >= ss.scenes.length - 1;
+      nextBtn.disabled = !ss.unlockedNext;
+      nextBtn.textContent = finalScene ? 'Finish Story Lesson' : 'Next Scene';
+    }
+  },
+
+  checkStoryAnswer: async () => {
+    const ss = appState.storySession;
+    if (!ss) return;
+    const scene = ss.scenes[ss.idx];
+    const answer = document.getElementById('story-answer')?.value.trim() || '';
+    if (answer.length < 20) return window.app.ui.toast('Use at least one complete sentence with evidence from the scene.', 'error');
+    const result = await window.app.ai.checkStoryUnderstanding(scene, answer);
+    const feedback = document.getElementById('story-feedback');
+    if (feedback) {
+      feedback.classList.remove('hidden');
+      feedback.style.background = result.pass ? 'rgba(77,128,96,.12)' : 'rgba(212,98,47,.12)';
+      feedback.style.borderColor = result.pass ? 'rgba(77,128,96,.35)' : 'rgba(212,98,47,.35)';
+      feedback.style.color = result.pass ? 'var(--sg)' : 'var(--ac)';
+      feedback.textContent = result.feedback;
+    }
+    if (result.pass) {
+      ss.unlockedNext = true;
+      ss.checksPassed++;
+      ss.responses.push({ scene: ss.idx, answer, pass: true });
+      window.app.ui.toast('Checkpoint passed. You may continue.', 'success');
+      if (!ss.teacherPreview && appState.userData?.gamification) {
+        appState.userData.gamification.xp += 10;
+        await updateDoc(doc(db, "users", appState.user.uid), { "gamification.xp": appState.userData.gamification.xp });
+      }
+    }
+    window.app.student.updateStoryStepRail();
+  },
+
+  nextStoryScene: async () => {
+    const ss = appState.storySession;
+    if (!ss || !ss.unlockedNext) return;
+    if (ss.idx >= ss.scenes.length - 1) {
+      window.app.ui.toast('Story complete — excellent historical thinking!', 'success');
+      if (!ss.teacherPreview && appState.userData?.gamification) {
+        appState.userData.gamification.xp += 20;
+        await updateDoc(doc(db, "users", appState.user.uid), { gamification: appState.userData.gamification });
+      }
+      return window.app.router.go(ss.teacherPreview ? 'library' : 'student-dash');
+    }
+    ss.idx++;
+    ss.unlockedNext = false;
+    window.app.student.renderStoryScene();
   },
 
   onEditorInput: (el) => {
@@ -1082,6 +1314,109 @@ game: {
   }
 },
 
+// ═══ LIVE QUIZ (MULTIPLAYER MCQ) ═══
+liveQuiz: {
+  cleanup: () => {
+    const lq = appState.liveQuiz;
+    if (lq.unsubGame) { lq.unsubGame(); lq.unsubGame = null; }
+    if (lq.unsubPlayers) { lq.unsubPlayers(); lq.unsubPlayers = null; }
+  },
+  init: () => {
+    window.app.liveQuiz.cleanup();
+    appState.liveQuiz.gameData = null;
+    appState.liveQuiz.players = [];
+    lucide.createIcons();
+  },
+  makeCode: () => 'HW' + Math.floor(1000 + Math.random() * 9000),
+  createGame: async () => {
+    const questions = MCQ_63_64_PACK.map((q, idx) => ({ ...q, id: idx })).sort(() => Math.random() - 0.5).slice(0, 6);
+    const code = window.app.liveQuiz.makeCode();
+    const ref = await addDoc(collection(db, 'liveGames'), { code, teacherId: appState.user.uid, teacherName: appState.userData?.name || 'Teacher', status: 'lobby', questionIdx: -1, questions, createdAt: serverTimestamp() });
+    appState.liveQuiz.gameId = ref.id;
+    window.app.ui.toast(`Lobby created: ${code}`, 'success');
+    window.app.liveQuiz.subscribe(ref.id);
+  },
+  subscribe: (gameId) => {
+    window.app.liveQuiz.cleanup();
+    appState.liveQuiz.gameId = gameId;
+    appState.liveQuiz.unsubGame = onSnapshot(doc(db, 'liveGames', gameId), snap => {
+      if (!snap.exists()) return;
+      appState.liveQuiz.gameData = { id: snap.id, ...snap.data() };
+      window.app.liveQuiz.render();
+    });
+    appState.liveQuiz.unsubPlayers = onSnapshot(collection(db, 'liveGames', gameId, 'players'), snap => {
+      appState.liveQuiz.players = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => (b.score || 0) - (a.score || 0));
+      window.app.liveQuiz.render();
+    });
+  },
+  joinGame: async () => {
+    const code = document.getElementById('live-join-code')?.value.toUpperCase().trim();
+    if (!code) return;
+    const snap = await getDocs(query(collection(db, 'liveGames'), where('code', '==', code)));
+    if (snap.empty) return window.app.ui.toast('Game code not found.', 'error');
+    const g = { id: snap.docs[0].id, ...snap.docs[0].data() };
+    if (g.status === 'ended') return window.app.ui.toast('This game has ended.', 'error');
+    await setDoc(doc(db, 'liveGames', g.id, 'players', appState.user.uid), { name: appState.userData?.name || 'Player', score: 0, joinedAt: serverTimestamp() }, { merge: true });
+    appState.liveQuiz.joined = true;
+    window.app.liveQuiz.subscribe(g.id);
+    window.app.ui.toast('Joined live game!', 'success');
+  },
+  startGame: async () => {
+    const g = appState.liveQuiz.gameData; if (!g) return;
+    await updateDoc(doc(db, 'liveGames', g.id), { status: 'question', questionIdx: 0, questionStartedAt: serverTimestamp() });
+  },
+  submitAnswer: async (choiceIdx) => {
+    const g = appState.liveQuiz.gameData; if (!g || g.questionIdx < 0) return;
+    const answerId = `${appState.user.uid}_${g.questionIdx}`;
+    await setDoc(doc(db, 'liveGames', g.id, 'answers', answerId), { playerId: appState.user.uid, playerName: appState.userData?.name || 'Player', questionIdx: g.questionIdx, choiceIdx, createdAt: serverTimestamp() });
+    window.app.ui.toast('Answer locked in!', 'success');
+  },
+  gradeRound: async () => {
+    const g = appState.liveQuiz.gameData; if (!g || g.questionIdx < 0) return;
+    const q = g.questions[g.questionIdx]; if (!q) return;
+    const ansSnap = await getDocs(query(collection(db, 'liveGames', g.id, 'answers'), where('questionIdx', '==', g.questionIdx)));
+    for (const d of ansSnap.docs) {
+      const ans = d.data();
+      if (ans.choiceIdx === q.a) {
+        const pRef = doc(db, 'liveGames', g.id, 'players', ans.playerId);
+        const pSnap = await getDoc(pRef);
+        const score = (pSnap.exists() ? (pSnap.data().score || 0) : 0) + 100;
+        await setDoc(pRef, { score }, { merge: true });
+      }
+    }
+  },
+  nextQuestion: async () => {
+    const g = appState.liveQuiz.gameData; if (!g) return;
+    await window.app.liveQuiz.gradeRound();
+    const next = (g.questionIdx || 0) + 1;
+    if (next >= (g.questions || []).length) {
+      await updateDoc(doc(db, 'liveGames', g.id), { status: 'ended' });
+      return;
+    }
+    await updateDoc(doc(db, 'liveGames', g.id), { status: 'question', questionIdx: next, questionStartedAt: serverTimestamp() });
+  },
+  endGame: async () => {
+    const g = appState.liveQuiz.gameData; if (!g) return;
+    await updateDoc(doc(db, 'liveGames', g.id), { status: 'ended' });
+  },
+  render: () => {
+    const g = appState.liveQuiz.gameData;
+    if (!g) return;
+    const playersHtml = (appState.liveQuiz.players || []).map((p, i) => `<div class="flex justify-between text-xs py-1"><span>${i + 1}. ${p.name}</span><span class="font-bold" style="color:var(--ac)">${p.score || 0}</span></div>`).join('') || '<p class="text-xs" style="color:var(--mu)">No players yet.</p>';
+    if (appState.userData?.role === 'teacher') {
+      const panel = document.getElementById('live-teacher-panel'); if (!panel) return;
+      const q = g.questions?.[g.questionIdx];
+      panel.innerHTML = `<div class="mb-3"><p class="text-xs fm" style="color:var(--fa)">GAME CODE</p><p class="text-2xl font-bold" style="color:var(--ac)">${g.code}</p><p class="text-xs mt-1" style="color:var(--mu)">Status: ${g.status}</p></div><div class="grid md:grid-cols-2 gap-4"><div class="hcard p-4"><h3 class="font-bold text-sm mb-2">Current Question</h3>${q ? `<p class="text-sm">${q.q}</p><p class="text-xs mt-2" style="color:var(--mu)">Correct: ${q.c[q.a]}</p>` : '<p class="text-xs" style="color:var(--mu)">Waiting to start.</p>'}<div class="flex gap-2 mt-3">${g.status === 'lobby' ? `<button onclick="window.app.liveQuiz.startGame()" class="btnP text-xs">Start</button>` : ''}${g.status === 'question' ? `<button onclick="window.app.liveQuiz.nextQuestion()" class="btnP text-xs">Grade + Next</button>` : ''}<button onclick="window.app.liveQuiz.endGame()" class="btnG text-xs">End</button></div></div><div class="hcard p-4"><h3 class="font-bold text-sm mb-2">Leaderboard</h3>${playersHtml}</div></div>`;
+    } else {
+      const panel = document.getElementById('live-student-panel'); if (!panel) return;
+      const q = g.questions?.[g.questionIdx];
+      const choices = q ? q.c.map((c, i) => `<button onclick="window.app.liveQuiz.submitAnswer(${i})" class="btnG w-full text-left text-xs">${String.fromCharCode(65+i)}. ${c}</button>`).join('<div class="h-2"></div>') : '';
+      panel.innerHTML = `<div class="flex justify-between items-center mb-3"><div><p class="text-[10px] fm" style="color:var(--fa)">GAME CODE</p><p class="font-bold" style="color:var(--ac)">${g.code}</p></div><p class="text-xs" style="color:var(--mu)">Status: ${g.status}</p></div>${g.status === 'question' && q ? `<div class="hcard p-4 mb-3"><p class="text-sm font-semibold mb-3">${q.q}</p>${choices}</div>` : `<p class="text-sm mb-3" style="color:var(--mu)">${g.status === 'lobby' ? 'Waiting for teacher to start...' : 'Game ended. See leaderboard.'}</p>`}<div class="hcard p-4"><h3 class="font-bold text-sm mb-2">Live Leaderboard</h3>${playersHtml}</div>`;
+    }
+    lucide.createIcons();
+  }
+},
+
 // ═══ AI GRADING ═══
 ai: {
   grade: async (type, prompt, essay, structure) => {
@@ -1104,6 +1439,41 @@ ai: {
       return window.app.ai.mockGrade(type);
     } catch (e) { console.error('AI grading error:', e); return window.app.ai.mockGrade(type); }
   },
+
+  checkStoryUnderstanding: async (scene, answer) => {
+    const lower = answer.toLowerCase();
+    const matched = (scene.checkpoint?.keyIdeas || []).filter(k => lower.includes(k.toLowerCase()));
+    if (!appState.apiKey) {
+      const pass = matched.length >= 2;
+      return { pass, feedback: pass ? scene.checkpoint.successHint : `Not yet. Revise with at least two ideas such as: ${(scene.checkpoint.keyIdeas || []).slice(0,4).join(', ')}.` };
+    }
+    try {
+      const resp = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-api-key': appState.apiKey, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514', max_tokens: 300,
+          messages: [{ role: 'user', content: `You are an AP World History coach checking retention for a story lesson.
+Scene: ${scene.title}
+Narrative: ${scene.narrative}
+Question: ${scene.checkpoint.question}
+Expected ideas: ${(scene.checkpoint.keyIdeas || []).join(', ')}
+Student answer: ${answer}
+Return ONLY JSON: {"pass":true|false,"feedback":"1-2 sentence supportive coaching feedback"}` }]
+        })
+      });
+      const data = await resp.json();
+      const text = data?.content?.[0]?.text || '';
+      const match = text.match(/\{[\s\S]*\}/);
+      if (match) {
+        const parsed = JSON.parse(match[0]);
+        if (typeof parsed.pass === 'boolean' && parsed.feedback) return parsed;
+      }
+    } catch (e) { console.error('Story understanding error:', e); }
+    const pass = matched.length >= 2;
+    return { pass, feedback: pass ? scene.checkpoint.successHint : `Not yet. Revise with at least two ideas such as: ${(scene.checkpoint.keyIdeas || []).slice(0,4).join(', ')}.` };
+  },
+
   mockGrade: (type) => {
     const scores = { saq: 2, leq: 4, dbq: 5 };
     const maxScores = { saq: 3, leq: 6, dbq: 7 };
