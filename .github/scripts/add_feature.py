@@ -3,6 +3,10 @@ import json
 import os
 import sys
 
+repo_root = os.environ.get("GITHUB_WORKSPACE", os.getcwd())
+target_file = os.path.join(repo_root, os.environ["TARGET_FILE"])
+map_filename = os.path.join(repo_root, f"codebase_map_{os.environ['TARGET_FILE'].replace('.html', '')}.json")
+
 client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
 feature_request = os.environ["FEATURE_REQUEST"]
 
