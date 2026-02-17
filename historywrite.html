@@ -865,7 +865,99 @@ const ESSAY_BLOCKS_PROMPTS = [
   { type: 'saq', title: 'Columbian Exchange SAQ', prompt: 'a) Identify ONE biological exchange that occurred as a result of the Columbian Exchange.\nb) Explain ONE economic effect of the Columbian Exchange on the Americas.\nc) Explain ONE way the Columbian Exchange affected population patterns in Afro-Eurasia.', difficulty: 'Easy', parts: 3 },
   { type: 'saq', title: 'Mongol Empire SAQ', prompt: 'a) Identify ONE way the Mongol Empire facilitated trade across Eurasia.\nb) Explain ONE negative consequence of Mongol expansion.\nc) Explain how the Mongol Empire contributed to cultural exchange between East and West.', difficulty: 'Easy', parts: 3 },
   { type: 'leq', title: 'Imperialism LEQ', prompt: 'Evaluate the extent to which European imperialism in the period 1750–1900 was driven by economic motives versus ideological justifications.', difficulty: 'Hard' },
-  { type: 'leq', title: 'Decolonization LEQ', prompt: 'Compare the processes of decolonization in TWO of the following regions: South Asia, Sub-Saharan Africa, or Southeast Asia.', difficulty: 'Hard' }
+  { type: 'leq', title: 'Decolonization LEQ', prompt: 'Compare the processes of decolonization in TWO of the following regions: South Asia, Sub-Saharan Africa, or Southeast Asia.', difficulty: 'Hard' },
+  {
+    type: 'dbq',
+    title: 'APWH 6.4 — Global Economy DBQ',
+    prompt: 'Evaluate the extent to which industrialization changed global economic relationships in the period 1750–1900.',
+    difficulty: 'Hard',
+    structure: {
+      sources: [
+        {
+          label: 'Document 1',
+          attribution: 'Adam Smith, The Wealth of Nations, Book I, 1776',
+          type: 'text',
+          content: 'The greatest improvement in the productive powers of labor, and the greater part of the skill, dexterity, and judgment with which it is anywhere directed or applied, seem to have been the effects of the division of labor. A man draws the wire, another straightens it, a third cuts it, a fourth points it, a fifth grinds it. Those ten persons could make among them upwards of forty-eight thousand pins in a day. But if they had all wrought separately and independently, they could not each of them have made twenty — perhaps not one pin in a day.'
+        },
+        {
+          label: 'Document 2',
+          attribution: 'Report of the Committee on Factory Children\'s Labor, British Parliament, 1832',
+          type: 'text',
+          content: 'We found children of very tender age — some as young as five or six years — working in the mills for twelve to fourteen hours daily, often in poorly ventilated rooms filled with dust and cotton fibers. Many showed signs of physical deformity from standing at machines for prolonged periods. The parents, themselves earning starvation wages, saw no alternative but to send their children to the factories. The mill owners, however, maintained that without child labor, the price of British cloth would rise and foreign competitors would seize their markets.'
+        },
+        {
+          label: 'Document 3',
+          attribution: 'Imperial Commissioner Lin Zexu, letter to Queen Victoria of Britain, 1839',
+          type: 'text',
+          content: 'We have heard that in your honorable nation the rules of morality are strictly observed. How is it that you have not forbidden your merchants to deal in opium? Your country lies twenty thousand leagues away, but its subjects dare to sail to China and peddle this poison for profit. The wealth of China is used to profit the barbarians — that is to say, the great profit made by barbarians is all taken from the rightful share of China. By what right do they use this noxious article to injure the Chinese people? I pray you, O sovereign, take back and burn the foreign opium ships and ban the opium trade forever.'
+        },
+        {
+          label: 'Document 4',
+          attribution: 'Karl Marx and Friedrich Engels, The Communist Manifesto, 1848',
+          type: 'text',
+          content: 'The bourgeoisie has through its exploitation of the world market given a cosmopolitan character to production and consumption in every country. All old-established national industries have been destroyed or are daily being destroyed. They are dislodged by new industries, whose introduction becomes a life-and-death question for all civilized nations — industries that no longer work up indigenous raw material, but raw material drawn from the remotest zones. In place of the old wants, satisfied by the production of the country, we find new wants, requiring for their satisfaction the products of distant lands and climes.'
+        },
+        {
+          label: 'Document 5',
+          attribution: 'Tokugawa Akitake, official Japanese observer, report on the 1867 Paris Exposition, submitted to the Meiji government',
+          type: 'text',
+          content: 'We witnessed machinery of extraordinary variety — spinning looms that produce in one hour what a hundred weavers could not complete in a day, steam engines of fearsome power driving whole factories from a single coal-fired furnace. The Western nations have achieved mastery over natural forces. Japan must study these techniques with urgency. If we do not build our own factories and railways, we shall find ourselves purchasing Western goods forever and selling raw silk and lacquerware at the prices they dictate. Our nation must industrialize or remain permanently subordinate in the new world order of commerce.'
+        },
+        {
+          label: 'Document 6',
+          attribution: 'Report of the Indian Railways Commission, submitted to the British Parliament, 1854',
+          type: 'text',
+          content: 'The extension of railways into the interior of India will deliver several great benefits to British commerce. Raw cotton from the Deccan, jute from Bengal, and wheat from the Punjab can be conveyed swiftly to the ports for export to England\'s mills. At the same time, British manufactured textiles, hardware, and tools can penetrate markets previously inaccessible. India\'s vast interior, with its millions of inhabitants, represents a commercial opportunity of incalculable magnitude — one that only a modern railway system can unlock for the mutual benefit of the Empire.'
+        }
+      ]
+    }
+  },
+  {
+    type: 'dbq',
+    title: 'APWH 6.5 — Economic Imperialism DBQ',
+    prompt: 'Evaluate the extent to which economic motives drove European imperialism in Africa and Asia in the period 1750–1900.',
+    difficulty: 'Hard',
+    structure: {
+      sources: [
+        {
+          label: 'Document 1',
+          attribution: 'Cecil Rhodes, British colonial magnate and politician, "Confession of Faith," 1877',
+          type: 'text',
+          content: 'I contend that we are the finest race in the world and that the more of the world we inhabit the better it is for the human race. I have found in the study of history that commerce has been the first motive of nearly all colonial enterprise. We must find new lands from which we can easily obtain raw materials and at the same time exploit the cheap labor that is available from the natives of those countries. Africa is still lying ready for us — it is our duty to take it. It is our duty to seize every opportunity of acquiring more territory.'
+        },
+        {
+          label: 'Document 2',
+          attribution: 'Dadabhai Naoroji, Indian nationalist leader and member of the British Parliament, "Poverty and Un-British Rule in India," 1876',
+          type: 'text',
+          content: 'The millions of India are now groaning under British economic rule. England takes from India year after year vast amounts of wealth in the form of salaries to English officers, interest on loans, pensions, and the profits of British-owned businesses — wealth that India produces but never sees returned. This "drain of wealth" amounts to tens of millions of pounds annually. India is impoverished, not because her people are lazy, but because the entire structure of British rule is designed to extract resources for Britain\'s benefit. The Indian weaver who once clothed the world has been ruined by cheap Lancashire mill cloth, forced upon us by free-trade policies we had no voice in making.'
+        },
+        {
+          label: 'Document 3',
+          attribution: 'King Jaja of Opobo (present-day Nigeria), letter to the British Consul General, 1887',
+          type: 'text',
+          content: 'I have always welcomed honest trade and I have maintained commerce with English firms for many years. But your consul now demands that I open my rivers to British traders directly, cutting out my position as middleman in the palm oil trade. This is not free trade — it is coercion. I built Opobo on commerce, and I have made it prosperous. The English merchants wish to take the profits of the interior trade for themselves and reduce my people to laborers on our own land. I will not sign any agreement that strips my people of the trade that is rightfully ours.'
+        },
+        {
+          label: 'Document 4',
+          attribution: 'Jules Ferry, Prime Minister of France, speech to the French Chamber of Deputies, 1884',
+          type: 'text',
+          content: 'Gentlemen, we must speak more loudly and more honestly! We must say openly that indeed the higher races have a right over the lower races — they have a duty to civilize the inferior races. But I insist that the great movement of colonial policy is a daughter of the industrial movement. Colonial policy is the daughter of economic policy. Is it not obvious that the great industrial nations have an absolute need for markets? For the export of capital as well as goods? Colonies are for us, from this angle, necessary investments for the future, markets for our surplus goods, and sources of raw materials that our factories require.'
+        },
+        {
+          label: 'Document 5',
+          attribution: 'E.D. Morel, British journalist and reformer, "The Black Man\'s Burden: The White Man in Africa," 1903',
+          type: 'text',
+          content: 'King Leopold\'s Congo Free State has revealed to the world the true face of economic imperialism stripped of its pretenses. Under the guise of bringing civilization and ending Arab slavery, Leopold has created a system of terror without parallel. Every Congolese man, woman, and child has been assigned a rubber quota. Those who fail to deliver are mutilated — their hands cut off as proof that cartridges were not wasted. Villages are burned, hostages taken, and a people who numbered twenty million at the start of Leopold\'s rule have been reduced, by the estimates of missionaries, to perhaps eight or nine million. All of this horror has produced rubber and ivory — profit for a king and his shareholders in Brussels.'
+        },
+        {
+          label: 'Document 6',
+          attribution: 'Bishop Samuel Ajayi Crowther, first African Anglican bishop, letter to the Church Missionary Society, Lagos, 1869',
+          type: 'text',
+          content: 'I confess that the missionaries and the merchants have often arrived together in Africa, and I do not always find it easy to separate their purposes. Where trade follows the cross, the African people gain access to education, medicine, and the word of God — blessings I have myself received. Yet I have also seen how the opening of trade routes and the establishment of trading posts is swiftly followed by demands for territory, for exclusive rights, for agreements signed by chiefs who do not understand their contents. I fear that the commercial motive, though dressed in the language of civilization, will prove stronger than the Christian one, and that Africa will lose not only her goods but her self-governance.'
+        }
+      ]
+    }
+  }
 ];
 
 function generateBlocks(type, prompt, structure) {
@@ -1069,7 +1161,7 @@ router: {
       if (bl._unsub) { bl._unsub(); bl._unsub = null; }
       if (bl._unsub2) { bl._unsub2(); bl._unsub2 = null; }
       if (bl._state?.timerInterval) { clearInterval(bl._state.timerInterval); bl._state.timerInterval = null; }
-      if (bl._state) bl._state.rendered = false;
+      if (bl._state) { bl._state.rendered = false; bl._state.docsRendered = false; }
     }
     // Cleanup quiz listeners on navigation
     const qz = window.app.quiz;
@@ -1414,18 +1506,30 @@ views: {
         </div>
       </div>
       <div id="assignments-list" class="space-y-3 stagger"></div>
-      <div id="eb-session-modal" class="hidden"><div class="modalBg" onclick="event.target===this&&window.app.ui.closeModal('eb-session-modal')"><div class="modalBox">
+      <div id="eb-session-modal" class="hidden"><div class="modalBg" onclick="event.target===this&&window.app.ui.closeModal('eb-session-modal')"><div class="modalBox" style="max-width:560px;max-height:90vh;overflow-y:auto">
         <h3 class="text-lg font-bold mb-1">🧩 Start Essay Blocks Session</h3>
         <p class="text-xs mb-4" style="color:var(--mu)">Students will be grouped randomly, each writing one block of an essay.</p>
         <label class="text-[10px] font-bold uppercase tracking-wider mb-1 block" style="color:var(--fa)">Select a prompt</label>
-        <select id="eb-prompt-select" class="hinp mb-3" onchange="document.getElementById('eb-custom-fields').classList.toggle('hidden',this.value!=='custom')">
+        <select id="eb-prompt-select" class="hinp mb-3" onchange="window.app.blocks._onPresetChange(this)">
           ${ESSAY_BLOCKS_PROMPTS.map((p, i) => '<option value="'+i+'">['+p.type.toUpperCase()+'] '+p.title+'</option>').join('')}
           <option value="custom">Custom prompt...</option>
         </select>
         <div id="eb-custom-fields" class="hidden mb-3">
-          <select id="eb-custom-type" class="hinp mb-2"><option value="saq">SAQ</option><option value="leq">LEQ</option><option value="dbq">DBQ</option></select>
+          <select id="eb-custom-type" class="hinp mb-2" onchange="document.getElementById('eb-custom-doc-fields').classList.toggle('hidden',this.value!=='dbq')"><option value="saq">SAQ</option><option value="leq">LEQ</option><option value="dbq">DBQ</option></select>
           <input id="eb-custom-title" placeholder="Title" class="hinp mb-2">
-          <textarea id="eb-custom-prompt" placeholder="Full prompt..." rows="3" class="hinp"></textarea>
+          <textarea id="eb-custom-prompt" placeholder="Full prompt..." rows="3" class="hinp mb-2"></textarea>
+          <div id="eb-custom-doc-fields" class="hidden">
+            <p class="text-[10px] font-bold uppercase tracking-wider mb-2" style="color:var(--ac)">📄 DBQ Documents (up to 7)</p>
+            <div id="eb-custom-docs-list"></div>
+            <button onclick="window.app.blocks._addCustomDoc()" class="btnG text-xs mt-2">+ Add Document</button>
+          </div>
+        </div>
+        <div id="eb-doc-panel" class="hidden mb-3">
+          <div class="flex items-center justify-between mb-2">
+            <p class="text-[10px] font-bold uppercase tracking-wider" style="color:var(--ac)">📄 Primary Source Documents</p>
+            <span class="text-[10px]" style="color:var(--mu)">Edit before creating session</span>
+          </div>
+          <div id="eb-doc-list" class="space-y-2"></div>
         </div>
         <label class="text-[10px] font-bold uppercase tracking-wider mb-1 block" style="color:var(--fa)">Timer (minutes)</label>
         <input id="eb-timer" type="number" value="5" min="2" max="20" class="hinp w-24 mb-4">
@@ -1736,10 +1840,20 @@ views: {
       <div class="eb-wrap">
         <div class="flex justify-between items-start mb-2">
           <button onclick="if(confirm('Leave the game? Your block will be submitted as-is.')){window.app.blocks.submitMultiBlock('${sessionId}');window.app.router.go('student-dash')}" class="text-xs flex items-center gap-1" style="color:var(--fa)"><i data-lucide="arrow-left" class="w-3 h-3"></i>Exit</button>
-          ${appState.userData?.role === 'teacher' ? '<button onclick="window.app.blocks.endSession(\''+sessionId+'\')" class="btnG text-xs py-1 px-3" style="border-color:var(--ac);color:var(--ac)">End Game</button>' : ''}
+          <div class="flex gap-2 items-center">
+            <button id="mp-docs-toggle" class="hidden btnG text-xs py-1 px-3 flex items-center gap-1" onclick="window.app.blocks._toggleDocPanel()" style="border-color:var(--ac);color:var(--ac)"><i data-lucide="file-text" class="w-3 h-3"></i>Documents</button>
+            ${appState.userData?.role === 'teacher' ? '<button onclick="window.app.blocks.endSession(\''+sessionId+'\')" class="btnG text-xs py-1 px-3" style="border-color:var(--ac);color:var(--ac)">End Game</button>' : ''}
+          </div>
         </div>
         <div id="mp-prompt-bar" class="mb-3 p-3 rounded-xl text-xs" style="background:var(--elev);border:1px solid var(--bd)">
           <span class="font-bold" style="color:var(--ac)">Prompt:</span> <span id="mp-prompt-text" class="fs" style="color:var(--mu)">Loading...</span>
+        </div>
+        <div id="mp-doc-panel" class="hidden mb-3 rounded-xl overflow-hidden" style="border:1px solid var(--bd)">
+          <div class="px-4 py-2 flex items-center justify-between" style="background:rgba(212,98,47,.1)">
+            <span class="text-xs font-bold" style="color:var(--ac)">📄 Primary Source Documents</span>
+            <span class="text-[10px]" style="color:var(--mu)">Reference these as you write</span>
+          </div>
+          <div id="mp-doc-list" class="divide-y" style="border-color:var(--bd);max-height:340px;overflow-y:auto"></div>
         </div>
         <div class="text-center mb-4">
           <div class="eb-timer" id="mp-timer">--:--</div>
@@ -4545,6 +4659,24 @@ blocks: {
       const promptEl = document.getElementById('mp-prompt-text');
       if (promptEl) promptEl.textContent = session.prompt || '';
 
+      // Show documents panel for DBQ sessions (only render once)
+      const sources = session.structure?.sources;
+      if (sources?.length && !st._state.docsRendered) {
+        st._state.docsRendered = true;
+        const toggle = document.getElementById('mp-docs-toggle');
+        const panel = document.getElementById('mp-doc-panel');
+        const docList = document.getElementById('mp-doc-list');
+        if (toggle) toggle.classList.remove('hidden');
+        if (docList) {
+          docList.innerHTML = sources.map((s, i) => `
+            <div class="p-3" style="${i > 0 ? 'border-top:1px solid var(--bd)' : ''}">
+              <p class="text-[10px] font-bold mb-1" style="color:var(--ac)">${s.label}</p>
+              <p class="text-[10px] mb-2 italic" style="color:var(--mu)">${s.attribution}</p>
+              <p class="text-xs leading-relaxed" style="color:var(--fs)">${s.content}</p>
+            </div>`).join('');
+        }
+      }
+
       // Render block with context
       const infoEl = document.getElementById('mp-block-info');
       if (infoEl) {
@@ -4766,6 +4898,48 @@ blocks: {
     } catch(e) { window.app.ui.toast('Error: ' + e.message, 'error'); }
   },
 
+  _toggleDocPanel: () => {
+    const panel = document.getElementById('mp-doc-panel');
+    if (!panel) return;
+    panel.classList.toggle('hidden');
+    const toggle = document.getElementById('mp-docs-toggle');
+    if (toggle) toggle.style.background = panel.classList.contains('hidden') ? '' : 'rgba(212,98,47,.15)';
+  },
+
+  _onPresetChange: (sel) => {
+    const isCustom = sel.value === 'custom';
+    document.getElementById('eb-custom-fields').classList.toggle('hidden', !isCustom);
+    const docPanel = document.getElementById('eb-doc-panel');
+    const docList = document.getElementById('eb-doc-list');
+    if (isCustom || !docPanel || !docList) { docPanel?.classList.add('hidden'); return; }
+    const preset = ESSAY_BLOCKS_PROMPTS[parseInt(sel.value)];
+    const sources = preset?.structure?.sources;
+    if (!sources?.length) { docPanel.classList.add('hidden'); return; }
+    docPanel.classList.remove('hidden');
+    docList.innerHTML = sources.map((doc, i) => `
+      <div class="mb-3 p-3 rounded-xl" style="background:var(--elev);border:1px solid var(--bd)">
+        <div class="flex items-center gap-2 mb-1">
+          <span class="text-xs font-bold" style="color:var(--ac)">${doc.label}</span>
+          <input class="hinp text-xs flex-1" id="eb-doc-attr-${i}" value="${doc.attribution.replace(/"/g,'&quot;')}" placeholder="Attribution">
+        </div>
+        <textarea class="hinp text-xs w-full" id="eb-doc-content-${i}" rows="3" style="min-height:60px">${doc.content}</textarea>
+      </div>`).join('');
+  },
+
+  _addCustomDoc: () => {
+    const list = document.getElementById('eb-custom-docs-list');
+    if (!list) return;
+    const idx = list.children.length;
+    if (idx >= 7) return window.app.ui.toast('Maximum 7 documents.', 'error');
+    const div = document.createElement('div');
+    div.className = 'mb-3 p-3 rounded-xl';
+    div.style.cssText = 'background:var(--elev);border:1px solid var(--bd)';
+    div.innerHTML = `<span class="text-xs font-bold mb-1 block" style="color:var(--ac)">Document ${idx + 1}</span>
+      <input class="hinp text-xs mb-1 w-full" id="eb-cdoc-attr-${idx}" placeholder="Attribution (author, title, year)">
+      <textarea class="hinp text-xs w-full" id="eb-cdoc-content-${idx}" rows="3" placeholder="Document text..." style="min-height:60px"></textarea>`;
+    list.appendChild(div);
+  },
+
   _createFromModal: async (classId) => {
     const sel = document.getElementById('eb-prompt-select');
     const timerMins = parseInt(document.getElementById('eb-timer')?.value || '5');
@@ -4775,9 +4949,32 @@ blocks: {
       const title = document.getElementById('eb-custom-title')?.value?.trim();
       const prompt = document.getElementById('eb-custom-prompt')?.value?.trim();
       if (!title || !prompt) return window.app.ui.toast('Fill in title and prompt.', 'error');
-      promptData = { type, title, prompt };
+      let sources = [];
+      if (type === 'dbq') {
+        const customDocList = document.getElementById('eb-custom-docs-list');
+        if (customDocList) {
+          for (let i = 0; i < customDocList.children.length; i++) {
+            const attr = document.getElementById(`eb-cdoc-attr-${i}`)?.value?.trim();
+            const content = document.getElementById(`eb-cdoc-content-${i}`)?.value?.trim();
+            if (attr && content) sources.push({ label: `Document ${i + 1}`, attribution: attr, type: 'text', content });
+          }
+        }
+      }
+      promptData = { type, title, prompt, structure: sources.length ? { sources } : {} };
     } else {
-      promptData = ESSAY_BLOCKS_PROMPTS[parseInt(sel.value)];
+      const preset = ESSAY_BLOCKS_PROMPTS[parseInt(sel.value)];
+      // Collect any teacher edits to documents
+      const docList = document.getElementById('eb-doc-list');
+      if (docList && preset?.structure?.sources?.length) {
+        const editedSources = preset.structure.sources.map((s, i) => ({
+          ...s,
+          attribution: document.getElementById(`eb-doc-attr-${i}`)?.value?.trim() || s.attribution,
+          content: document.getElementById(`eb-doc-content-${i}`)?.value?.trim() || s.content
+        }));
+        promptData = { ...preset, structure: { ...preset.structure, sources: editedSources } };
+      } else {
+        promptData = preset;
+      }
     }
     const code = Math.random().toString(36).substring(2, 8).toUpperCase();
     try {
