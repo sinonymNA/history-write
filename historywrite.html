@@ -348,6 +348,18 @@ a, [onclick] { transition:opacity .2s, color .2s; }
 @keyframes timerPulse { 0%,100% { transform:scale(1); } 50% { transform:scale(1.08); } }
 .eb-timer { font-size:48px; font-weight:800; font-family:'JetBrains Mono',monospace; color:var(--ac); }
 .eb-timer.urgent { animation:timerPulse .5s ease-in-out infinite; color:#b34d1e; }
+.eb-timer-board { font-size:96px; text-shadow:0 0 60px rgba(212,98,47,.25); letter-spacing:.05em; }
+@media(max-width:640px){ .eb-timer-board { font-size:56px; } }
+.eb-thesis-bar { background:rgba(212,98,47,.06); border:1px solid rgba(212,98,47,.2); border-radius:16px; padding:16px 20px; font-family:'Crimson Pro',Georgia,serif; font-size:15px; line-height:1.6; color:var(--tx); }
+.eb-doc-inline { background:var(--elev); border-left:3px solid var(--ac); border-radius:0 12px 12px 0; padding:14px 16px; margin-bottom:12px; font-family:'Crimson Pro',Georgia,serif; font-size:14px; line-height:1.7; color:var(--tx); }
+.eb-doc-inline .eb-doc-attr { font-size:11px; font-style:italic; color:var(--mu); margin-bottom:6px; display:block; }
+.eb-progress-card { background:var(--card); border:1px solid var(--bd); border-radius:16px; padding:20px 16px; text-align:center; transition:all .3s; }
+@keyframes fillUp { from { stroke-dashoffset:157; } }
+.eb-progress-ring { position:relative; width:72px; height:72px; margin:0 auto 8px; }
+.eb-progress-ring svg { transform:rotate(-90deg); }
+.eb-progress-ring .ring-bg { fill:none; stroke:var(--bd); stroke-width:6; }
+.eb-progress-ring .ring-fill { fill:none; stroke:var(--ac); stroke-width:6; stroke-linecap:round; transition:stroke-dashoffset .6s var(--ease-out-expo); }
+.eb-progress-ring .ring-text { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:18px; font-weight:800; color:var(--ac); font-family:'JetBrains Mono',monospace; }
 .eb-group-card { background:var(--card); border:1px solid var(--bd); border-radius:16px; padding:20px; transition:all .3s var(--ease-out-expo); }
 .eb-group-card:hover { transform:translateY(-2px); box-shadow:0 8px 24px rgba(0,0,0,.06); }
 .eb-vote-btn { padding:8px 16px; border-radius:10px; border:2px solid var(--bd); background:var(--card); cursor:pointer; font-size:13px; font-weight:600; transition:all .2s; font-family:'DM Sans',sans-serif; }
@@ -846,15 +858,28 @@ const BLOCK_TEMPLATES = {
     { id: 'leq-analysis', label: 'So What?', emoji: '🧠', question: 'Analyze HOW your evidence supports your argument. What patterns or comparisons do you see?', hint: 'Use words like "this demonstrates," "as a result," "this pattern shows." Compare, contrast, or show cause/effect.', minWords: 40 },
     { id: 'leq-complex', label: 'Level Up', emoji: '🏆', question: 'Show complexity! Acknowledge a counterargument, different perspective, or connect to another time period.', hint: 'Start with "However," or "While this is true," to show you can think beyond your main argument.', minWords: 30 }
   ],
-  dbq: (prompt, numDocs = 0) => {
-    const blocks = [
-      { id: 'dbq-ctx', label: 'Set the Scene', emoji: '🌍', question: 'What was the historical context? Describe what was happening BEFORE or DURING the topic of the prompt.', hint: 'Don\'t reference the documents yet — use your outside knowledge to set up the situation.', minWords: 40 },
-      { id: 'dbq-thesis', label: 'Your Argument', emoji: '⚔️', question: 'State your thesis. Make a clear argument that addresses the prompt and previews your line of reasoning.', hint: 'Group the documents into categories that support your argument. Your thesis should hint at these groupings.', minWords: 25 },
-      { id: 'dbq-docs1', label: 'Document Deep Dive #1', emoji: '🔎', question: 'Use 2-3 documents as evidence. For each, explain what it says AND why it supports your argument.', hint: 'Don\'t just summarize — analyze! Mention the author, purpose, or audience (HAPP) for at least one doc.', minWords: 60 },
-      { id: 'dbq-docs2', label: 'Document Deep Dive #2', emoji: '📑', question: 'Use 2-3 MORE documents. Try to use documents from a different perspective or grouping.', hint: 'Show sourcing skills: explain how the author\'s point of view or purpose affects the document\'s reliability.', minWords: 60 },
-      { id: 'dbq-outside', label: 'Beyond the Docs', emoji: '💡', question: 'Provide ONE piece of outside evidence (not from the documents) that supports your argument.', hint: 'Think of a specific event, person, or development from your class notes that connects to this topic.', minWords: 30 },
-      { id: 'dbq-complex', label: 'Level Up', emoji: '🏆', question: 'Show complexity! Qualify your argument, address a counterargument, or connect across time periods.', hint: 'Acknowledge limitations, show nuance, or explain why the situation is more complicated than it seems.', minWords: 30 }
+  dbq: (prompt, sources = []) => {
+    const docPicks = sources.slice(0, Math.min(sources.length, 4));
+    const happ = [
+      (s) => `Read ${s.label} below. What is the author's MAIN ARGUMENT? In 2-3 sentences, explain what they are saying and how it connects to the thesis above.`,
+      (s) => `Read ${s.label} below. Analyze the author's POINT OF VIEW. How does who they are (their job, nationality, or social position) shape what they wrote? What does this reveal?`,
+      (s) => `Read ${s.label} below. What was the author's PURPOSE for writing this? Who was their AUDIENCE? How does knowing this change how we should read the document?`,
+      (s) => `Read ${s.label} below. Identify ONE specific claim or detail from this document. Explain how the HISTORICAL SITUATION at the time helps us understand why this was written.`
     ];
+    const hints = [
+      'Focus on the key point the author is making. Use a specific detail or quote from the text.',
+      'Think: WHY does this person see things this way? Their identity shapes their perspective.',
+      'Was this meant to persuade, inform, protest, or report? That changes everything about how we read it.',
+      'Connect the document to specific events or conditions happening during this time period.'
+    ];
+    const emojis = ['🔎','📑','🔍','📋'];
+    const blocks = [
+      { id: 'dbq-ctx', label: 'Set the Scene', emoji: '🌍', question: 'In 2-3 sentences, describe the historical context. What was happening BEFORE or DURING this time period that helps explain the topic?', hint: 'Don\'t reference any documents — use your outside knowledge. Think big picture: political, economic, or social conditions.', minWords: 25 }
+    ];
+    docPicks.forEach((s, i) => {
+      blocks.push({ id: `dbq-doc${i+1}`, label: `Analyze ${s.label}`, emoji: emojis[i], question: happ[i % happ.length](s), hint: hints[i % hints.length], minWords: 25, docIndex: i });
+    });
+    blocks.push({ id: 'dbq-finish', label: 'Finish Strong', emoji: '🏆', question: 'Do TWO things: (1) Name ONE specific piece of outside evidence (not from any document) that supports the thesis. (2) In 1-2 sentences, explain why the thesis might be more complicated than it seems — what\'s a counterargument?', hint: 'Be SPECIFIC with outside evidence — name a person, event, or policy with a date. For complexity, start with "However..." or "While this is true..."', minWords: 30 });
     return blocks;
   }
 };
@@ -871,6 +896,7 @@ const ESSAY_BLOCKS_PROMPTS = [
     title: 'APWH 6.4 — Global Economy DBQ',
     prompt: 'Evaluate the extent to which industrialization changed global economic relationships in the period 1750–1900.',
     difficulty: 'Hard',
+    thesis: 'Industrialization fundamentally transformed global economic relationships between 1750 and 1900 by creating new systems of factory production that enriched industrialized nations while forcing non-industrialized regions into economic dependency as suppliers of raw materials and consumers of manufactured goods.',
     structure: {
       sources: [
         {
@@ -881,33 +907,33 @@ const ESSAY_BLOCKS_PROMPTS = [
         },
         {
           label: 'Document 2',
-          attribution: 'Report of the Committee on Factory Children\'s Labor, British Parliament, 1832',
-          type: 'text',
-          content: 'We found children of very tender age — some as young as five or six years — working in the mills for twelve to fourteen hours daily, often in poorly ventilated rooms filled with dust and cotton fibers. Many showed signs of physical deformity from standing at machines for prolonged periods. The parents, themselves earning starvation wages, saw no alternative but to send their children to the factories. The mill owners, however, maintained that without child labor, the price of British cloth would rise and foreign competitors would seize their markets.'
-        },
-        {
-          label: 'Document 3',
           attribution: 'Imperial Commissioner Lin Zexu, letter to Queen Victoria of Britain, 1839',
           type: 'text',
           content: 'We have heard that in your honorable nation the rules of morality are strictly observed. How is it that you have not forbidden your merchants to deal in opium? Your country lies twenty thousand leagues away, but its subjects dare to sail to China and peddle this poison for profit. The wealth of China is used to profit the barbarians — that is to say, the great profit made by barbarians is all taken from the rightful share of China. By what right do they use this noxious article to injure the Chinese people? I pray you, O sovereign, take back and burn the foreign opium ships and ban the opium trade forever.'
         },
         {
-          label: 'Document 4',
-          attribution: 'Karl Marx and Friedrich Engels, The Communist Manifesto, 1848',
-          type: 'text',
-          content: 'The bourgeoisie has through its exploitation of the world market given a cosmopolitan character to production and consumption in every country. All old-established national industries have been destroyed or are daily being destroyed. They are dislodged by new industries, whose introduction becomes a life-and-death question for all civilized nations — industries that no longer work up indigenous raw material, but raw material drawn from the remotest zones. In place of the old wants, satisfied by the production of the country, we find new wants, requiring for their satisfaction the products of distant lands and climes.'
-        },
-        {
-          label: 'Document 5',
+          label: 'Document 3',
           attribution: 'Tokugawa Akitake, official Japanese observer, report on the 1867 Paris Exposition, submitted to the Meiji government',
           type: 'text',
           content: 'We witnessed machinery of extraordinary variety — spinning looms that produce in one hour what a hundred weavers could not complete in a day, steam engines of fearsome power driving whole factories from a single coal-fired furnace. The Western nations have achieved mastery over natural forces. Japan must study these techniques with urgency. If we do not build our own factories and railways, we shall find ourselves purchasing Western goods forever and selling raw silk and lacquerware at the prices they dictate. Our nation must industrialize or remain permanently subordinate in the new world order of commerce.'
         },
         {
-          label: 'Document 6',
+          label: 'Document 4',
           attribution: 'Report of the Indian Railways Commission, submitted to the British Parliament, 1854',
           type: 'text',
           content: 'The extension of railways into the interior of India will deliver several great benefits to British commerce. Raw cotton from the Deccan, jute from Bengal, and wheat from the Punjab can be conveyed swiftly to the ports for export to England\'s mills. At the same time, British manufactured textiles, hardware, and tools can penetrate markets previously inaccessible. India\'s vast interior, with its millions of inhabitants, represents a commercial opportunity of incalculable magnitude — one that only a modern railway system can unlock for the mutual benefit of the Empire.'
+        },
+        {
+          label: 'Document 5',
+          attribution: 'Report of the Committee on Factory Children\'s Labor, British Parliament, 1832',
+          type: 'text',
+          content: 'We found children of very tender age — some as young as five or six years — working in the mills for twelve to fourteen hours daily, often in poorly ventilated rooms filled with dust and cotton fibers. Many showed signs of physical deformity from standing at machines for prolonged periods. The parents, themselves earning starvation wages, saw no alternative but to send their children to the factories. The mill owners, however, maintained that without child labor, the price of British cloth would rise and foreign competitors would seize their markets.'
+        },
+        {
+          label: 'Document 6',
+          attribution: 'Karl Marx and Friedrich Engels, The Communist Manifesto, 1848',
+          type: 'text',
+          content: 'The bourgeoisie has through its exploitation of the world market given a cosmopolitan character to production and consumption in every country. All old-established national industries have been destroyed or are daily being destroyed. They are dislodged by new industries, whose introduction becomes a life-and-death question for all civilized nations — industries that no longer work up indigenous raw material, but raw material drawn from the remotest zones. In place of the old wants, satisfied by the production of the country, we find new wants, requiring for their satisfaction the products of distant lands and climes.'
         }
       ]
     }
@@ -917,6 +943,7 @@ const ESSAY_BLOCKS_PROMPTS = [
     title: 'APWH 6.5 — Economic Imperialism DBQ',
     prompt: 'Evaluate the extent to which economic motives drove European imperialism in Africa and Asia in the period 1750–1900.',
     difficulty: 'Hard',
+    thesis: 'European imperialism in Africa and Asia from 1750 to 1900 was primarily driven by economic motives — the need for raw materials, new markets for manufactured goods, and investment opportunities — though these economic goals were often justified through ideological claims of racial and civilizational superiority.',
     structure: {
       sources: [
         {
@@ -962,7 +989,7 @@ const ESSAY_BLOCKS_PROMPTS = [
 
 function generateBlocks(type, prompt, structure) {
   if (type === 'saq') return BLOCK_TEMPLATES.saq(prompt, structure?.parts || 3);
-  if (type === 'dbq') return BLOCK_TEMPLATES.dbq(prompt, structure?.sources?.length || 0);
+  if (type === 'dbq') return BLOCK_TEMPLATES.dbq(prompt, structure?.sources || structure?.structure?.sources || []);
   return BLOCK_TEMPLATES.leq(prompt);
 }
 
@@ -1161,7 +1188,7 @@ router: {
       if (bl._unsub) { bl._unsub(); bl._unsub = null; }
       if (bl._unsub2) { bl._unsub2(); bl._unsub2 = null; }
       if (bl._state?.timerInterval) { clearInterval(bl._state.timerInterval); bl._state.timerInterval = null; }
-      if (bl._state) { bl._state.rendered = false; bl._state.docsRendered = false; }
+      if (bl._state) { bl._state.rendered = false; bl._state.docsRendered = false; bl._state.thesisRendered = false; }
     }
     // Cleanup quiz listeners on navigation
     const qz = window.app.quiz;
@@ -1836,30 +1863,39 @@ views: {
     </div>`,
 
   blocksPlay: (sessionId) => `
-    <div class="max-w-4xl mx-auto px-4 py-6 pageEnter">
-      <div class="eb-wrap">
-        <div class="flex justify-between items-start mb-2">
+    <div class="pageEnter" style="min-height:100vh">
+      <!-- TEACHER BOARD VIEW -->
+      <div id="mp-teacher-view" class="hidden" style="max-width:860px;margin:0 auto;padding:40px 24px">
+        <div class="text-center mb-6">
+          <span class="text-[10px] font-bold fm uppercase px-3 py-1.5 rounded-lg" style="background:var(--acs);color:var(--ac);letter-spacing:.1em">Live Session</span>
+          <h1 class="text-2xl font-bold fs mt-4 mb-2" id="mp-t-title">Essay Blocks</h1>
+        </div>
+        <div id="mp-t-prompt" class="mb-4 p-4 rounded-2xl text-sm leading-relaxed" style="background:var(--elev);border:1px solid var(--bd);color:var(--mu)"></div>
+        <div id="mp-t-thesis" class="hidden eb-thesis-bar mb-6"></div>
+        <div class="text-center mb-8">
+          <div class="eb-timer eb-timer-board" id="mp-t-timer">--:--</div>
+          <p class="text-sm mt-2 fm" style="color:var(--fa)">Time Remaining</p>
+        </div>
+        <div id="mp-t-progress" class="grid gap-4 mb-8" style="grid-template-columns:repeat(auto-fill,minmax(160px,1fr))"></div>
+        <div class="text-center">
+          <button onclick="window.app.blocks.endSession('${sessionId}')" class="btnP py-3 px-10 text-base font-bold" style="font-size:16px">End Game</button>
+        </div>
+      </div>
+      <!-- STUDENT VIEW -->
+      <div id="mp-student-view" class="hidden" style="max-width:680px;margin:0 auto;padding:24px 16px">
+        <div class="flex justify-between items-center mb-3">
           <button onclick="if(confirm('Leave the game? Your block will be submitted as-is.')){window.app.blocks.submitMultiBlock('${sessionId}');window.app.router.go('student-dash')}" class="text-xs flex items-center gap-1" style="color:var(--fa)"><i data-lucide="arrow-left" class="w-3 h-3"></i>Exit</button>
-          <div class="flex gap-2 items-center">
-            <button id="mp-docs-toggle" class="hidden btnG text-xs py-1 px-3 flex items-center gap-1" onclick="window.app.blocks._toggleDocPanel()" style="border-color:var(--ac);color:var(--ac)"><i data-lucide="file-text" class="w-3 h-3"></i>Documents</button>
-            ${appState.userData?.role === 'teacher' ? '<button onclick="window.app.blocks.endSession(\''+sessionId+'\')" class="btnG text-xs py-1 px-3" style="border-color:var(--ac);color:var(--ac)">End Game</button>' : ''}
-          </div>
+          <div class="eb-timer text-lg" id="mp-timer" style="font-size:22px">--:--</div>
         </div>
         <div id="mp-prompt-bar" class="mb-3 p-3 rounded-xl text-xs" style="background:var(--elev);border:1px solid var(--bd)">
           <span class="font-bold" style="color:var(--ac)">Prompt:</span> <span id="mp-prompt-text" class="fs" style="color:var(--mu)">Loading...</span>
         </div>
-        <div id="mp-doc-panel" class="hidden mb-3 rounded-xl overflow-hidden" style="border:1px solid var(--bd)">
-          <div class="px-4 py-2 flex items-center justify-between" style="background:rgba(212,98,47,.1)">
-            <span class="text-xs font-bold" style="color:var(--ac)">📄 Primary Source Documents</span>
-            <span class="text-[10px]" style="color:var(--mu)">Reference these as you write</span>
-          </div>
-          <div id="mp-doc-list" class="divide-y" style="border-color:var(--bd);max-height:340px;overflow-y:auto"></div>
-        </div>
-        <div class="text-center mb-4">
-          <div class="eb-timer" id="mp-timer">--:--</div>
-          <p class="text-xs mt-1" style="color:var(--fa)">Time remaining</p>
+        <div id="mp-thesis-bar" class="hidden eb-thesis-bar mb-4">
+          <span class="text-[10px] font-bold uppercase tracking-wider block mb-1" style="color:var(--ac)">Working Thesis</span>
+          <span id="mp-thesis-text" class="text-sm"></span>
         </div>
         <div id="mp-block-info" class="mb-4"></div>
+        <div id="mp-block-doc" class="hidden"></div>
         <div id="mp-block-area"></div>
       </div>
     </div>`,
@@ -4235,13 +4271,20 @@ blocks: {
     const blockEl = document.getElementById('eb-current-block');
     if (!blockEl) return;
 
+    // Show thesis for DBQ
+    const thesis = st.prompt?.thesis;
+    const sources = st.prompt?.structure?.sources || [];
+    const docForBlock = (b.docIndex >= 0 && sources[b.docIndex]) ? sources[b.docIndex] : null;
+
     blockEl.innerHTML = `<div class="eb-block">
+      ${thesis ? '<div class="eb-thesis-bar mb-4"><span class="text-[10px] font-bold uppercase tracking-wider block mb-1" style="color:var(--ac)">Working Thesis</span><span class="text-sm">' + thesis + '</span></div>' : ''}
       <div class="eb-card">
         <span class="eb-emoji">${b.emoji}</span>
         <div class="flex items-center gap-2 mb-2">
           <span class="eb-block-label">${b.label}</span>
           <span class="text-xs" style="color:var(--fa)">Block ${currentIdx + 1} of ${blocks.length}</span>
         </div>
+        ${docForBlock ? '<div class="eb-doc-inline mb-3"><span class="eb-doc-attr">' + docForBlock.attribution + '</span><p style="color:var(--tx);font-size:14px;line-height:1.7">"' + docForBlock.content + '"</p></div>' : ''}
         <h2 class="text-lg font-bold fs mb-2">${b.question}</h2>
         <textarea id="eb-input" class="eb-textarea" placeholder="Type your response here..." oninput="window.app.blocks._onInput(this)">${saved}</textarea>
         <div class="flex items-center justify-between mt-2">
@@ -4600,8 +4643,9 @@ blocks: {
       await updateDoc(doc(db, 'blockSessions', sessionId), {
         status: 'active',
         groups: Object.fromEntries(groups.map((g, i) => [String(i), g.map(p => p.id)])),
-        blocks: blocks.map(b => ({ id: b.id, label: b.label, emoji: b.emoji, question: b.question })),
-        startedAt: serverTimestamp()
+        blocks: blocks.map(b => ({ id: b.id, label: b.label, emoji: b.emoji, question: b.question, hint: b.hint || '', docIndex: b.docIndex ?? -1 })),
+        startedAt: serverTimestamp(),
+        thesis: session.thesis || ''
       });
     } catch(e) { window.app.ui.toast('Error starting: ' + e.message, 'error'); }
   },
@@ -4612,6 +4656,25 @@ blocks: {
     if (st._unsub) { st._unsub(); st._unsub = null; }
     if (st._unsub2) { st._unsub2(); st._unsub2 = null; }
     st._state.timerInterval = null;
+    const isTeacher = appState.userData?.role === 'teacher';
+
+    // Helper: start timer on a given element ID
+    const setupTimer = (elId, session, onEnd) => {
+      if (st._state.timerInterval || !session.startedAt) return;
+      const startTime = session.startedAt.toDate ? session.startedAt.toDate().getTime() : Date.now();
+      const duration = (session.timerSeconds || 300) * 1000;
+      st._state.timerInterval = setInterval(() => {
+        const remaining = Math.max(0, duration - (Date.now() - startTime));
+        const mins = Math.floor(remaining / 60000);
+        const secs = Math.floor((remaining % 60000) / 1000);
+        const timerEl = document.getElementById(elId);
+        if (timerEl) {
+          timerEl.textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+          timerEl.classList.toggle('urgent', remaining < 60000);
+        }
+        if (remaining <= 0) { clearInterval(st._state.timerInterval); if (onEnd) onEnd(); }
+      }, 1000);
+    };
 
     st._unsub = onSnapshot(doc(db, 'blockSessions', sessionId), async (snap) => {
       if (!snap.exists()) return;
@@ -4625,7 +4688,55 @@ blocks: {
         return;
       }
 
-      // Get my player data
+      // ─── TEACHER BOARD VIEW ───
+      if (isTeacher) {
+        const tv = document.getElementById('mp-teacher-view');
+        if (tv) tv.classList.remove('hidden');
+        const sv = document.getElementById('mp-student-view');
+        if (sv) sv.classList.add('hidden');
+
+        const titleEl = document.getElementById('mp-t-title');
+        if (titleEl) titleEl.textContent = session.title || 'Essay Blocks';
+        const promptEl = document.getElementById('mp-t-prompt');
+        if (promptEl) promptEl.innerHTML = `<span class="font-bold" style="color:var(--ac)">Prompt:</span> ${session.prompt || ''}`;
+        const thesisEl = document.getElementById('mp-t-thesis');
+        if (thesisEl && session.thesis) { thesisEl.classList.remove('hidden'); thesisEl.innerHTML = `<span class="text-[10px] font-bold uppercase tracking-wider block mb-1" style="color:var(--ac)">Working Thesis</span>${session.thesis}`; }
+
+        setupTimer('mp-t-timer', session, null);
+
+        // Show progress per group
+        const groups = session.groups || {};
+        const progEl = document.getElementById('mp-t-progress');
+        if (progEl && Object.keys(groups).length) {
+          const playersSnap = await getDocs(collection(db, 'blockSessions', sessionId, 'players'));
+          const players = {};
+          playersSnap.forEach(d => { players[d.id] = d.data(); });
+          const groupKeys = Object.keys(groups).sort((a,b) => Number(a) - Number(b));
+          progEl.innerHTML = groupKeys.map(k => {
+            const ids = groups[k] || [];
+            const submitted = ids.filter(id => players[id]?.response?.trim()).length;
+            const total = ids.length;
+            const pct = total ? (submitted / total) : 0;
+            const circumference = 2 * Math.PI * 25;
+            const offset = circumference * (1 - pct);
+            return `<div class="eb-progress-card ${submitted === total ? 'done' : ''}">
+              <div class="eb-progress-ring">
+                <svg width="72" height="72" viewBox="0 0 60 60"><circle class="ring-bg" cx="30" cy="30" r="25"/><circle class="ring-fill" cx="30" cy="30" r="25" stroke-dasharray="${circumference}" stroke-dashoffset="${offset}" style="${submitted === total ? 'stroke:var(--sg)' : ''}"/></svg>
+                <div class="ring-text" style="${submitted === total ? 'color:var(--sg)' : ''}">${submitted}/${total}</div>
+              </div>
+              <p class="text-sm font-bold fs">Group ${Number(k) + 1}</p>
+              <p class="text-[10px] mt-1" style="color:${submitted === total ? 'var(--sg)' : 'var(--fa)'}">${submitted === total ? 'All done!' : submitted + ' submitted'}</p>
+            </div>`;
+          }).join('');
+        }
+        lucide.createIcons();
+        return;
+      }
+
+      // ─── STUDENT VIEW ───
+      const sv = document.getElementById('mp-student-view');
+      if (sv) sv.classList.remove('hidden');
+
       const myDoc = await getDoc(doc(db, 'blockSessions', sessionId, 'players', appState.user.uid));
       if (!myDoc.exists()) return;
       const me = myDoc.data();
@@ -4634,53 +4745,23 @@ blocks: {
       const block = session.blocks?.[me.blockIndex] || session.blocks?.[0];
       if (!block) return;
 
-      // Timer
-      if (!st._state.timerInterval && session.startedAt) {
-        const startTime = session.startedAt.toDate ? session.startedAt.toDate().getTime() : Date.now();
-        const duration = (session.timerSeconds || 300) * 1000;
-        st._state.timerInterval = setInterval(() => {
-          const remaining = Math.max(0, duration - (Date.now() - startTime));
-          const mins = Math.floor(remaining / 60000);
-          const secs = Math.floor((remaining % 60000) / 1000);
-          const timerEl = document.getElementById('mp-timer');
-          if (timerEl) {
-            timerEl.textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
-            timerEl.classList.toggle('urgent', remaining < 60000);
-          }
-          if (remaining <= 0) {
-            clearInterval(st._state.timerInterval);
-            // Teacher auto-ends or player submits
-            window.app.blocks.submitMultiBlock(sessionId);
-          }
-        }, 1000);
-      }
+      setupTimer('mp-timer', session, () => window.app.blocks.submitMultiBlock(sessionId));
 
       // Show prompt
       const promptEl = document.getElementById('mp-prompt-text');
       if (promptEl) promptEl.textContent = session.prompt || '';
 
-      // Show documents panel for DBQ sessions (only render once)
-      const sources = session.structure?.sources;
-      if (sources?.length && !st._state.docsRendered) {
-        st._state.docsRendered = true;
-        const toggle = document.getElementById('mp-docs-toggle');
-        const panel = document.getElementById('mp-doc-panel');
-        const docList = document.getElementById('mp-doc-list');
-        if (toggle) toggle.classList.remove('hidden');
-        if (docList) {
-          docList.innerHTML = sources.map((s, i) => `
-            <div class="p-3" style="${i > 0 ? 'border-top:1px solid var(--bd)' : ''}">
-              <p class="text-[10px] font-bold mb-1" style="color:var(--ac)">${s.label}</p>
-              <p class="text-[10px] mb-2 italic" style="color:var(--mu)">${s.attribution}</p>
-              <p class="text-xs leading-relaxed" style="color:var(--fs)">${s.content}</p>
-            </div>`).join('');
-        }
+      // Show thesis for DBQ sessions
+      if (session.thesis && !st._state.thesisRendered) {
+        st._state.thesisRendered = true;
+        const thesisBar = document.getElementById('mp-thesis-bar');
+        const thesisText = document.getElementById('mp-thesis-text');
+        if (thesisBar && thesisText) { thesisBar.classList.remove('hidden'); thesisText.textContent = session.thesis; }
       }
 
-      // Render block with context
+      // Render block info (progress pips)
       const infoEl = document.getElementById('mp-block-info');
       if (infoEl) {
-        // Show all blocks as progress so the student sees how their piece fits
         const allBlocks = session.blocks || [];
         const pips = allBlocks.map((b, i) => `<span class="inline-flex items-center gap-1 text-[10px] px-2 py-1 rounded-lg fm" style="background:${i === me.blockIndex ? 'var(--acs)' : 'var(--elev)'};${i === me.blockIndex ? 'color:var(--ac);font-weight:700;border:1px solid var(--ac)' : 'color:var(--fa);border:1px solid var(--bd)'}">${b.emoji} ${b.label}${i === me.blockIndex ? ' ← You' : ''}</span>`).join('');
         infoEl.innerHTML = `<div class="text-center">
@@ -4690,15 +4771,31 @@ blocks: {
         </div>`;
       }
 
+      // Show inline document for doc-analysis blocks
+      const docPanel = document.getElementById('mp-block-doc');
+      if (docPanel && !st._state.docsRendered) {
+        st._state.docsRendered = true;
+        const sources = session.structure?.sources;
+        if (sources?.length && block.docIndex >= 0 && sources[block.docIndex]) {
+          const d = sources[block.docIndex];
+          docPanel.classList.remove('hidden');
+          docPanel.innerHTML = `<div class="eb-doc-inline">
+            <span class="eb-doc-attr">${d.attribution}</span>
+            <p style="color:var(--tx);font-size:14px;line-height:1.7">"${d.content}"</p>
+          </div>`;
+        }
+      }
+
+      // Render writing area
       const areaEl = document.getElementById('mp-block-area');
       if (areaEl && !st._state.rendered) {
         st._state.rendered = true;
         const esc = window.app.blocks._esc;
         areaEl.innerHTML = `<div class="eb-card eb-block">
-          <h2 class="text-lg font-bold fs mb-2">${block.question}</h2>
-          <p class="text-xs mb-1" style="color:var(--fa)">Your teammates are working on other blocks right now — you can't see what they're writing! 🤫</p>
-          <p class="text-xs mb-3" style="color:var(--mu)"><strong>Tip:</strong> ${block.label === 'Set the Scene' ? 'Describe the historical context before/during the topic of the prompt.' : block.label === 'Your Argument' ? 'Make a clear, defensible claim that answers the prompt with a "because" and 2-3 supporting points.' : block.label.includes('Evidence') ? 'Provide specific historical evidence — names, dates, events — and explain how it connects to the prompt.' : block.label.includes('Document') ? 'Reference specific documents. Explain what each says AND how it supports your argument.' : block.label === 'Beyond the Docs' ? 'Add a piece of outside evidence (not from the documents) that supports the argument.' : block.label === 'So What?' ? 'Analyze HOW your evidence proves the argument. Show cause & effect or comparisons.' : block.label === 'Level Up' ? 'Show nuance! Acknowledge a counterargument or connect to another time period.' : 'Write your response thoughtfully — it all comes together at the end!'}</p>
-          <textarea id="mp-input" class="eb-textarea" placeholder="Write your block here..." style="min-height:180px">${esc(me.response || '')}</textarea>
+          <h2 class="text-base font-bold fs mb-2">${block.question}</h2>
+          <p class="text-xs mb-1" style="color:var(--fa)">Your teammates are working on other blocks right now — you can't see what they're writing!</p>
+          ${block.hint ? '<p class="text-xs mb-3" style="color:var(--mu)"><strong>Tip:</strong> ' + block.hint + '</p>' : ''}
+          <textarea id="mp-input" class="eb-textarea" placeholder="Write your block here..." style="min-height:160px">${esc(me.response || '')}</textarea>
           <div class="flex items-center justify-between mt-3">
             <span class="text-xs fm" style="color:var(--fa)" id="mp-wc">0 words</span>
             <button onclick="window.app.blocks.submitMultiBlock('${sessionId}')" class="btnP text-sm py-2 px-6" id="mp-submit">Submit Block</button>
@@ -4715,6 +4812,36 @@ blocks: {
       }
       lucide.createIcons();
     });
+
+    // Teacher: also listen to players subcollection for live progress updates
+    if (isTeacher) {
+      st._unsub2 = onSnapshot(collection(db, 'blockSessions', sessionId, 'players'), async (playersSnap) => {
+        const session = st._state.session;
+        if (!session) return;
+        const groups = session.groups || {};
+        const progEl = document.getElementById('mp-t-progress');
+        if (!progEl || !Object.keys(groups).length) return;
+        const players = {};
+        playersSnap.forEach(d => { players[d.id] = d.data(); });
+        const groupKeys = Object.keys(groups).sort((a,b) => Number(a) - Number(b));
+        progEl.innerHTML = groupKeys.map(k => {
+          const ids = groups[k] || [];
+          const submitted = ids.filter(id => players[id]?.response?.trim()).length;
+          const total = ids.length;
+          const pct = total ? (submitted / total) : 0;
+          const circumference = 2 * Math.PI * 25;
+          const offset = circumference * (1 - pct);
+          return `<div class="eb-progress-card ${submitted === total ? 'done' : ''}">
+            <div class="eb-progress-ring">
+              <svg width="72" height="72" viewBox="0 0 60 60"><circle class="ring-bg" cx="30" cy="30" r="25"/><circle class="ring-fill" cx="30" cy="30" r="25" stroke-dasharray="${circumference}" stroke-dashoffset="${offset}" style="${submitted === total ? 'stroke:var(--sg)' : ''}"/></svg>
+              <div class="ring-text" style="${submitted === total ? 'color:var(--sg)' : ''}">${submitted}/${total}</div>
+            </div>
+            <p class="text-sm font-bold fs">Group ${Number(k) + 1}</p>
+            <p class="text-[10px] mt-1" style="color:${submitted === total ? 'var(--sg)' : 'var(--fa)'}">${submitted === total ? 'All done!' : submitted + ' submitted'}</p>
+          </div>`;
+        }).join('');
+      });
+    }
   },
 
   submitMultiBlock: async (sessionId) => {
@@ -4898,14 +5025,6 @@ blocks: {
     } catch(e) { window.app.ui.toast('Error: ' + e.message, 'error'); }
   },
 
-  _toggleDocPanel: () => {
-    const panel = document.getElementById('mp-doc-panel');
-    if (!panel) return;
-    panel.classList.toggle('hidden');
-    const toggle = document.getElementById('mp-docs-toggle');
-    if (toggle) toggle.style.background = panel.classList.contains('hidden') ? '' : 'rgba(212,98,47,.15)';
-  },
-
   _onPresetChange: (sel) => {
     const isCustom = sel.value === 'custom';
     document.getElementById('eb-custom-fields').classList.toggle('hidden', !isCustom);
@@ -4984,6 +5103,7 @@ blocks: {
         title: promptData.title,
         type: promptData.type,
         prompt: promptData.prompt,
+        thesis: promptData.thesis || '',
         structure: promptData.structure || {},
         teacherId: appState.user.uid,
         status: 'lobby',
