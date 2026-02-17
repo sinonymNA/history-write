@@ -3,27 +3,41 @@ name: Add Feature
 on:
   workflow_dispatch:
     inputs:
+      target_file:
+        description: 'Which HTML file? (e.g. historywrite.html)'
+        required: true
+        type: string
       feature_request:
         description: 'Describe the feature you want added'
         required: true
         type: string
+
+permissions:
+  contents: write
 
 jobs:
   implement:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
       - uses: actions/setup-python@v4
         with:
           python-version: '3.11'
+
       - run: pip install anthropic
+
       - run: python .github/scripts/add_feature.py
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           FEATURE_REQUEST: ${{ github.event.inputs.feature_request }}
+          TARGET_FILE: ${{ github.event.inputs.target_file }}
+
       - run: |
           git config --global user.email "action@github.com"
           git config --global user.name "GitHub Action"
-          git add index.html
+          git add ${{ github.event.inputs.target_file }}
           git commit -m "Add feature: ${{ github.event.inputs.feature_request }}"
           git push
