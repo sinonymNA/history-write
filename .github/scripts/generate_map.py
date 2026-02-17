@@ -1,11 +1,17 @@
-import anthropic
-import json
 import os
+import glob
 
-client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
+# Add this near the top, before the glob line
+repo_root = os.environ.get("GITHUB_WORKSPACE", os.getcwd())
 
-with open("index.html", "r") as f:
-    content = f.read()
+html_files = glob.glob(os.path.join(repo_root, "*.html"))
+
+for filepath in html_files:
+    filename = os.path.basename(filepath)
+    map_filename = os.path.join(repo_root, f"codebase_map_{filename.replace('.html', '')}.json")
+    
+    with open(filepath, "r") as f:  # filepath is already absolute now
+        content = f.read()
 
 response = client.messages.create(
     model="claude-haiku-4-5-20251001",
