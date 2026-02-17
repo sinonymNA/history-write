@@ -5402,12 +5402,21 @@ Return ONLY this JSON:
       const resp = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
-        body: JSON.stringify({ model: 'claude-opus-4-6', max_tokens: 4000, system: systemPrompt, messages: [{ role: 'user', content: userPrompt }] })
+        body: JSON.stringify({ model: 'claude-sonnet-4-5-20250929', max_tokens: 4000, system: systemPrompt, messages: [{ role: 'user', content: userPrompt }] })
       });
+      if (!resp.ok) {
+        const errData = await resp.json().catch(() => ({}));
+        throw new Error(errData.error?.message || `API returned ${resp.status}`);
+      }
       const data = await resp.json();
+      if (data.error) throw new Error(data.error.message || 'API error');
       const text = data.content?.[0]?.text || '';
-      const jsonText = text.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/```\s*$/i, '').trim();
-      const generated = JSON.parse(jsonText);
+      if (!text) throw new Error('No content returned from AI. Try again.');
+      const cleaned = text.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/```\s*$/i, '').trim();
+      const start = cleaned.indexOf('{');
+      const end = cleaned.lastIndexOf('}');
+      if (start === -1 || end === -1) throw new Error('AI did not return valid JSON. Try again.');
+      const generated = JSON.parse(cleaned.substring(start, end + 1));
       window.app.lab._generated = generated;
       window.app.lab._renderEditor(generated, t);
       document.getElementById('lab-phase1').classList.add('hidden');
