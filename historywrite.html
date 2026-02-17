@@ -1714,6 +1714,7 @@ views: {
           </div>
         </div>`).join('')}
       </div>
+      <div id="library-custom-stories"></div>
       <h2 class="text-lg font-bold fs mb-3">Essay Assignments</h2>
       <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 stagger">
         ${LIBRARY_TEMPLATES.map((t, idx) => `<div class="hcard p-5 flex flex-col justify-between"><div class="mb-4"><span class="text-[10px] font-bold fm uppercase px-2 py-1 rounded" style="background:var(--acs);color:var(--ac)">${t.type}</span><h3 class="font-bold mt-2 text-sm">${t.title}</h3><p class="text-xs mt-1 line-clamp-3" style="color:var(--mu)">${t.prompt}</p>${t.sources?.length ? `<p class="text-[10px] mt-1" style="color:var(--fa)">${t.sources.length} document${t.sources.length > 1 ? 's' : ''} attached</p>` : ''}</div><button onclick="window.app.teacher.cloneTemplate(${idx})" class="btnP text-xs w-full">Clone to Class</button></div>`).join('')}
@@ -2027,16 +2028,16 @@ views: {
     </div>`,
 
   storyLesson: (storyId) => {
-    const story = STORY_LESSONS[storyId];
-    if (!story) return `<div class="p-8 text-center"><p>Story not found.</p></div>`;
+    const story = window.app.story._getStory(storyId);
+    const unitBadge = story ? `<span class="text-[10px] fm font-bold px-2 py-1 rounded" style="background:var(--acs);color:var(--ac)">Unit ${story.unit}</span>` : '<span id="story-unit-badge"></span>';
     return `
     <div class="max-w-3xl mx-auto px-4 py-6 pageEnter" id="story-root" data-story="${storyId}">
       <div class="flex items-center justify-between mb-4">
         <button onclick="window.app.story.exit()" class="text-sm flex items-center gap-1" style="color:var(--mu)"><i data-lucide="arrow-left" class="w-4 h-4"></i>Back</button>
-        <div class="text-right"><span class="text-[10px] fm font-bold px-2 py-1 rounded" style="background:var(--acs);color:var(--ac)">Unit ${story.unit}</span></div>
+        <div class="text-right">${unitBadge}</div>
       </div>
       <div class="story-progress" id="story-progress"></div>
-      <div id="story-content"></div>
+      <div id="story-content">${story ? '' : '<p class="text-center text-sm" style="color:var(--mu)">Loading lesson...</p>'}</div>
     </div>`;
   },
 
@@ -2175,6 +2176,35 @@ teacher: {
           return `<button onclick="window.app.teacher._selectedClassId='${d.id}';document.querySelectorAll('.lib-cls-btn').forEach(b=>b.style.cssText='');this.style.cssText='background:var(--ac);color:#fff;border-color:var(--ac)'" class="lib-cls-btn text-xs px-3 py-1.5 rounded-lg font-semibold transition" style="${d.id === snap.docs[0].id ? 'background:var(--ac);color:#fff;border-color:var(--ac)' : 'border:1px solid var(--bd)'}">${data.name}</button>`;
         }).join('');
     } catch(e) { console.error(e); }
+    // Load teacher-created story lessons from Firestore
+    try {
+      const customSnap = await getDocs(query(collection(db, 'teacherLessons'), where('teacherId', '==', appState.user.uid), where('type', '==', 'story')));
+      const customEl = document.getElementById('library-custom-stories');
+      if (customEl && customSnap.docs.length) {
+        customSnap.docs.forEach(d => { window.app.story._customLessons[d.id] = d.data(); });
+        customEl.innerHTML = `<h3 class="text-sm font-bold fs mb-3 flex items-center gap-2"><span class="w-6 h-6 rounded-lg flex items-center justify-center text-xs" style="background:linear-gradient(135deg,var(--ac),var(--gd))">+</span> Your Created Lessons</h3>
+          <div class="grid sm:grid-cols-2 gap-4 mb-8">${customSnap.docs.map(d => {
+            const s = d.data();
+            const bg = s.chapters?.[0]?.bg || 'linear-gradient(135deg,#1a1a2e,#2d1b3d)';
+            const icon = s.chapters?.[0]?.icon || s.icon || '📖';
+            return `<div class="story-lib-card">
+              <div class="story-lib-cover" style="background:${bg}">
+                <span style="font-size:36px;filter:drop-shadow(0 2px 8px rgba(0,0,0,.4))">${icon}</span>
+                <p class="text-[10px] font-bold uppercase tracking-widest mt-2" style="color:rgba(255,255,255,.5)">Unit ${s.unit||'?'} · ${s.period||''}</p>
+                <h3 class="font-bold text-lg fs" style="color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.4)">${s.title||'Untitled'}</h3>
+              </div>
+              <div class="p-4" style="background:var(--card)">
+                <p class="text-xs mb-3" style="color:var(--mu)">${s.desc||''}</p>
+                <p class="text-[10px] mb-3" style="color:var(--fa)">${s.chapters?.length||0} chapters · AI-generated</p>
+                <div class="flex gap-2">
+                  <button onclick="window.app.teacher.assignStory('${d.id}')" class="btnP text-xs flex-1">Assign to Class</button>
+                  <button onclick="window.app.router.go('story-lesson',{storyId:'${d.id}'})" class="btnG text-xs flex-1">Preview</button>
+                </div>
+              </div>
+            </div>`;
+          }).join('')}</div>`;
+      }
+    } catch(e) { console.error('Failed to load custom lessons:', e); }
     lucide.createIcons();
   },
   cloneTemplate: async (idx) => {
@@ -2192,12 +2222,16 @@ teacher: {
     } catch(e) { console.error(e); window.app.ui.toast('Clone failed: ' + e.message, 'error'); }
   },
   assignStory: async (storyId) => {
-    const story = STORY_LESSONS[storyId]; if (!story) return;
+    let story = window.app.story._getStory(storyId);
+    if (!story) {
+      try { const ds = await getDoc(doc(db, 'teacherLessons', storyId)); if (ds.exists()) { story = ds.data(); window.app.story._customLessons[storyId] = story; } } catch(e) {}
+    }
+    if (!story) return window.app.ui.toast('Story not found.', 'error');
     const classId = window.app.teacher._selectedClassId;
     if (!classId) return window.app.ui.toast('Select a class first.', 'error');
     try {
       await addDoc(collection(db, 'assignments'), {
-        classId, title: `📖 ${story.title} (Unit ${story.unit})`, type: 'story', prompt: story.desc,
+        classId, title: `📖 ${story.title} (Unit ${story.unit||'?'})`, type: 'story', prompt: story.desc,
         storyId, maxAttempts: 99, teacherId: appState.user.uid, createdAt: serverTimestamp(), submissionsCount: 0,
         structure: { kind: 'story', storyId, chapters: story.chapters.length }
       });
@@ -2693,7 +2727,7 @@ student: {
           const aPayload = JSON.stringify({ id: d.id, ...a }).replace(/'/g, "&#39;");
           if (a.type === 'story') {
             const sid = a.storyId || a.structure?.storyId;
-            const storyData = sid ? STORY_LESSONS[sid] : null;
+            const storyData = sid ? (window.app.story._getStory(sid)) : null;
             const saved = localStorage.getItem(`story_${sid}_${appState.user.uid}`);
             const progress = saved ? JSON.parse(saved) : [];
             const total = storyData?.chapters?.length || a.structure?.chapters || 5;
@@ -3839,8 +3873,10 @@ quiz: {
 // ═══ STORY LESSONS ═══
 story: {
   _storyId: null, _chapter: 0, _assignmentId: null, _completed: [],
+  _customLessons: {},
+  _getStory: (id) => STORY_LESSONS[id] || window.app.story._customLessons[id] || null,
 
-  init: (storyId, assignmentId) => {
+  init: async (storyId, assignmentId) => {
     const st = window.app.story;
     st._storyId = storyId;
     st._chapter = 0;
@@ -3849,7 +3885,13 @@ story: {
     const saved = localStorage.getItem(`story_${storyId}_${appState.user?.uid||'preview'}`);
     st._completed = saved ? JSON.parse(saved) : [];
     // If they've completed some chapters, start at the first incomplete
-    const story = STORY_LESSONS[storyId];
+    let story = st._getStory(storyId);
+    if (!story) {
+      try {
+        const docSnap = await getDoc(doc(db, 'teacherLessons', storyId));
+        if (docSnap.exists()) { st._customLessons[storyId] = docSnap.data(); story = docSnap.data(); }
+      } catch(e) { console.error('Failed to load custom lesson:', e); }
+    }
     if (story) {
       const firstIncomplete = story.chapters.findIndex((_,i) => !st._completed.includes(i));
       st._chapter = firstIncomplete >= 0 ? firstIncomplete : 0;
@@ -3866,11 +3908,15 @@ story: {
 
   renderChapter: () => {
     const st = window.app.story;
-    const story = STORY_LESSONS[st._storyId]; if (!story) return;
+    const story = st._getStory(st._storyId); if (!story) return;
     const ch = story.chapters[st._chapter];
     const container = document.getElementById('story-content');
     const progEl = document.getElementById('story-progress');
     if (!container) return;
+
+    // Fill in unit badge if it was a placeholder (async-loaded lesson)
+    const badge = document.getElementById('story-unit-badge');
+    if (badge) badge.outerHTML = `<span class="text-[10px] fm font-bold px-2 py-1 rounded" style="background:var(--acs);color:var(--ac)">Unit ${story.unit||'?'}</span>`;
 
     // Progress pips
     if (progEl) {
@@ -3949,7 +3995,7 @@ story: {
 
   checkAnswer: async () => {
     const st = window.app.story;
-    const story = STORY_LESSONS[st._storyId]; if (!story) return;
+    const story = st._getStory(st._storyId); if (!story) return;
     const ch = story.chapters[st._chapter];
     const answer = document.getElementById('story-answer')?.value?.trim();
     if (!answer || answer.length < 15) return window.app.ui.toast('Write a more complete answer — at least a sentence or two.', 'info');
@@ -4036,7 +4082,7 @@ story: {
         window.app.game.checkLevelUp();
       }
       // If all chapters complete and there's an assignment, mark it
-      const story = STORY_LESSONS[st._storyId];
+      const story = st._getStory(st._storyId);
       if (story && st._completed.length >= story.chapters.length && st._assignmentId && appState.user) {
         try {
           addDoc(collection(db,'submissions'), {
@@ -4052,7 +4098,7 @@ story: {
 
   nextChapter: () => {
     const st = window.app.story;
-    const story = STORY_LESSONS[st._storyId];
+    const story = st._getStory(st._storyId);
     if (story && st._chapter < story.chapters.length - 1) {
       st._chapter++;
       st.renderChapter();
@@ -4067,7 +4113,7 @@ story: {
   editImage: () => {
     const st = window.app.story;
     const customKey = `story_img_${st._storyId}_${st._chapter}`;
-    const current = localStorage.getItem(customKey) || STORY_LESSONS[st._storyId]?.chapters[st._chapter]?.img || '';
+    const current = localStorage.getItem(customKey) || st._getStory(st._storyId)?.chapters[st._chapter]?.img || '';
     const url = prompt('Paste a public image URL for this chapter:', current);
     if (url !== null) {
       if (url.trim()) localStorage.setItem(customKey, url.trim());
