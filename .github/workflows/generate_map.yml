@@ -1,0 +1,27 @@
+name: Generate Codebase Map
+
+on:
+  workflow_dispatch:  # manual trigger only
+
+jobs:
+  map:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      - run: pip install anthropic
+      - run: python .github/scripts/generate_map.py
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: codebase-map
+          path: codebase_map.json
+      - run: |
+          git config --global user.email "action@github.com"
+          git config --global user.name "GitHub Action"
+          git add codebase_map.json
+          git commit -m "Update codebase map"
+          git push
