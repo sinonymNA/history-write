@@ -366,6 +366,32 @@ a, [onclick] { transition:opacity .2s, color .2s; }
 .eb-vote-btn:hover { border-color:var(--ac); color:var(--ac); }
 .eb-vote-btn.voted { border-color:var(--ac); background:var(--acs); color:var(--ac); }
 
+/* ═══ LESSON LAB ═══ */
+@keyframes labSparkle { 0%,100% { transform:scale(1) rotate(0deg); } 50% { transform:scale(1.15) rotate(5deg); } }
+.lab-icon { animation:labSparkle 3s ease-in-out infinite; display:inline-block; }
+.lab-template-card { border:2px solid var(--bd); border-radius:20px; padding:20px 16px; text-align:center; cursor:pointer; transition:all .25s var(--ease-out-expo); background:var(--card); user-select:none; }
+.lab-template-card:hover { border-color:var(--ac); transform:translateY(-2px); box-shadow:0 8px 24px rgba(212,98,47,.1); }
+.lab-template-card.selected { border-color:var(--ac); background:var(--acs); box-shadow:0 0 0 3px rgba(212,98,47,.12); }
+.lab-template-card .lab-t-icon { font-size:32px; margin-bottom:8px; display:block; transition:transform .3s; }
+.lab-template-card.selected .lab-t-icon { transform:scale(1.2); }
+.lab-generate-btn { width:100%; padding:14px; border-radius:14px; background:linear-gradient(135deg,var(--ac),var(--gd)); color:#fff; font-weight:700; font-size:16px; border:none; cursor:pointer; transition:all .3s; font-family:'DM Sans',sans-serif; display:flex; align-items:center; justify-content:center; gap:8px; }
+.lab-generate-btn:hover { filter:brightness(1.08); transform:translateY(-1px); box-shadow:0 8px 24px rgba(212,98,47,.3); }
+.lab-generate-btn:disabled { opacity:.6; cursor:not-allowed; transform:none; }
+@keyframes labPulse { 0%,100% { opacity:1; } 50% { opacity:.5; } }
+.lab-generating { animation:labPulse 1.5s ease-in-out infinite; }
+.lab-chapter-card { background:var(--card); border:1px solid var(--bd); border-radius:20px; overflow:hidden; transition:all .3s; }
+.lab-chapter-header { padding:16px 20px; display:flex; align-items:center; gap:12px; cursor:pointer; border-bottom:1px solid var(--bd); }
+.lab-chapter-body { padding:20px; }
+.lab-gradient-swatch { width:36px; height:36px; border-radius:10px; cursor:pointer; border:3px solid transparent; transition:all .2s; flex-shrink:0; }
+.lab-gradient-swatch.selected { border-color:#fff; box-shadow:0 0 0 2px var(--ac),0 4px 12px rgba(0,0,0,.2); transform:scale(1.1); }
+.lab-img-preview { width:100%; height:140px; object-fit:cover; border-radius:12px; margin-top:8px; display:none; }
+.lab-img-preview.visible { display:block; }
+.lab-q-option { display:flex; align-items:flex-start; gap:10px; padding:12px 14px; border-radius:12px; border:1.5px solid var(--bd); cursor:pointer; transition:all .2s; margin-bottom:8px; background:var(--card); }
+.lab-q-option:hover { border-color:var(--ac); background:var(--acs); }
+.lab-q-option input[type=radio] { margin-top:2px; accent-color:var(--ac); flex-shrink:0; }
+.lab-q-option.checked { border-color:var(--ac); background:var(--acs); }
+.lab-saved-banner { background:linear-gradient(135deg,rgba(77,128,96,.1),rgba(77,128,96,.05)); border:1px solid rgba(77,128,96,.25); border-radius:14px; padding:16px 20px; display:flex; align-items:center; gap:12px; }
+
 /* ═══ TEACHER TOUR ═══ */
 .tour-step { opacity:0; transform:translateY(20px); transition:opacity .5s var(--ease-out-expo),transform .5s var(--ease-out-expo); }
 .tour-step.visible { opacity:1; transform:translateY(0); }
@@ -1213,7 +1239,8 @@ router: {
       'blocks-play': () => { root.innerHTML = V.blocksPlay(params.sessionId); window.app.blocks.initMultiPlay(params.sessionId); },
       'blocks-review': () => { root.innerHTML = V.blocksReview(params.sessionId); window.app.blocks.initReview(params.sessionId); },
       'story-lesson': () => { root.innerHTML = V.storyLesson(params.storyId); window.app.story.init(params.storyId, params.assignmentId); },
-      'quiz-game': () => { root.innerHTML = V.quizGame(); window.app.quiz.init(params.gameId, params.isHost); }
+      'quiz-game': () => { root.innerHTML = V.quizGame(); window.app.quiz.init(params.gameId, params.isHost); },
+      'lesson-lab': () => { root.innerHTML = V.lessonLab(); window.app.lab.init(); }
     };
     if (routes[view]) routes[view]();
     lucide.createIcons();
@@ -1454,7 +1481,7 @@ views: {
         </div>
         <div class="flex gap-2">
           <button onclick="window.app.quiz.hostGame()" class="btnG text-sm py-2 px-4 flex items-center gap-2" style="border-color:#c0392b;color:#c0392b"><i data-lucide="zap" class="w-4 h-4"></i>Host Quiz</button>
-          <button onclick="window.app.router.go('teacher-tour')" class="btnG text-sm py-2 px-4 flex items-center gap-2" style="border-color:var(--ac);color:var(--ac)"><i data-lucide="play-circle" class="w-4 h-4"></i>Tour</button>
+          <button onclick="window.app.router.go('lesson-lab')" class="btnG text-sm py-2 px-4 flex items-center gap-2" style="border-color:var(--gd);color:var(--gd)"><i data-lucide="sparkles" class="w-4 h-4"></i>Lesson Lab</button>
           <button onclick="window.app.router.go('library')" class="btnG text-sm py-2 px-4 flex items-center gap-2"><i data-lucide="library" class="w-4 h-4"></i>Library</button>
           <button onclick="window.app.ui.modal('create-class','open')" class="btnP text-sm py-2 px-4 flex items-center gap-2"><i data-lucide="plus" class="w-4 h-4"></i>New Class</button>
         </div>
@@ -1915,6 +1942,70 @@ views: {
       </div>
       <div id="review-essays" class="space-y-6 stagger"></div>
       <div id="review-results" class="hidden mt-8"></div>
+    </div>`,
+
+  lessonLab: () => `
+    <div class="max-w-3xl mx-auto px-4 py-8 pageEnter">
+      <button onclick="window.app.router.go('teacher-dash')" class="mb-6 text-sm flex items-center gap-1" style="color:var(--mu)"><i data-lucide="arrow-left" class="w-4 h-4"></i>Back to Dashboard</button>
+      <!-- Header -->
+      <div class="text-center mb-10">
+        <div class="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg" style="background:linear-gradient(135deg,var(--gd),var(--ac))">
+          <span class="lab-icon text-2xl">✨</span>
+        </div>
+        <h1 class="text-3xl font-bold fs mb-2">Lesson Lab</h1>
+        <p class="text-sm" style="color:var(--mu)">Describe what you want to teach — Claude builds it in seconds. Edit, customize, and save it to your library.</p>
+      </div>
+
+      <!-- Phase 1: Template + Input -->
+      <div id="lab-phase1">
+        <!-- Template selector -->
+        <h2 class="text-xs font-bold uppercase tracking-wider mb-3" style="color:var(--fa)">What are you creating?</h2>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+          <div class="lab-template-card selected" id="lab-t-story" onclick="window.app.lab.selectTemplate('story')">
+            <span class="lab-t-icon">📖</span>
+            <p class="text-sm font-bold fs">Story Lesson</p>
+            <p class="text-[10px] mt-1" style="color:var(--mu)">Immersive narrative chapters</p>
+          </div>
+          <div class="lab-template-card" id="lab-t-dbq" onclick="window.app.lab.selectTemplate('dbq')">
+            <span class="lab-t-icon">🧩</span>
+            <p class="text-sm font-bold fs">Essay Blocks</p>
+            <p class="text-[10px] mt-1" style="color:var(--mu)">DBQ / LEQ / SAQ</p>
+          </div>
+          <div class="lab-template-card" id="lab-t-quiz" onclick="window.app.lab.selectTemplate('quiz')">
+            <span class="lab-t-icon">🎮</span>
+            <p class="text-sm font-bold fs">Live Quiz</p>
+            <p class="text-[10px] mt-1" style="color:var(--mu)">Blooket-style MCQ game</p>
+          </div>
+          <div class="lab-template-card" id="lab-t-writing" onclick="window.app.lab.selectTemplate('writing')">
+            <span class="lab-t-icon">✍️</span>
+            <p class="text-sm font-bold fs">Writing Assignment</p>
+            <p class="text-[10px] mt-1" style="color:var(--mu)">Prompt + rubric</p>
+          </div>
+        </div>
+
+        <!-- Template-specific options -->
+        <div id="lab-template-opts" class="mb-4"></div>
+
+        <!-- AI input -->
+        <div class="hcard p-6">
+          <label class="text-[10px] font-bold uppercase tracking-wider mb-2 block" style="color:var(--fa)">Topic, standard, or instructions</label>
+          <textarea id="lab-topic" class="hinp w-full mb-1" rows="3" placeholder="e.g. APWH 6.5 Economic Imperialism — I want students to understand how European powers used economic pressure to control Africa and Asia. Focus on the perspectives of both colonizers and the colonized."></textarea>
+          <p class="text-[10px] mb-4" style="color:var(--mu)">Be specific — include the time period, key themes, or any standards you're targeting.</p>
+          <button class="lab-generate-btn" onclick="window.app.lab.generate()">
+            <i data-lucide="sparkles" class="w-5 h-5"></i> Generate with Claude AI
+          </button>
+        </div>
+      </div>
+
+      <!-- Phase 2: Editor (hidden until generated) -->
+      <div id="lab-phase2" class="hidden mt-8">
+        <div class="flex items-center justify-between mb-4">
+          <button onclick="document.getElementById('lab-phase1').classList.remove('hidden');document.getElementById('lab-phase2').classList.add('hidden')" class="text-xs flex items-center gap-1" style="color:var(--mu)"><i data-lucide="arrow-left" class="w-3.5 h-3.5"></i>Start over</button>
+          <button id="lab-save-btn" onclick="window.app.lab.save()" class="btnP text-sm py-2 px-6 flex items-center gap-2"><i data-lucide="save" class="w-4 h-4"></i>Save to Library</button>
+        </div>
+        <div id="lab-editor-content"></div>
+        <div id="lab-save-result" class="hidden mt-4"></div>
+      </div>
     </div>`,
 
   teacherTour: () => `
