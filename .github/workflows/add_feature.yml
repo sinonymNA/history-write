@@ -1,0 +1,29 @@
+name: Add Feature
+
+on:
+  workflow_dispatch:
+    inputs:
+      feature_request:
+        description: 'Describe the feature you want added'
+        required: true
+        type: string
+
+jobs:
+  implement:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      - run: pip install anthropic
+      - run: python .github/scripts/add_feature.py
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          FEATURE_REQUEST: ${{ github.event.inputs.feature_request }}
+      - run: |
+          git config --global user.email "action@github.com"
+          git config --global user.name "GitHub Action"
+          git add index.html
+          git commit -m "Add feature: ${{ github.event.inputs.feature_request }}"
+          git push
