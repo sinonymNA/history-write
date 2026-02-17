@@ -5240,11 +5240,445 @@ blocks: {
       }
     } catch(e) { console.warn('Session check failed:', e); }
   }
+},
+
+// ─────────────────────────────────────────────────────────────────────────
+// ═══ LESSON LAB MODULE ═══
+// ─────────────────────────────────────────────────────────────────────────
+lab: {
+  _template: 'story',
+  _generated: null,
+
+  init: () => {
+    window.app.lab._template = 'story';
+    window.app.lab._generated = null;
+    window.app.lab._renderTemplateOpts();
+    lucide.createIcons();
+  },
+
+  selectTemplate: (type) => {
+    window.app.lab._template = type;
+    document.querySelectorAll('.lab-template-card').forEach(c => c.classList.remove('selected'));
+    document.getElementById(`lab-t-${type}`)?.classList.add('selected');
+    window.app.lab._renderTemplateOpts();
+  },
+
+  _renderTemplateOpts: () => {
+    const t = window.app.lab._template;
+    const el = document.getElementById('lab-template-opts');
+    if (!el) return;
+    if (t === 'story') {
+      el.innerHTML = `<div class="flex gap-3 items-end mb-4">
+        <div class="flex-1"><label class="text-[10px] font-bold uppercase tracking-wider mb-1 block" style="color:var(--fa)">Number of Chapters</label>
+        <select id="lab-chapters" class="hinp w-full"><option value="3">3 chapters (~12 min)</option><option value="4" selected>4 chapters (~18 min)</option><option value="5">5 chapters (~22 min)</option></select></div>
+        <div class="flex-1"><label class="text-[10px] font-bold uppercase tracking-wider mb-1 block" style="color:var(--fa)">Unit / Period</label>
+        <input id="lab-unit" class="hinp w-full" placeholder="e.g. 6.5 · 1750–1900"></div>
+      </div>`;
+    } else if (t === 'dbq') {
+      el.innerHTML = `<div class="flex gap-3 items-end mb-4"><div class="flex-1"><label class="text-[10px] font-bold uppercase tracking-wider mb-1 block" style="color:var(--fa)">Essay Type</label>
+        <select id="lab-essay-type" class="hinp w-full"><option value="dbq">DBQ</option><option value="leq">LEQ</option><option value="saq">SAQ</option></select></div>
+        <div class="flex-1"><label class="text-[10px] font-bold uppercase tracking-wider mb-1 block" style="color:var(--fa)">Difficulty</label>
+        <select id="lab-diff" class="hinp w-full"><option value="Medium">Medium</option><option value="Hard">Hard</option><option value="Easy">Easy</option></select></div></div>`;
+    } else if (t === 'quiz') {
+      el.innerHTML = `<div class="flex-1 mb-4"><label class="text-[10px] font-bold uppercase tracking-wider mb-1 block" style="color:var(--fa)">Number of Questions</label>
+        <select id="lab-q-count" class="hinp w-32"><option value="8">8</option><option value="12" selected>12</option><option value="15">15</option><option value="20">20</option></select></div>`;
+    } else {
+      el.innerHTML = '';
+    }
+  },
+
+  generate: async () => {
+    const topic = document.getElementById('lab-topic')?.value?.trim();
+    if (!topic) return window.app.ui.toast('Describe what you want to create first!', 'error');
+    const key = localStorage.getItem('anthropic_key') || appState.apiKey;
+    if (!key) return window.app.ui.toast('Add your Claude API key in Settings first.', 'error');
+
+    const btn = document.querySelector('.lab-generate-btn');
+    if (btn) { btn.disabled = true; btn.innerHTML = '<span class="lab-generating">✨ Generating...</span>'; }
+
+    const t = window.app.lab._template;
+    let systemPrompt = '', userPrompt = '';
+
+    if (t === 'story') {
+      const numChapters = parseInt(document.getElementById('lab-chapters')?.value || '4');
+      const unit = document.getElementById('lab-unit')?.value?.trim() || '';
+      systemPrompt = 'You are an expert AP World History curriculum designer. Generate rich, immersive story lessons for high school students. Write at a Grade 9-10 reading level with vivid, cinematic prose. Always return ONLY valid JSON — no markdown, no explanation.';
+      userPrompt = `Create an immersive AP World History story lesson about: ${topic}
+
+Generate exactly ${numChapters} chapters. For each chapter, write 2-3 rich narrative paragraphs that put students inside the historical moment. Use real historical figures, specific dates and places, and sensory details.
+
+Return ONLY this JSON structure (no markdown):
+{
+  "title": "Compelling lesson title",
+  "unit": "${unit || '6.x'}",
+  "period": "e.g. 1750-1900",
+  "desc": "1-2 sentence lesson description for teachers",
+  "icon": "single emoji",
+  "chapters": [
+    {
+      "title": "Chapter title",
+      "date": "City, Country — Decade (e.g. Lagos, Nigeria — 1890s)",
+      "bg": "linear-gradient(135deg, #hexcolor1 0%, #hexcolor2 60%, #hexcolor3 100%)",
+      "icon": "single thematic emoji",
+      "img": "https://upload.wikimedia.org/wikipedia/commons/thumb/[real_path]/800px-[filename]",
+      "text": "<p>First vivid paragraph...</p><p>Second paragraph with a key historical figure or event...</p><p>Third paragraph connecting to the broader theme...</p>",
+      "quote": { "text": "An actual historical quote from the era", "attr": "— Person Name, Year" },
+      "questions": [
+        { "q": "Comprehension/analysis question focused on this chapter's key idea", "keyConcept": "The core concept students should demonstrate understanding of" },
+        { "q": "Second distinct question — different approach (e.g. causation vs description)", "keyConcept": "Related but different key concept" },
+        { "q": "Third question — perspective or comparison based", "keyConcept": "Third key concept" }
+      ]
+    }
+  ]
 }
 
-}; // end window.app
+For "bg": use dark, moody gradients appropriate to the historical setting (e.g. industrial = dark blues/grays, tropical colony = deep greens/golds).
+For "img": use real Wikimedia Commons URLs that actually exist for this topic. If unsure, use an empty string "".`;
+    } else if (t === 'dbq') {
+      const essayType = document.getElementById('lab-essay-type')?.value || 'dbq';
+      const diff = document.getElementById('lab-diff')?.value || 'Hard';
+      systemPrompt = 'You are an AP World History exam writer. Generate high-quality essay prompts that align with College Board standards. Always return ONLY valid JSON.';
+      if (essayType === 'dbq') {
+        userPrompt = `Create a DBQ essay blocks assignment about: ${topic}
 
-// ═══ FIREBASE AUTH LISTENER ═══
+Return ONLY this JSON:
+{
+  "type": "dbq",
+  "title": "Brief title",
+  "difficulty": "${diff}",
+  "prompt": "Evaluate the extent to which [specific claim] in the period [dates].",
+  "thesis": "A model thesis statement students will work with (1-2 sentences with clear argument and line of reasoning)",
+  "sources": [
+    { "label": "Document 1", "attribution": "Author Name, Title, Year", "content": "2-4 sentence primary source excerpt (paraphrased or real)" },
+    { "label": "Document 2", "attribution": "...", "content": "..." },
+    { "label": "Document 3", "attribution": "...", "content": "..." },
+    { "label": "Document 4", "attribution": "...", "content": "..." }
+  ]
+}`;
+      } else if (essayType === 'leq') {
+        userPrompt = `Create a LEQ prompt about: ${topic}. Return ONLY: {"type":"leq","title":"Brief title","difficulty":"${diff}","prompt":"Evaluate the extent to which... in the period [dates]."}`;
+      } else {
+        userPrompt = `Create a 3-part SAQ about: ${topic}. Return ONLY: {"type":"saq","title":"Brief title","difficulty":"${diff}","parts":3,"prompt":"a) Identify...\\nb) Explain...\\nc) Explain..."}`;
+      }
+    } else if (t === 'quiz') {
+      const qCount = parseInt(document.getElementById('lab-q-count')?.value || '12');
+      systemPrompt = 'You are an AP World History teacher creating multiple-choice quiz questions. Return ONLY valid JSON.';
+      userPrompt = `Create ${qCount} multiple-choice questions about: ${topic}
+
+Return ONLY this JSON:
+{
+  "title": "Quiz title",
+  "questions": [
+    {
+      "q": "Question text",
+      "choices": ["Choice A", "Choice B", "Choice C", "Choice D"],
+      "ans": 0,
+      "exp": "Brief explanation of why this is correct"
+    }
+  ]
+}
+"ans" is the 0-based index of the correct choice. Make questions AP-level (primary source analysis, causation, comparison, etc.)`;
+    } else {
+      systemPrompt = 'You are an AP World History teacher. Return ONLY valid JSON.';
+      userPrompt = `Create a writing assignment about: ${topic}
+
+Return ONLY this JSON:
+{
+  "title": "Assignment title",
+  "type": "writing",
+  "prompt": "Full writing prompt (2-4 sentences)",
+  "instructions": "Specific student instructions including paragraph count, evidence requirements, etc.",
+  "rubric": [
+    { "category": "Thesis", "points": 1, "description": "What earns this point" },
+    { "category": "Contextualization", "points": 1, "description": "..." },
+    { "category": "Evidence", "points": 2, "description": "..." },
+    { "category": "Analysis & Reasoning", "points": 2, "description": "..." }
+  ],
+  "minWords": 250
+}`;
+    }
+
+    try {
+      const resp = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+        body: JSON.stringify({ model: 'claude-opus-4-6', max_tokens: 4000, system: systemPrompt, messages: [{ role: 'user', content: userPrompt }] })
+      });
+      const data = await resp.json();
+      const text = data.content?.[0]?.text || '';
+      const jsonText = text.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/```\s*$/i, '').trim();
+      const generated = JSON.parse(jsonText);
+      window.app.lab._generated = generated;
+      window.app.lab._renderEditor(generated, t);
+      document.getElementById('lab-phase1').classList.add('hidden');
+      document.getElementById('lab-phase2').classList.remove('hidden');
+    } catch(e) {
+      console.error('Lab generation error:', e);
+      window.app.ui.toast('Generation failed: ' + e.message + '. Check your API key and try again.', 'error');
+    } finally {
+      if (btn) { btn.disabled = false; btn.innerHTML = '<i data-lucide="sparkles" class="w-5 h-5"></i> Generate with Claude AI'; lucide.createIcons(); }
+    }
+  },
+
+  _renderEditor: (data, type) => {
+    const el = document.getElementById('lab-editor-content');
+    if (!el) return;
+
+    if (type === 'story') {
+      const GRADIENTS = [
+        'linear-gradient(135deg,#1a1a2e 0%,#2d1b3d 40%,#4a1c1c 100%)',
+        'linear-gradient(135deg,#0a2a1a 0%,#1a4a2a 50%,#0a3020 100%)',
+        'linear-gradient(135deg,#1a2540 0%,#2a3a6a 50%,#1a1a3a 100%)',
+        'linear-gradient(135deg,#2a1a0a 0%,#5a3a10 50%,#3a2a10 100%)',
+        'linear-gradient(135deg,#2a0a0a 0%,#6a1a10 50%,#3a1020 100%)',
+        'linear-gradient(135deg,#0a1a2a 0%,#1a3a5a 50%,#0a2a3a 100%)'
+      ];
+      el.innerHTML = `
+        <div class="hcard p-5 mb-6">
+          <h2 class="text-xs font-bold uppercase tracking-wider mb-3" style="color:var(--fa)">Lesson Info</h2>
+          <div class="grid sm:grid-cols-3 gap-3">
+            <div><label class="text-[10px] uppercase tracking-wider mb-1 block" style="color:var(--mu)">Title</label><input id="lab-s-title" class="hinp w-full" value="${(data.title||'').replace(/"/g,'&quot;')}"></div>
+            <div><label class="text-[10px] uppercase tracking-wider mb-1 block" style="color:var(--mu)">Unit</label><input id="lab-s-unit" class="hinp w-full" value="${(data.unit||'').replace(/"/g,'&quot;')}"></div>
+            <div><label class="text-[10px] uppercase tracking-wider mb-1 block" style="color:var(--mu)">Period</label><input id="lab-s-period" class="hinp w-full" value="${(data.period||'').replace(/"/g,'&quot;')}"></div>
+          </div>
+          <div class="mt-3"><label class="text-[10px] uppercase tracking-wider mb-1 block" style="color:var(--mu)">Description (shown in library)</label><textarea id="lab-s-desc" class="hinp w-full" rows="2">${data.desc||''}</textarea></div>
+        </div>
+        <h2 class="text-xs font-bold uppercase tracking-wider mb-3" style="color:var(--fa)">Chapters — Edit anything you'd like to change</h2>
+        <div class="space-y-4" id="lab-chapters-list">
+          ${(data.chapters||[]).map((ch, ci) => {
+            const chGrad = ch.bg || GRADIENTS[ci % GRADIENTS.length];
+            return `<div class="lab-chapter-card" id="lab-ch-${ci}">
+              <div class="lab-chapter-header" onclick="window.app.lab._toggleChapter(${ci})">
+                <div class="w-10 h-10 rounded-xl flex items-center justify-center text-xl flex-shrink-0" style="background:${chGrad}">${ch.icon||'📖'}</div>
+                <div class="flex-1 min-w-0"><p class="text-[10px] font-bold uppercase tracking-wider" style="color:var(--ac)">Chapter ${ci+1}</p><p class="text-sm font-bold fs truncate">${ch.title||''}</p></div>
+                <i data-lucide="chevron-down" class="w-4 h-4 lab-ch-arrow-${ci}" style="color:var(--fa);flex-shrink:0"></i>
+              </div>
+              <div class="lab-chapter-body" id="lab-ch-body-${ci}">
+                <div class="grid sm:grid-cols-2 gap-3 mb-4">
+                  <div><label class="text-[10px] uppercase tracking-wider mb-1 block" style="color:var(--mu)">Title</label><input class="hinp w-full" id="lab-ch-title-${ci}" value="${(ch.title||'').replace(/"/g,'&quot;')}"></div>
+                  <div><label class="text-[10px] uppercase tracking-wider mb-1 block" style="color:var(--mu)">Date / Setting</label><input class="hinp w-full" id="lab-ch-date-${ci}" value="${(ch.date||'').replace(/"/g,'&quot;')}"></div>
+                </div>
+                <div class="flex items-center gap-2 mb-1"><label class="text-[10px] uppercase tracking-wider" style="color:var(--mu)">Background Gradient</label></div>
+                <div class="flex gap-2 flex-wrap mb-4">
+                  ${GRADIENTS.map((g, gi) => `<div class="lab-gradient-swatch ${g===chGrad?'selected':''}" style="background:${g}" onclick="window.app.lab._selectGradient(${ci},${gi},this)" data-grad="${gi}"></div>`).join('')}
+                  <input type="hidden" id="lab-ch-bg-${ci}" value="${chGrad.replace(/"/g,'&quot;')}">
+                </div>
+                <div class="mb-4">
+                  <label class="text-[10px] uppercase tracking-wider mb-1 block" style="color:var(--mu)">Image URL <a href="https://commons.wikimedia.org/w/index.php?search=${encodeURIComponent((ch.title||'')+(data.unit||''))}&ns0=1&ns6=1&ns12=1&ns14=1&ns100=1&ns106=1" target="_blank" class="ml-2 font-bold" style="color:var(--ac)">🔍 Find on Wikimedia</a></label>
+                  <input class="hinp w-full" id="lab-ch-img-${ci}" placeholder="Paste image URL..." value="${(ch.img||'').replace(/"/g,'&quot;')}" oninput="window.app.lab._previewImg(${ci},this.value)">
+                  <img id="lab-ch-img-preview-${ci}" class="lab-img-preview ${ch.img?'visible':''}" src="${ch.img||''}" onerror="this.classList.remove('visible')">
+                </div>
+                <div class="mb-4">
+                  <label class="text-[10px] uppercase tracking-wider mb-1 block" style="color:var(--mu)">Chapter Text (HTML &lt;p&gt; tags)</label>
+                  <textarea class="hinp w-full text-xs" id="lab-ch-text-${ci}" rows="6" style="font-family:monospace">${(ch.text||'').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</textarea>
+                </div>
+                <div class="grid sm:grid-cols-2 gap-3 mb-4">
+                  <div><label class="text-[10px] uppercase tracking-wider mb-1 block" style="color:var(--mu)">Historical Quote</label><input class="hinp w-full" id="lab-ch-quote-${ci}" value="${(ch.quote?.text||'').replace(/"/g,'&quot;')}"></div>
+                  <div><label class="text-[10px] uppercase tracking-wider mb-1 block" style="color:var(--mu)">Attribution</label><input class="hinp w-full" id="lab-ch-attr-${ci}" value="${(ch.quote?.attr||'').replace(/"/g,'&quot;')}"></div>
+                </div>
+                <div>
+                  <label class="text-[10px] uppercase tracking-wider mb-2 block" style="color:var(--mu)">Choose a Retention Question</label>
+                  ${(ch.questions||[]).map((qo, qi) => `<label class="lab-q-option ${qi===0?'checked':''}">
+                    <input type="radio" name="lab-ch-q-${ci}" value="${qi}" ${qi===0?'checked':''} onchange="window.app.lab._selectQ(${ci},${qi})">
+                    <div><p class="text-sm fs font-medium">${qo.q||''}</p><p class="text-[10px] mt-0.5" style="color:var(--mu)">Key concept: ${qo.keyConcept||''}</p></div>
+                  </label>`).join('')}
+                </div>
+              </div>
+            </div>`;
+          }).join('')}
+        </div>
+        <button onclick="window.app.lab._addChapter()" class="w-full mt-4 p-3 rounded-xl text-sm" style="border:2px dashed var(--bd);color:var(--mu);cursor:pointer;background:transparent">+ Add Chapter</button>`;
+    } else if (type === 'dbq' || type === 'leq' || type === 'saq') {
+      const esc = (s) => (s||'').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      el.innerHTML = `<div class="hcard p-5 mb-4">
+        <div class="grid sm:grid-cols-2 gap-3 mb-3">
+          <div><label class="text-[10px] uppercase tracking-wider mb-1 block" style="color:var(--mu)">Title</label><input id="lab-e-title" class="hinp w-full" value="${esc(data.title||'')}"></div>
+          <div><label class="text-[10px] uppercase tracking-wider mb-1 block" style="color:var(--mu)">Type</label>
+          <select id="lab-e-type" class="hinp w-full"><option value="dbq" ${data.type==='dbq'?'selected':''}>DBQ</option><option value="leq" ${data.type==='leq'?'selected':''}>LEQ</option><option value="saq" ${data.type==='saq'?'selected':''}>SAQ</option></select></div>
+        </div>
+        <div class="mb-3"><label class="text-[10px] uppercase tracking-wider mb-1 block" style="color:var(--mu)">Prompt</label><textarea id="lab-e-prompt" class="hinp w-full" rows="3">${esc(data.prompt||'')}</textarea></div>
+        ${data.thesis ? '<div class="mb-3"><label class="text-[10px] uppercase tracking-wider mb-1 block" style="color:var(--mu)">Working Thesis</label><textarea id="lab-e-thesis" class="hinp w-full" rows="3">'+esc(data.thesis||'')+'</textarea></div>' : ''}
+      </div>
+      ${data.sources?.length ? '<h2 class="text-xs font-bold uppercase tracking-wider mb-3" style="color:var(--fa)">Primary Source Documents</h2><div class="space-y-3">' + data.sources.map((s,i) => `<div class="hcard p-4"><div class="grid sm:grid-cols-3 gap-2 mb-2"><input class="hinp text-xs" id="lab-doc-label-${i}" value="${esc(s.label||'Document '+(i+1))}"><input class="hinp text-xs sm:col-span-2" id="lab-doc-attr-${i}" value="${esc(s.attribution||'')}"></div><textarea class="hinp w-full text-xs" id="lab-doc-content-${i}" rows="3">${esc(s.content||'')}</textarea></div>`).join('') + '</div>' : ''}`;
+    } else if (type === 'quiz') {
+      const esc = (s) => (s||'').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      el.innerHTML = `<div class="hcard p-4 mb-4"><input id="lab-q-title" class="hinp w-full" value="${esc(data.title||'')}" placeholder="Quiz title"></div>
+      <div class="space-y-3" id="lab-quiz-questions">
+        ${(data.questions||[]).map((q,qi) => `<div class="hcard p-4">
+          <div class="flex items-center gap-2 mb-2"><span class="text-[10px] font-bold fm px-2 py-0.5 rounded" style="background:var(--acs);color:var(--ac)">Q${qi+1}</span>
+          <input class="hinp flex-1 text-xs" id="lab-qq-${qi}" value="${esc(q.q||'')}"></div>
+          <div class="grid grid-cols-2 gap-2 mb-2">
+            ${(q.choices||[]).map((c,ci) => `<div class="flex items-center gap-1.5"><input type="radio" name="lab-qans-${qi}" value="${ci}" ${ci===q.ans?'checked':''} style="accent-color:var(--ac)"><input class="hinp flex-1 text-xs" id="lab-qc-${qi}-${ci}" value="${esc(c)}"></div>`).join('')}
+          </div>
+          <input class="hinp w-full text-xs" id="lab-qexp-${qi}" value="${esc(q.exp||'')}" placeholder="Explanation...">
+        </div>`).join('')}
+      </div>`;
+    } else {
+      const esc = (s) => (s||'').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      el.innerHTML = `<div class="hcard p-5 space-y-3">
+        <div><label class="text-[10px] uppercase tracking-wider mb-1 block" style="color:var(--mu)">Title</label><input id="lab-w-title" class="hinp w-full" value="${esc(data.title||'')}"></div>
+        <div><label class="text-[10px] uppercase tracking-wider mb-1 block" style="color:var(--mu)">Prompt</label><textarea id="lab-w-prompt" class="hinp w-full" rows="4">${esc(data.prompt||'')}</textarea></div>
+        <div><label class="text-[10px] uppercase tracking-wider mb-1 block" style="color:var(--mu)">Student Instructions</label><textarea id="lab-w-instructions" class="hinp w-full" rows="3">${esc(data.instructions||'')}</textarea></div>
+        <div><label class="text-[10px] uppercase tracking-wider mb-1 block" style="color:var(--mu)">Min Words</label><input type="number" id="lab-w-words" class="hinp w-28" value="${data.minWords||250}"></div>
+      </div>`;
+    }
+    lucide.createIcons();
+  },
+
+  _toggleChapter: (ci) => {
+    const body = document.getElementById(`lab-ch-body-${ci}`);
+    if (!body) return;
+    body.style.display = body.style.display === 'none' ? '' : 'none';
+  },
+
+  _selectGradient: (ci, gi, el) => {
+    const GRADIENTS = [
+      'linear-gradient(135deg,#1a1a2e 0%,#2d1b3d 40%,#4a1c1c 100%)',
+      'linear-gradient(135deg,#0a2a1a 0%,#1a4a2a 50%,#0a3020 100%)',
+      'linear-gradient(135deg,#1a2540 0%,#2a3a6a 50%,#1a1a3a 100%)',
+      'linear-gradient(135deg,#2a1a0a 0%,#5a3a10 50%,#3a2a10 100%)',
+      'linear-gradient(135deg,#2a0a0a 0%,#6a1a10 50%,#3a1020 100%)',
+      'linear-gradient(135deg,#0a1a2a 0%,#1a3a5a 50%,#0a2a3a 100%)'
+    ];
+    document.querySelectorAll(`#lab-ch-${ci} .lab-gradient-swatch`).forEach(s => s.classList.remove('selected'));
+    el.classList.add('selected');
+    const input = document.getElementById(`lab-ch-bg-${ci}`);
+    if (input) input.value = GRADIENTS[gi];
+  },
+
+  _previewImg: (ci, url) => {
+    const img = document.getElementById(`lab-ch-img-preview-${ci}`);
+    if (!img) return;
+    if (url.trim()) { img.src = url.trim(); img.classList.add('visible'); }
+    else { img.classList.remove('visible'); }
+  },
+
+  _selectQ: (ci, qi) => {
+    document.querySelectorAll(`label[class*="lab-q-option"]`).forEach(l => {
+      const inp = l.querySelector(`input[name="lab-ch-q-${ci}"]`);
+      if (inp) l.classList.toggle('checked', inp.checked);
+    });
+  },
+
+  _addChapter: () => {
+    const gen = window.app.lab._generated;
+    if (!gen) return;
+    const newCh = { title: 'New Chapter', date: '—', bg: 'linear-gradient(135deg,#1a1a2e,#2d1b3d)', icon: '📖', img: '', text: '<p>Write your chapter content here.</p>', quote: { text: '', attr: '' }, questions: [{ q: 'What was the most significant development in this chapter?', keyConcept: '' }] };
+    gen.chapters.push(newCh);
+    window.app.lab._renderEditor(gen, 'story');
+  },
+
+  _collectStoryData: () => {
+    const gen = window.app.lab._generated || {};
+    const chapters = (gen.chapters || []).map((_, ci) => {
+      const selQ = document.querySelector(`input[name="lab-ch-q-${ci}"]:checked`);
+      const qIdx = selQ ? parseInt(selQ.value) : 0;
+      const qData = _.questions?.[qIdx] || _.questions?.[0] || { q: '', keyConcept: '' };
+      const rawText = document.getElementById(`lab-ch-text-${ci}`)?.value || '';
+      const text = rawText.replace(/&lt;/g,'<').replace(/&gt;/g,'>');
+      return {
+        title: document.getElementById(`lab-ch-title-${ci}`)?.value?.trim() || _.title,
+        date: document.getElementById(`lab-ch-date-${ci}`)?.value?.trim() || _.date,
+        bg: document.getElementById(`lab-ch-bg-${ci}`)?.value || _.bg,
+        icon: _.icon || '📖',
+        img: document.getElementById(`lab-ch-img-${ci}`)?.value?.trim() || '',
+        text,
+        quote: {
+          text: document.getElementById(`lab-ch-quote-${ci}`)?.value?.trim() || '',
+          attr: document.getElementById(`lab-ch-attr-${ci}`)?.value?.trim() || ''
+        },
+        question: qData.q,
+        keyConcept: qData.keyConcept
+      };
+    });
+    return {
+      title: document.getElementById('lab-s-title')?.value?.trim() || gen.title,
+      unit: document.getElementById('lab-s-unit')?.value?.trim() || gen.unit,
+      period: document.getElementById('lab-s-period')?.value?.trim() || gen.period,
+      desc: document.getElementById('lab-s-desc')?.value?.trim() || gen.desc,
+      icon: gen.icon || '📖',
+      chapters
+    };
+  },
+
+  save: async () => {
+    const t = window.app.lab._template;
+    const saveBtn = document.getElementById('lab-save-btn');
+    if (saveBtn) saveBtn.disabled = true;
+
+    try {
+      if (t === 'story') {
+        const lessonData = window.app.lab._collectStoryData();
+        if (!lessonData.title || !lessonData.chapters.length) return window.app.ui.toast('Fill in a title and at least one chapter.', 'error');
+        const ref = await addDoc(collection(db, 'teacherLessons'), {
+          ...lessonData,
+          teacherId: appState.user.uid,
+          createdAt: serverTimestamp(),
+          type: 'story'
+        });
+        document.getElementById('lab-save-result')?.classList.remove('hidden');
+        document.getElementById('lab-save-result').innerHTML = `<div class="lab-saved-banner">
+          <span class="text-2xl">🎉</span>
+          <div>
+            <p class="font-bold fs">Saved to Library!</p>
+            <p class="text-xs mt-0.5" style="color:var(--mu)">Your story lesson is ready to assign. <button onclick="window.app.router.go('library')" class="font-bold underline" style="color:var(--ac)">Go to Library →</button></p>
+          </div>
+        </div>`;
+        window.app.ui.toast('Story lesson saved to Library!', 'success');
+      } else if (t === 'dbq' || t === 'leq' || t === 'saq') {
+        const etype = document.getElementById('lab-e-type')?.value || t;
+        const sources = [];
+        let i = 0;
+        while (document.getElementById(`lab-doc-label-${i}`)) {
+          sources.push({ label: document.getElementById(`lab-doc-label-${i}`)?.value?.trim() || `Document ${i+1}`, attribution: document.getElementById(`lab-doc-attr-${i}`)?.value?.trim() || '', type: 'text', content: document.getElementById(`lab-doc-content-${i}`)?.value?.trim() || '' });
+          i++;
+        }
+        const preset = { type: etype, title: document.getElementById('lab-e-title')?.value?.trim() || 'Custom Prompt', prompt: document.getElementById('lab-e-prompt')?.value?.trim() || '', difficulty: 'Medium', thesis: document.getElementById('lab-e-thesis')?.value?.trim() || '', structure: sources.length ? { sources } : {} };
+        await addDoc(collection(db, 'teacherLessons'), { ...preset, teacherId: appState.user.uid, createdAt: serverTimestamp() });
+        document.getElementById('lab-save-result')?.classList.remove('hidden');
+        document.getElementById('lab-save-result').innerHTML = `<div class="lab-saved-banner"><span class="text-2xl">🎉</span><div><p class="font-bold fs">Essay Blocks preset saved!</p><p class="text-xs mt-0.5" style="color:var(--mu)">Go to your class → Essay Blocks to use it. <button onclick="window.app.router.go('library')" class="font-bold underline" style="color:var(--ac)">Library →</button></p></div></div>`;
+        window.app.ui.toast('Essay Blocks preset saved!', 'success');
+      } else if (t === 'quiz') {
+        const questions = [];
+        let qi = 0;
+        while (document.getElementById(`lab-qq-${qi}`)) {
+          const choices = [0,1,2,3].map(ci => document.getElementById(`lab-qc-${qi}-${ci}`)?.value?.trim() || '').filter(Boolean);
+          const ans = parseInt(document.querySelector(`input[name="lab-qans-${qi}"]:checked`)?.value ?? '0');
+          questions.push({ q: document.getElementById(`lab-qq-${qi}`)?.value?.trim() || '', choices, ans, exp: document.getElementById(`lab-qexp-${qi}`)?.value?.trim() || '' });
+          qi++;
+        }
+        await addDoc(collection(db, 'teacherLessons'), { type: 'quiz', title: document.getElementById('lab-q-title')?.value?.trim() || 'Custom Quiz', questions, teacherId: appState.user.uid, createdAt: serverTimestamp() });
+        document.getElementById('lab-save-result')?.classList.remove('hidden');
+        document.getElementById('lab-save-result').innerHTML = `<div class="lab-saved-banner"><span class="text-2xl">🎉</span><div><p class="font-bold fs">Quiz saved!</p><p class="text-xs mt-0.5" style="color:var(--mu)">Your quiz is saved. Go to Library to assign it. <button onclick="window.app.router.go('library')" class="font-bold underline" style="color:var(--ac)">Library →</button></p></div></div>`;
+        window.app.ui.toast('Quiz saved!', 'success');
+      } else {
+        const cls = window.app.teacher._classDataCache;
+        if (!cls) { window.app.ui.toast('Go to a class first to assign this!', 'error'); return; }
+        await addDoc(collection(db, 'assignments'), {
+          classId: cls.id,
+          title: document.getElementById('lab-w-title')?.value?.trim() || 'Writing Assignment',
+          type: 'leq',
+          prompt: document.getElementById('lab-w-prompt')?.value?.trim() || '',
+          instructions: document.getElementById('lab-w-instructions')?.value?.trim() || '',
+          maxAttempts: 3,
+          teacherId: appState.user.uid,
+          createdAt: serverTimestamp(),
+          submissionsCount: 0,
+          structure: {}
+        });
+        document.getElementById('lab-save-result')?.classList.remove('hidden');
+        document.getElementById('lab-save-result').innerHTML = `<div class="lab-saved-banner"><span class="text-2xl">🎉</span><div><p class="font-bold fs">Assignment created!</p><p class="text-xs mt-0.5" style="color:var(--mu)">Go to your class to see it. <button onclick="window.app.router.go('teacher-dash')" class="font-bold underline" style="color:var(--ac)">Dashboard →</button></p></div></div>`;
+        window.app.ui.toast('Assignment created!', 'success');
+      }
+    } catch(e) {
+      window.app.ui.toast('Save failed: ' + e.message, 'error');
+    } finally {
+      if (saveBtn) saveBtn.disabled = false;
+    }
+  }
+}
+
+};  // ═══ end window.app ═══
 onAuthStateChanged(auth, async (user) => {
   if (user) {
     appState.user = user;
