@@ -1,13 +1,18 @@
 name: Generate Codebase Map
 
 on:
-  workflow_dispatch:  # manual trigger only
+  workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   map:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
       - uses: actions/setup-python@v4
         with:
           python-version: '3.11'
