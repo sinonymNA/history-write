@@ -5287,6 +5287,26 @@ lab: {
     }
   },
 
+  _repairJSON: (str) => {
+    // Fix trailing commas before } or ]
+    str = str.replace(/,(\s*[\]}])/g, '$1');
+    // Fix literal control chars inside JSON string values
+    let out = '', inStr = false, esc = false;
+    for (let i = 0; i < str.length; i++) {
+      const c = str[i];
+      if (esc) { out += c; esc = false; continue; }
+      if (c === '\\') { out += c; esc = true; continue; }
+      if (c === '"') { inStr = !inStr; out += c; continue; }
+      if (inStr) {
+        if (c === '\n') { out += '\\n'; continue; }
+        if (c === '\r') { out += '\\r'; continue; }
+        if (c === '\t') { out += '\\t'; continue; }
+      }
+      out += c;
+    }
+    return out;
+  },
+
   generate: async () => {
     const topic = document.getElementById('lab-topic')?.value?.trim();
     if (!topic) return window.app.ui.toast('Describe what you want to create first!', 'error');
@@ -5302,7 +5322,7 @@ lab: {
     if (t === 'story') {
       const numChapters = parseInt(document.getElementById('lab-chapters')?.value || '4');
       const unit = document.getElementById('lab-unit')?.value?.trim() || '';
-      systemPrompt = 'You are an expert AP World History curriculum designer. Generate rich, immersive story lessons for high school students. Write at a Grade 9-10 reading level with vivid, cinematic prose. Always return ONLY valid JSON — no markdown, no explanation.';
+      systemPrompt = 'You are an expert AP World History curriculum designer. Generate rich, immersive story lessons for high school students. Write at a Grade 9-10 reading level with vivid, cinematic prose. Always return ONLY valid JSON — no markdown, no explanation. CRITICAL: All JSON string values must be on a single line. Use \\n for newlines within strings. Never use literal line breaks inside JSON string values. Use single quotes for HTML attributes inside text fields.';
       userPrompt = `Create an immersive AP World History story lesson about: ${topic}
 
 Generate exactly ${numChapters} chapters. For each chapter, write 2-3 rich narrative paragraphs that put students inside the historical moment. Use real historical figures, specific dates and places, and sensory details.
@@ -5402,7 +5422,7 @@ Return ONLY this JSON:
       const resp = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
-        body: JSON.stringify({ model: 'claude-sonnet-4-5-20250929', max_tokens: 4000, system: systemPrompt, messages: [{ role: 'user', content: userPrompt }] })
+        body: JSON.stringify({ model: 'claude-sonnet-4-5-20250929', max_tokens: 8192, system: systemPrompt, messages: [{ role: 'user', content: userPrompt }] })
       });
       if (!resp.ok) {
         const errData = await resp.json().catch(() => ({}));
@@ -5416,7 +5436,25 @@ Return ONLY this JSON:
       const start = cleaned.indexOf('{');
       const end = cleaned.lastIndexOf('}');
       if (start === -1 || end === -1) throw new Error('AI did not return valid JSON. Try again.');
-      const generated = JSON.parse(cleaned.substring(start, end + 1));
+      const jsonStr = cleaned.substring(start, end + 1);
+      let generated;
+      try {
+        generated = JSON.parse(window.app.lab._repairJSON(jsonStr));
+      } catch(parseErr) {
+        // Retry: ask Claude to fix the broken JSON
+        const fixResp = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+          body: JSON.stringify({ model: 'claude-sonnet-4-5-20250929', max_tokens: 8192, system: 'Fix this broken JSON. Return ONLY the corrected valid JSON, nothing else. Escape all newlines in strings as \\n. Remove trailing commas.', messages: [{ role: 'user', content: jsonStr }] })
+        });
+        if (!fixResp.ok) throw new Error('JSON repair failed: ' + parseErr.message);
+        const fixData = await fixResp.json();
+        const fixText = fixData.content?.[0]?.text || '';
+        const fc = fixText.replace(/^```json\s*/i,'').replace(/^```\s*/i,'').replace(/```\s*$/i,'').trim();
+        const fs = fc.indexOf('{'), fe = fc.lastIndexOf('}');
+        if (fs === -1 || fe === -1) throw new Error('Could not parse AI response. Try again.');
+        generated = JSON.parse(window.app.lab._repairJSON(fc.substring(fs, fe + 1)));
+      }
       window.app.lab._generated = generated;
       window.app.lab._renderEditor(generated, t);
       document.getElementById('lab-phase1').classList.add('hidden');
