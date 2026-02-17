@@ -1,0 +1,141 @@
+```json
+{
+  "doctype_and_meta": {
+    "start": 1,
+    "end": 21,
+    "description": "HTML doctype, head with meta tags, Tailwind/Lucide/Confetti CDN imports, custom Tailwind config with theme colors, Google Fonts import"
+  },
+  "css_variables_and_theme": {
+    "start": 22,
+    "end": 50,
+    "description": "Root CSS variables (--bg, --card, --tx, etc.), light/dark theme definitions, color palette (ember, sage, royal, gold), selection styling"
+  },
+  "css_layout_and_typography": {
+    "start": 51,
+    "end": 100,
+    "description": "Global box-sizing, body font-family (DM Sans), background/color transitions, font families (.fs serif, .fm mono), custom scrollbar styling"
+  },
+  "css_navbar_glass": {
+    "start": 101,
+    "end": 107,
+    "description": "Navigation bar glassmorphism effect (.navg) with backdrop-filter, border, and hover shadow"
+  },
+  "css_cards": {
+    "start": 108,
+    "end": 114,
+    "description": "Card component styles (.hcard) with border, border-radius, hover effects (lift, border color change, shadow)"
+  },
+  "css_buttons": {
+    "start": 115,
+    "end": 140,
+    "description": "Primary button (.btnP) and ghost button (.btnG) styles with hover/active/disabled states, gradient overlays, transitions"
+  },
+  "css_form_inputs": {
+    "start": 141,
+    "end": 153,
+    "description": "Input field styles (.hinp) with focus states, placeholder styling, box-shadow effects"
+  },
+  "css_highlights_and_annotations": {
+    "start": 154,
+    "end": 185,
+    "description": "Text highlight classes (.hl-success, .hl-warning, .hl-error), inline markers (.hl-inline, .hl-num), annotation cards with colored borders, flash animation"
+  },
+  "css_banner_and_tips": {
+    "start": 186,
+    "end": 200,
+    "description": "Encouragement banner (.enc-banner), improvement tip boxes (.tip-box), highlight legend"
+  },
+  "css_skill_nodes_and_garden": {
+    "start": 201,
+    "end": 250,
+    "description": "Skill node styling (.skill-node) with hover effects, glow animation for mastery (.skill-gold), garden plot styling, progress rings, plant cells with water fill animation, streak badges"
+  },
+  "css_drill_and_feedback": {
+    "start": 251,
+    "end": 280,
+    "description": "Drill scenario boxes, hint styling, checklist items (.drill-check) with met states, feedback boxes (.drill-feedback) with color variants"
+  },
+  "css_arcade_ui": {
+    "start": 281,
+    "end": 295,
+    "description": "Arcade container (.arcP), tab styling (.arcTab) with active state, dark background for game panels"
+  },
+  "css_animations_keyframes": {
+    "start": 296,
+    "end": 370,
+    "description": "Global animation keyframes: toastIn/Out, slideUp, fadeIn, scaleIn, slideInRight/Left, staggered children animations, hero animations (float, typeReveal, blockPop), score reveal, pulse glow, modal animations, XP bar shimmer, chronoCorrect/Wrong flashes"
+  },
+  "css_modals": {
+    "start": 371,
+    "end": 385,
+    "description": "Modal background and box animations (.modalBg, .modalBox, .modalLg), scaling and positioning effects"
+  },
+  "css_xp_bar": {
+    "start": 386,
+    "end": 395,
+    "description": "XP progress bar (.xpBar, .xpFill) with gradient and shimmer animation"
+  },
+  "css_tabs": {
+    "start": 396,
+    "end": 405,
+    "description": "Tab button styling (.tabBtn) with active border-bottom, background color change on active"
+  },
+  "css_assignment_builder": {
+    "start": 406,
+    "end": 480,
+    "description": "Builder layout (.builder-wrap) with split pane (form/preview), form and preview sections, document cards (.doc-card), document badges, image previews, empty states, responsive design breakpoint at 768px"
+  },
+  "css_submission_list": {
+    "start": 481,
+    "end": 495,
+    "description": "Submission row styling (.sub-row) with hover effects, score badges (.sub-score) with color variants (high/mid/low)"
+  },
+  "css_chronocrisis_feedback": {
+    "start": 496,
+    "end": 510,
+    "description": "Chrono-crisis flash animations (.chronoCorrect, .chronoWrong) for right/wrong answer feedback"
+  },
+  "css_enhanced_interactions": {
+    "start": 511,
+    "end": 550,
+    "description": "Enhanced hover effects for various components (annotation cards, skill nodes, garden plots, plant cells, tabs, sub-rows), smooth transitions, accessibility focus-visible styling"
+  },
+  "css_essay_blocks": {
+    "start": 551,
+    "end": 630,
+    "description": "Essay blocks module (.eb-*): wrap, progress pips, block cards with emoji, hint boxes, textarea, consolidation view, final essay display, multiplayer lobby (.eb-lobby, .eb-player, .eb-timer), thesis bar, document inline display, progress cards with circular rings, group cards, voting buttons"
+  },
+  "css_lesson_lab": {
+    "start": 631,
+    "end": 680,
+    "description": "Lesson Lab styling (.lab-*): template card selection, generate button with gradient, chapter cards, gradient swatch selector, image preview, question options, saved banner"
+  },
+  "css_teacher_tour": {
+    "start": 681,
+    "end": 715,
+    "description": "Feature tour styling (.tour-*): step visibility, navigation dots, mock browser chrome, typing animation, fade-slide animations, cursor blink"
+  },
+  "css_block_blast": {
+    "start": 716,
+    "end": 800,
+    "description": "Block Blast game (.bb-*): 8×8 grid cells with filled/ghost states, clearing animation, piece tray with grid layout, piece selection/hover states, modal for quiz questions, multiple choice buttons with correct/wrong states"
+  },
+  "css_live_quiz": {
+    "start": 801,
+    "end": 880,
+    "description": "Live Quiz styling (.qz-*): lobby with code display, player chips, timer with urgent state, multiple choice grid (2×2), score popup animation, leaderboard with row styling, podium display (1st/2nd/3rd with gradient backgrounds)"
+  },
+  "css_story_lessons": {
+    "start": 881,
+    "end": 970,
+    "description": "Story lessons (.story-*): scene styling with radial gradient overlay, icon/title/date typography, body text with drop cap (.story-body::first-letter), inline glossary terms (.story-term), block quotes (.story-quote), progress pips, narrator bubble cards, unlock animation"
+  },
+  "css_illustrations": {
+    "start": 971,
+    "end": 990,
+    "description": "Decorative illustration styling (.illus, .orbit, .orbit-dot) with opacity and animation effects"
+  },
+  "css_landing_showcases": {
+    "start": 991,
+    "end": 1070,
+    "description": "Landing page showcase containers (.showcase-*): wrap with chrome header, inner padding, label badge, fake browser tabs (red/yellow/green), URL bar, animated typing cursor, block pop-in animations,
