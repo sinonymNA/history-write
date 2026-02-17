@@ -22,6 +22,6 @@ jobs:
       - run: |
           git config --global user.email "action@github.com"
           git config --global user.name "GitHub Action"
-          git add codebase_map.json
+          git add codebase_map_*.json
           git commit -m "Update codebase map"
           git push
