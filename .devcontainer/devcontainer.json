@@ -1,0 +1,48 @@
+{
+  "name": "HistoryWrite - React Development",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:20",
+  "features": {
+    "ghcr.io/devcontainers/features/github-cli:1": {}
+  },
+  "forwardPorts": [5173],
+  "portsAttributes": {
+    "5173": {
+      "label": "Vite Dev Server",
+      "onAutoForward": "notify"
+    }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "bradlc.vscode-tailwindcss",
+        "dsznajder.es7-react-js-snippets",
+        "Firebase.firebase"
+      ],
+      "settings": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.formatOnSave": true,
+        "[javascript]": {
+          "editor.defaultFormatter": "esbenp.prettier-vscode"
+        },
+        "[javascriptreact]": {
+          "editor.defaultFormatter": "esbenp.prettier-vscode"
+        },
+        "files.watcherExclude": {
+          "**/node_modules/**": true
+        },
+        "tailwindCSS.experimental.classRegex": [
+          ["cva\\(([^)]*)\\)", "(?:'|\"|`)([^']*)(?:'|\"|`)"]
+        ]
+      }
+    }
+  },
+  "postCreateCommand": "npm install",
+  "postStartCommand": "echo '✅ Codespace ready! Run: npm run dev'",
+  "remoteUser": "node",
+  "hostRequirements": {
+    "cpus": 2,
+    "memory": "4gb"
+  }
+}

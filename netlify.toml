@@ -1,0 +1,55 @@
+# Netlify Configuration for HistoryWrite
+
+[build]
+  command = "npm run build"
+  publish = "dist"
+  functions = "netlify/functions"
+
+[build.environment]
+  # Node.js version
+  NODE_VERSION = "20"
+
+# Environment variables — set these in Netlify dashboard
+# Settings → Environment Variables → Import from .env
+[context.production.environment]
+  VITE_FIREBASE_API_KEY = ""
+  VITE_FIREBASE_AUTH_DOMAIN = ""
+  VITE_FIREBASE_PROJECT_ID = ""
+  VITE_FIREBASE_STORAGE_BUCKET = ""
+  VITE_FIREBASE_MESSAGING_SENDER_ID = ""
+  VITE_FIREBASE_APP_ID = ""
+
+# Redirect all routes to index.html for React SPA
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# Headers for security and performance
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    X-Frame-Options = "SAMEORIGIN"
+    X-XSS-Protection = "1; mode=block"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "geolocation=(), microphone=(), camera=()"
+
+# Cache headers for assets
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# HTML files should not be cached
+[[headers]]
+  for = "/*.html"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+# Development context (deploy previews, branch deploys)
+[context.deploy-preview]
+  command = "npm run build"
+
+[context.branch-deploy]
+  command = "npm run build"

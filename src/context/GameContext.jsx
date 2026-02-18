@@ -4,10 +4,19 @@ const GameContext = createContext()
 
 export function GameProvider({ children }) {
   const [gameState, setGameState] = useState({
-    level: 1,
-    xp: 0,
-    gamification: {},
-    essayState: {},
+    gamification: {
+      level: 1,
+      xp: 0,
+      xpToNextLevel: 100,
+      currentPlants: [],
+      harvestedSeeds: 0,
+      skillPoints: 0
+    },
+    essayState: {
+      currentBlock: null,
+      responses: {},
+      submitted: false
+    }
   })
 
   const updateGameState = (updates) => {
