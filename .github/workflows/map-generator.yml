@@ -1,0 +1,121 @@
+name: Generate Code Map
+
+on:
+  workflow_dispatch:
+    inputs:
+      filename:
+        description: 'HTML filename (in repo root) to map'
+        required: true
+        default: 'historywrite.html'
+        type: string
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  generate-map:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Validate filename
+        run: |
+          FILENAME="${{ inputs.filename }}"
+
+          # Check filename format
+          if [[ ! "$FILENAME" =~ ^[a-zA-Z0-9_.-]+\.html$ ]]; then
+            echo "❌ Invalid filename format: $FILENAME"
+            echo "Must be a single .html filename (no paths), e.g., historywrite.html"
+            exit 1
+          fi
+
+          # Check file exists
+          if [ ! -f "$FILENAME" ]; then
+            echo "❌ File not found: $FILENAME"
+            ls -la
+            exit 1
+          fi
+
+          FILE_SIZE=$(stat -f%z "$FILENAME" 2>/dev/null || stat -c%s "$FILENAME")
+          echo "✓ File validated: $FILENAME ($FILE_SIZE bytes)"
+
+      - name: Generate map with Haiku
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          node scripts/generate-map.js "${{ inputs.filename }}" > map-${{ inputs.filename }}.json
+
+          if [ $? -ne 0 ]; then
+            echo "❌ Map generation failed"
+            exit 1
+          fi
+
+          echo "✓ Map generated successfully"
+
+          # Show statistics
+          jq '.sections | length as $count | {sections: $count, totalLines: .totalLines}' \
+            map-${{ inputs.filename }}.json 2>/dev/null || echo "Map JSON is valid"
+
+      - name: Validate map structure
+        run: |
+          jq '
+            if (.sections | type) != "array" then
+              "ERROR: sections must be array" | error
+            elif (.sections | length) == 0 then
+              "ERROR: no sections found" | error
+            elif (.totalLines | type) != "number" then
+              "ERROR: totalLines must be number" | error
+            else
+              {
+                status: "valid",
+                sections: (.sections | length),
+                totalLines: .totalLines,
+                sectionNames: (.sections | map(.name))
+              }
+            end
+          ' map-${{ inputs.filename }}.json
+
+      - name: Upload map as artifact
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: code-maps
+          path: map-*.json
+          retention-days: 30
+
+      - name: Create summary
+        if: success()
+        run: |
+          MAP_FILE="map-${{ inputs.filename }}.json"
+          SECTIONS=$(jq '.sections | length' "$MAP_FILE")
+          TOTAL_LINES=$(jq '.totalLines' "$MAP_FILE")
+
+          echo "## ✓ Code Map Generated Successfully" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**File**: \`${{ inputs.filename }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Total Lines**: $TOTAL_LINES" >> $GITHUB_STEP_SUMMARY
+          echo "**Sections Identified**: $SECTIONS" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Sections" >> $GITHUB_STEP_SUMMARY
+          jq -r '.sections[] | "- **\(.name)** (lines \(.startLine)-\(.endLine)): \(.description)"' "$MAP_FILE" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Map File**: \`$MAP_FILE\`" >> $GITHUB_STEP_SUMMARY
+
+      - name: Report failure
+        if: failure()
+        run: |
+          echo "## ❌ Map Generation Failed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Check logs above for details." >> $GITHUB_STEP_SUMMARY
