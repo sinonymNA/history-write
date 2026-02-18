@@ -1,0 +1,209 @@
+name: Add Feature to HTML
+
+on:
+  workflow_dispatch:
+    inputs:
+      filename:
+        description: 'HTML filename (in repo root) to modify'
+        required: true
+        default: 'historywrite.html'
+        type: string
+      feature_description:
+        description: 'Plain English description of the feature to add'
+        required: true
+        type: string
+      target_sections:
+        description: 'Comma-separated section names to modify (leave blank for auto-select)'
+        required: false
+        type: string
+
+permissions:
+  contents: read
+  actions: read
+  pull-requests: write
+
+jobs:
+  add-feature:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Validate inputs
+        run: |
+          FILENAME="${{ inputs.filename }}"
+          FEATURE="${{ inputs.feature_description }}"
+
+          # Validate filename
+          if [[ ! "$FILENAME" =~ ^[a-zA-Z0-9_.-]+\.html$ ]]; then
+            echo "❌ Invalid filename format: $FILENAME"
+            exit 1
+          fi
+
+          if [ ! -f "$FILENAME" ]; then
+            echo "❌ File not found: $FILENAME"
+            exit 1
+          fi
+
+          # Validate feature description
+          if [ -z "$FEATURE" ] || [ ${#FEATURE} -lt 10 ]; then
+            echo "❌ Feature description too short (minimum 10 characters)"
+            exit 1
+          fi
+
+          if [ ${#FEATURE} -gt 1000 ]; then
+            echo "❌ Feature description too long (maximum 1000 characters)"
+            exit 1
+          fi
+
+          echo "✓ Inputs validated"
+          echo "  - Filename: $FILENAME"
+          echo "  - Feature: ${FEATURE:0:60}..."
+
+      - name: Generate or retrieve map
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          MAP_FILE="map-${{ inputs.filename }}.json"
+
+          # Try to use cached map if available
+          if [ -f "$MAP_FILE" ]; then
+            echo "ℹ Using existing map: $MAP_FILE"
+            MAP_AGE=$(($(date +%s) - $(stat -f%m "$MAP_FILE" 2>/dev/null || stat -c%Y "$MAP_FILE")))
+            if [ $MAP_AGE -gt 3600 ]; then
+              echo "ℹ Map is older than 1 hour, regenerating..."
+              rm "$MAP_FILE"
+            else
+              echo "✓ Map is fresh"
+              exit 0
+            fi
+          fi
+
+          # Generate map
+          echo "↻ Generating new code map..."
+          node scripts/generate-map.js "${{ inputs.filename }}" > "$MAP_FILE"
+
+          if [ $? -ne 0 ]; then
+            echo "❌ Map generation failed"
+            exit 1
+          fi
+
+          echo "✓ Map generated"
+          jq '.sections | length as $count | "  Identified \($count) sections"' "$MAP_FILE"
+
+      - name: Generate feature with Sonnet
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          MAP_FILE="map-${{ inputs.filename }}.json"
+          FEATURE_DESC="${{ inputs.feature_description }}"
+          TARGET_SECTIONS="${{ inputs.target_sections }}"
+
+          # Build command
+          CMD="node scripts/add-feature.js '${{ inputs.filename }}' '$MAP_FILE' '$FEATURE_DESC'"
+
+          # Add target sections if provided
+          if [ -n "$TARGET_SECTIONS" ]; then
+            # Convert comma-separated to arguments
+            IFS=',' read -ra SECTIONS <<< "$TARGET_SECTIONS"
+            for section in "${SECTIONS[@]}"; do
+              CMD="$CMD '$(echo "$section" | xargs)'"
+            done
+          fi
+
+          echo "↻ Generating feature implementation..."
+          eval "$CMD"
+
+          if [ $? -ne 0 ]; then
+            echo "❌ Feature generation failed"
+            exit 1
+          fi
+
+          echo "✓ Feature implementation generated"
+
+      - name: Validate modified HTML
+        run: |
+          MODIFIED_FILE="${{ inputs.filename }}.modified.html"
+
+          if [ ! -f "$MODIFIED_FILE" ]; then
+            echo "❌ Modified file not created: $MODIFIED_FILE"
+            exit 1
+          fi
+
+          echo "↻ Validating modified HTML..."
+          node scripts/validate-html.js "$MODIFIED_FILE"
+
+          if [ $? -ne 0 ]; then
+            echo "❌ HTML validation failed"
+            exit 1
+          fi
+
+          echo "✓ Modified HTML is valid"
+
+      - name: Compare files
+        run: |
+          ORIGINAL="${{ inputs.filename }}"
+          MODIFIED="${{ inputs.filename }}.modified.html"
+
+          ORIG_LINES=$(wc -l < "$ORIGINAL")
+          MOD_LINES=$(wc -l < "$MODIFIED")
+          ADDED_LINES=$((MOD_LINES - ORIG_LINES))
+
+          ORIG_SIZE=$(stat -f%z "$ORIGINAL" 2>/dev/null || stat -c%s "$ORIGINAL")
+          MOD_SIZE=$(stat -f%z "$MODIFIED" 2>/dev/null || stat -c%s "$MODIFIED")
+          ADDED_SIZE=$((MOD_SIZE - ORIG_SIZE))
+
+          echo "## Modification Statistics" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Metric | Original | Modified | Change |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|----------|----------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Lines | $ORIG_LINES | $MOD_LINES | +$ADDED_LINES |" >> $GITHUB_STEP_SUMMARY
+          echo "| Size | $ORIG_SIZE B | $MOD_SIZE B | +$ADDED_SIZE B |" >> $GITHUB_STEP_SUMMARY
+
+      - name: Upload modified file
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: modified-html
+          path: |
+            *.modified.html
+            map-*.json
+          retention-days: 7
+
+      - name: Create summary
+        if: success()
+        run: |
+          MODIFIED_FILE="${{ inputs.filename }}.modified.html"
+
+          echo "## ✓ Feature Added Successfully" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**File**: \`${{ inputs.filename }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Feature**: ${{ inputs.feature_description }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Next Steps" >> $GITHUB_STEP_SUMMARY
+          echo "1. Download the modified file from artifacts: \`$MODIFIED_FILE\`" >> $GITHUB_STEP_SUMMARY
+          echo "2. Review the changes" >> $GITHUB_STEP_SUMMARY
+          echo "3. Test the feature" >> $GITHUB_STEP_SUMMARY
+          echo "4. Commit to your repository" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Note**: The workflow does NOT commit changes automatically to preserve control." >> $GITHUB_STEP_SUMMARY
+
+      - name: Report failure
+        if: failure()
+        run: |
+          echo "## ❌ Feature Addition Failed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**File**: \`${{ inputs.filename }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Feature**: ${{ inputs.feature_description }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Check the logs above for error details." >> $GITHUB_STEP_SUMMARY
