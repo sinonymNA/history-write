@@ -1,40 +1,43 @@
 import anthropic
 import json
 import os
-import sys
 
 repo_root = os.environ.get("GITHUB_WORKSPACE", os.getcwd())
-target_file = os.path.join(repo_root, os.environ["TARGET_FILE"])
-map_filename = os.path.join(repo_root, f"codebase_map_{os.environ['TARGET_FILE'].replace('.html', '')}.json")
-
 client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
 feature_request = os.environ["FEATURE_REQUEST"]
+target_file = os.environ["TARGET_FILE"]
 
-# Load the map
-with open("codebase_map.json", "r") as f:
+map_filename = os.path.join(repo_root, f"codebase_map_{target_file.replace('.html', '')}.json")
+filepath = os.path.join(repo_root, target_file)
+
+print(f"Loading map from {map_filename}")
+print(f"Loading file from {filepath}")
+
+with open(map_filename, "r") as f:
     codebase_map = json.load(f)
 
-# Load the full file
-with open("index.html", "r") as f:
+with open(filepath, "r") as f:
     lines = f.readlines()
 
 # Stage 1: Haiku identifies relevant line ranges
+print("Stage 1: Scout identifying relevant sections...")
 scout_response = client.messages.create(
     model="claude-haiku-4-5-20251001",
     max_tokens=500,
     messages=[{
         "role": "user",
         "content": f"""Given this feature request and codebase map, return ONLY a JSON array of section names that need to be modified or referenced.
-        
-        Feature request: {feature_request}
-        
-        Codebase map: {json.dumps(codebase_map, indent=2)}
-        
-        Return format: ["section_name_1", "section_name_2"]"""
+
+Feature request: {feature_request}
+
+Codebase map: {json.dumps(codebase_map, indent=2)}
+
+Return format: ["section_name_1", "section_name_2"]"""
     }]
 )
 
 relevant_sections = json.loads(scout_response.content[0].text)
+print(f"Relevant sections: {relevant_sections}")
 
 # Extract only the relevant lines
 excerpts = {}
@@ -48,7 +51,8 @@ for section in relevant_sections:
             "end": end
         }
 
-# Stage 2: Sonnet implements the feature on just those excerpts
+# Stage 2: Sonnet implements the feature
+print("Stage 2: Implementing feature...")
 excerpt_text = "\n\n".join([
     f"### {name} (lines {data['start']}-{data['end']}):\n{data['lines']}"
     for name, data in excerpts.items()
@@ -72,6 +76,7 @@ Sections to work with:
 )
 
 changes = json.loads(implement_response.content[0].text)
+print(f"Changes received for sections: {list(changes.keys())}")
 
 # Splice changes back into the file
 for section_name, change in sorted(changes.items(), key=lambda x: x[1]["start"], reverse=True):
@@ -80,7 +85,7 @@ for section_name, change in sorted(changes.items(), key=lambda x: x[1]["start"],
     new_lines = change["new_content"].splitlines(keepends=True)
     lines[start:end] = new_lines
 
-with open("index.html", "w") as f:
+with open(filepath, "w") as f:
     f.writelines(lines)
 
-print(f"Feature implemented using sections: {relevant_sections}")
+print(f"Done! Feature implemented in {target_file}")
