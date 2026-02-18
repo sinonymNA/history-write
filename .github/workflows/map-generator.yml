@@ -11,7 +11,6 @@ on:
 
 permissions:
   contents: read
-  actions: read
 
 jobs:
   generate-map:
@@ -28,55 +27,60 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
 
       - name: Validate filename
         run: |
+          set -e
           FILENAME="${{ inputs.filename }}"
 
-          # Check filename format
           if [[ ! "$FILENAME" =~ ^[a-zA-Z0-9_.-]+\.html$ ]]; then
-            echo "❌ Invalid filename format: $FILENAME"
-            echo "Must be a single .html filename (no paths), e.g., historywrite.html"
+            echo "::error::Invalid filename format: $FILENAME (must be a .html file in repo root)"
             exit 1
           fi
 
-          # Check file exists
           if [ ! -f "$FILENAME" ]; then
-            echo "❌ File not found: $FILENAME"
-            ls -la
+            echo "::error::File not found: $FILENAME"
+            echo "Available HTML files:"
+            ls -la *.html 2>/dev/null || echo "  (none)"
             exit 1
           fi
 
-          FILE_SIZE=$(stat -f%z "$FILENAME" 2>/dev/null || stat -c%s "$FILENAME")
-          echo "✓ File validated: $FILENAME ($FILE_SIZE bytes)"
+          FILE_SIZE=$(stat -c%s "$FILENAME")
+          echo "File validated: $FILENAME ($FILE_SIZE bytes)"
 
       - name: Generate map with Haiku
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          INPUT_FILENAME: ${{ inputs.filename }}
         run: |
-          node scripts/generate-map.js "${{ inputs.filename }}" > map-${{ inputs.filename }}.json
+          set -eo pipefail
 
-          if [ $? -ne 0 ]; then
-            echo "❌ Map generation failed"
-            exit 1
-          fi
+          MAP_FILE="map-${INPUT_FILENAME%.html}.json"
+          echo "Generating map: $INPUT_FILENAME -> $MAP_FILE"
 
-          echo "✓ Map generated successfully"
+          node scripts/generate-map.js "$INPUT_FILENAME" > "$MAP_FILE"
 
-          # Show statistics
-          jq '.sections | length as $count | {sections: $count, totalLines: .totalLines}' \
-            map-${{ inputs.filename }}.json 2>/dev/null || echo "Map JSON is valid"
+          # Validate it's valid JSON
+          jq empty "$MAP_FILE" || { echo "::error::Map output is not valid JSON"; exit 1; }
+
+          SECTIONS=$(jq '.sections | length' "$MAP_FILE")
+          TOTAL=$(jq '.totalLines' "$MAP_FILE")
+          echo "Map generated: $SECTIONS sections, $TOTAL lines"
 
       - name: Validate map structure
+        env:
+          INPUT_FILENAME: ${{ inputs.filename }}
         run: |
-          jq '
+          set -eo pipefail
+          MAP_FILE="map-${INPUT_FILENAME%.html}.json"
+
+          jq -e '
             if (.sections | type) != "array" then
-              "ERROR: sections must be array" | error
+              "sections must be an array" | error
             elif (.sections | length) == 0 then
-              "ERROR: no sections found" | error
+              "no sections found" | error
             elif (.totalLines | type) != "number" then
-              "ERROR: totalLines must be number" | error
+              "totalLines must be a number" | error
             else
               {
                 status: "valid",
@@ -85,37 +89,34 @@ jobs:
                 sectionNames: (.sections | map(.name))
               }
             end
-          ' map-${{ inputs.filename }}.json
+          ' "$MAP_FILE" || { echo "::error::Map structure validation failed"; exit 1; }
 
       - name: Upload map as artifact
         uses: actions/upload-artifact@v4
-        if: always()
+        if: success()
         with:
-          name: code-maps
+          name: code-map
           path: map-*.json
           retention-days: 30
 
       - name: Create summary
-        if: success()
+        if: always()
+        env:
+          INPUT_FILENAME: ${{ inputs.filename }}
         run: |
-          MAP_FILE="map-${{ inputs.filename }}.json"
-          SECTIONS=$(jq '.sections | length' "$MAP_FILE")
-          TOTAL_LINES=$(jq '.totalLines' "$MAP_FILE")
+          MAP_FILE="map-${INPUT_FILENAME%.html}.json"
 
-          echo "## ✓ Code Map Generated Successfully" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**File**: \`${{ inputs.filename }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "**Total Lines**: $TOTAL_LINES" >> $GITHUB_STEP_SUMMARY
-          echo "**Sections Identified**: $SECTIONS" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### Sections" >> $GITHUB_STEP_SUMMARY
-          jq -r '.sections[] | "- **\(.name)** (lines \(.startLine)-\(.endLine)): \(.description)"' "$MAP_FILE" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Map File**: \`$MAP_FILE\`" >> $GITHUB_STEP_SUMMARY
+          if [ -f "$MAP_FILE" ] && jq empty "$MAP_FILE" 2>/dev/null; then
+            SECTIONS=$(jq '.sections | length' "$MAP_FILE")
+            TOTAL_LINES=$(jq '.totalLines' "$MAP_FILE")
 
-      - name: Report failure
-        if: failure()
-        run: |
-          echo "## ❌ Map Generation Failed" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "Check logs above for details." >> $GITHUB_STEP_SUMMARY
+            echo "## Code Map Generated" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "**File**: \`${INPUT_FILENAME}\` | **Lines**: $TOTAL_LINES | **Sections**: $SECTIONS" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### Sections" >> $GITHUB_STEP_SUMMARY
+            jq -r '.sections[] | "- **\(.name)** (L\(.startLine)–\(.endLine)): \(.description)"' "$MAP_FILE" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "## Map Generation Failed" >> $GITHUB_STEP_SUMMARY
+            echo "Check the logs above for details." >> $GITHUB_STEP_SUMMARY
+          fi
