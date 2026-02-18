@@ -18,7 +18,7 @@ export default function Login() {
     try {
       const { signInWithEmailAndPassword } = await import('firebase/auth')
       await signInWithEmailAndPassword(firebase.auth, email, password)
-      // Auth context will handle redirect
+      window.location.hash = '#home'
     } catch (err) {
       setError(err.message)
     } finally {

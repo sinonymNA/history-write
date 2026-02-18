@@ -46,7 +46,7 @@ export default function Signup() {
         createdAt: new Date()
       })
 
-      // Redirect handled by auth context
+      window.location.hash = '#home'
     } catch (err) {
       setError(err.message)
     } finally {
