@@ -13,14 +13,12 @@ on:
         required: true
         type: string
       target_sections:
-        description: 'Comma-separated section names to modify (leave blank for auto-select)'
+        description: 'Comma-separated section names (leave blank for auto-select via Haiku)'
         required: false
         type: string
 
 permissions:
   contents: read
-  actions: read
-  pull-requests: write
 
 jobs:
   add-feature:
@@ -37,142 +35,114 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
 
       - name: Validate inputs
         run: |
+          set -e
           FILENAME="${{ inputs.filename }}"
           FEATURE="${{ inputs.feature_description }}"
 
-          # Validate filename
           if [[ ! "$FILENAME" =~ ^[a-zA-Z0-9_.-]+\.html$ ]]; then
-            echo "❌ Invalid filename format: $FILENAME"
+            echo "::error::Invalid filename: $FILENAME (must be a .html file in repo root)"
             exit 1
           fi
 
           if [ ! -f "$FILENAME" ]; then
-            echo "❌ File not found: $FILENAME"
+            echo "::error::File not found: $FILENAME"
+            ls -la *.html 2>/dev/null || echo "  (no HTML files found)"
             exit 1
           fi
 
-          # Validate feature description
-          if [ -z "$FEATURE" ] || [ ${#FEATURE} -lt 10 ]; then
-            echo "❌ Feature description too short (minimum 10 characters)"
+          if [ ${#FEATURE} -lt 10 ]; then
+            echo "::error::Feature description too short (min 10 chars). Got: ${#FEATURE}"
             exit 1
           fi
 
-          if [ ${#FEATURE} -gt 1000 ]; then
-            echo "❌ Feature description too long (maximum 1000 characters)"
-            exit 1
-          fi
+          echo "Inputs validated:"
+          echo "  File: $FILENAME ($(stat -c%s "$FILENAME") bytes)"
+          echo "  Feature: ${FEATURE:0:80}..."
 
-          echo "✓ Inputs validated"
-          echo "  - Filename: $FILENAME"
-          echo "  - Feature: ${FEATURE:0:60}..."
-
-      - name: Generate or retrieve map
+      - name: Stage 1 — Generate code map with Haiku
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          INPUT_FILENAME: ${{ inputs.filename }}
         run: |
-          MAP_FILE="map-${{ inputs.filename }}.json"
+          set -eo pipefail
+          BASENAME="${INPUT_FILENAME%.html}"
+          MAP_FILE="map-${BASENAME}.json"
 
-          # Try to use cached map if available
-          if [ -f "$MAP_FILE" ]; then
-            echo "ℹ Using existing map: $MAP_FILE"
-            MAP_AGE=$(($(date +%s) - $(stat -f%m "$MAP_FILE" 2>/dev/null || stat -c%Y "$MAP_FILE")))
-            if [ $MAP_AGE -gt 3600 ]; then
-              echo "ℹ Map is older than 1 hour, regenerating..."
-              rm "$MAP_FILE"
-            else
-              echo "✓ Map is fresh"
-              exit 0
-            fi
-          fi
+          echo "Stage 1: Mapping $INPUT_FILENAME with Haiku..."
+          node scripts/generate-map.js "$INPUT_FILENAME" > "$MAP_FILE"
 
-          # Generate map
-          echo "↻ Generating new code map..."
-          node scripts/generate-map.js "${{ inputs.filename }}" > "$MAP_FILE"
+          jq empty "$MAP_FILE" || { echo "::error::Map generation produced invalid JSON"; exit 1; }
 
-          if [ $? -ne 0 ]; then
-            echo "❌ Map generation failed"
-            exit 1
-          fi
+          SECTIONS=$(jq '.sections | length' "$MAP_FILE")
+          echo "Map complete: $SECTIONS sections identified"
 
-          echo "✓ Map generated"
-          jq '.sections | length as $count | "  Identified \($count) sections"' "$MAP_FILE"
-
-      - name: Generate feature with Sonnet
+      - name: Stage 2 — Implement feature with Sonnet
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          INPUT_FILENAME: ${{ inputs.filename }}
+          INPUT_FEATURE: ${{ inputs.feature_description }}
+          INPUT_SECTIONS: ${{ inputs.target_sections }}
         run: |
-          MAP_FILE="map-${{ inputs.filename }}.json"
-          FEATURE_DESC="${{ inputs.feature_description }}"
-          TARGET_SECTIONS="${{ inputs.target_sections }}"
+          set -eo pipefail
+          BASENAME="${INPUT_FILENAME%.html}"
+          MAP_FILE="map-${BASENAME}.json"
 
-          # Build command
-          CMD="node scripts/add-feature.js '${{ inputs.filename }}' '$MAP_FILE' '$FEATURE_DESC'"
+          echo "Stage 2: Implementing feature with Sonnet..."
+          node scripts/add-feature.js
 
-          # Add target sections if provided
-          if [ -n "$TARGET_SECTIONS" ]; then
-            # Convert comma-separated to arguments
-            IFS=',' read -ra SECTIONS <<< "$TARGET_SECTIONS"
-            for section in "${SECTIONS[@]}"; do
-              CMD="$CMD '$(echo "$section" | xargs)'"
-            done
-          fi
-
-          echo "↻ Generating feature implementation..."
-          eval "$CMD"
-
-          if [ $? -ne 0 ]; then
-            echo "❌ Feature generation failed"
+          MODIFIED="${BASENAME}.modified.html"
+          if [ ! -f "$MODIFIED" ]; then
+            echo "::error::Modified file not created: $MODIFIED"
             exit 1
           fi
 
-          echo "✓ Feature implementation generated"
+          echo "Feature implemented: $MODIFIED ($(stat -c%s "$MODIFIED") bytes)"
 
-      - name: Validate modified HTML
+      - name: Stage 3 — Validate modified HTML
+        env:
+          INPUT_FILENAME: ${{ inputs.filename }}
         run: |
-          MODIFIED_FILE="${{ inputs.filename }}.modified.html"
+          set -eo pipefail
+          BASENAME="${INPUT_FILENAME%.html}"
+          MODIFIED="${BASENAME}.modified.html"
 
-          if [ ! -f "$MODIFIED_FILE" ]; then
-            echo "❌ Modified file not created: $MODIFIED_FILE"
-            exit 1
-          fi
+          echo "Stage 3: Validating $MODIFIED..."
+          node scripts/validate-html.js "$MODIFIED"
 
-          echo "↻ Validating modified HTML..."
-          node scripts/validate-html.js "$MODIFIED_FILE"
-
-          if [ $? -ne 0 ]; then
-            echo "❌ HTML validation failed"
-            exit 1
-          fi
-
-          echo "✓ Modified HTML is valid"
-
-      - name: Compare files
+      - name: Compare original vs modified
+        env:
+          INPUT_FILENAME: ${{ inputs.filename }}
         run: |
-          ORIGINAL="${{ inputs.filename }}"
-          MODIFIED="${{ inputs.filename }}.modified.html"
+          set -e
+          BASENAME="${INPUT_FILENAME%.html}"
+          ORIGINAL="$INPUT_FILENAME"
+          MODIFIED="${BASENAME}.modified.html"
 
-          ORIG_LINES=$(wc -l < "$ORIGINAL")
-          MOD_LINES=$(wc -l < "$MODIFIED")
-          ADDED_LINES=$((MOD_LINES - ORIG_LINES))
+          ORIG_LINES=$(wc -l < "$ORIGINAL" | tr -d ' ')
+          MOD_LINES=$(wc -l < "$MODIFIED" | tr -d ' ')
+          DIFF_LINES=$((MOD_LINES - ORIG_LINES))
 
-          ORIG_SIZE=$(stat -f%z "$ORIGINAL" 2>/dev/null || stat -c%s "$ORIGINAL")
-          MOD_SIZE=$(stat -f%z "$MODIFIED" 2>/dev/null || stat -c%s "$MODIFIED")
-          ADDED_SIZE=$((MOD_SIZE - ORIG_SIZE))
+          ORIG_SIZE=$(stat -c%s "$ORIGINAL")
+          MOD_SIZE=$(stat -c%s "$MODIFIED")
+          DIFF_SIZE=$((MOD_SIZE - ORIG_SIZE))
 
-          echo "## Modification Statistics" >> $GITHUB_STEP_SUMMARY
+          echo "## Feature Added" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "| Metric | Original | Modified | Change |" >> $GITHUB_STEP_SUMMARY
-          echo "|--------|----------|----------|--------|" >> $GITHUB_STEP_SUMMARY
-          echo "| Lines | $ORIG_LINES | $MOD_LINES | +$ADDED_LINES |" >> $GITHUB_STEP_SUMMARY
-          echo "| Size | $ORIG_SIZE B | $MOD_SIZE B | +$ADDED_SIZE B |" >> $GITHUB_STEP_SUMMARY
+          echo "**File**: \`$ORIGINAL\` | **Feature**: ${{ inputs.feature_description }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Metric | Original | Modified | Delta |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|----------|----------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Lines | $ORIG_LINES | $MOD_LINES | ${DIFF_LINES:+$DIFF_LINES} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Bytes | $ORIG_SIZE | $MOD_SIZE | ${DIFF_SIZE:+$DIFF_SIZE} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Download \`${BASENAME}.modified.html\` from artifacts below." >> $GITHUB_STEP_SUMMARY
 
       - name: Upload modified file
         uses: actions/upload-artifact@v4
-        if: always()
+        if: success()
         with:
           name: modified-html
           path: |
@@ -180,30 +150,12 @@ jobs:
             map-*.json
           retention-days: 7
 
-      - name: Create summary
-        if: success()
-        run: |
-          MODIFIED_FILE="${{ inputs.filename }}.modified.html"
-
-          echo "## ✓ Feature Added Successfully" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**File**: \`${{ inputs.filename }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "**Feature**: ${{ inputs.feature_description }}" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### Next Steps" >> $GITHUB_STEP_SUMMARY
-          echo "1. Download the modified file from artifacts: \`$MODIFIED_FILE\`" >> $GITHUB_STEP_SUMMARY
-          echo "2. Review the changes" >> $GITHUB_STEP_SUMMARY
-          echo "3. Test the feature" >> $GITHUB_STEP_SUMMARY
-          echo "4. Commit to your repository" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Note**: The workflow does NOT commit changes automatically to preserve control." >> $GITHUB_STEP_SUMMARY
-
       - name: Report failure
         if: failure()
         run: |
-          echo "## ❌ Feature Addition Failed" >> $GITHUB_STEP_SUMMARY
+          echo "## Feature Addition Failed" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**File**: \`${{ inputs.filename }}\`" >> $GITHUB_STEP_SUMMARY
           echo "**Feature**: ${{ inputs.feature_description }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "Check the logs above for error details." >> $GITHUB_STEP_SUMMARY
+          echo "Check the step logs above for the specific error." >> $GITHUB_STEP_SUMMARY

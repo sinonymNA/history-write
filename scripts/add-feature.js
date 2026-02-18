@@ -1,325 +1,86 @@
 #!/usr/bin/env node
 
 /**
- * Stage 2: Add feature to HTML file using Claude Sonnet
+ * Stage 2: Add a feature to an HTML file using Claude Sonnet
  *
- * Input: Feature description, HTML file, section map
- * Output: Modified HTML file with feature added
- *
- * Robust error handling:
- * - Validates section names exist in map
- * - Handles Sonnet JSON response parsing with retry
- * - Validates spliced HTML doesn't go out of bounds
- * - Validates HTML structure after modifications
+ * Reads inputs from environment variables (safe — no shell injection) with
+ * argv fallback for local CLI use. When no target sections are specified,
+ * uses Haiku as a scout to auto-select the most relevant sections.
  */
 
 const fs = require('fs');
 const path = require('path');
-const { execSync } = require('child_process');
 
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
-const MODEL = 'claude-sonnet-4-5-20250929';
-const MAX_RETRIES = 1;
+const SONNET = 'claude-sonnet-4-5-20250929';
+const HAIKU  = 'claude-haiku-4-5-20251001';
 
-// ============================================================================
-// ERROR HANDLING & UTILITIES
-// ============================================================================
+// ── Logging ──────────────────────────────────────────────────────────────────
 
-class ValidationError extends Error {
-  constructor(message) {
-    super(message);
-    this.name = 'ValidationError';
-  }
+function log(level, msg, data) {
+  const ts = new Date().toISOString().slice(11, 23);
+  const extra = data ? ' ' + JSON.stringify(data) : '';
+  console.error(`[${ts}] ${level} ${msg}${extra}`);
 }
+const info  = (m, d) => log('INFO', m, d);
+const ok    = (m, d) => log(' OK ', m, d);
+const fail  = (m, d) => log('FAIL', m, d);
 
-function log(level, message, data = '') {
-  const timestamp = new Date().toISOString();
-  console.error(`[${timestamp}] [${level}] ${message}${data ? ' ' + JSON.stringify(data) : ''}`);
-}
+// ── JSON Parsing Pipeline (shared with generate-map.js) ─────────────────────
 
-function logSuccess(message, data = '') {
-  log('✓', message, data);
-}
+function parseJSON(raw) {
+  let text = raw.replace(/^```(?:json)?\s*\n?/i, '').replace(/\n?```\s*$/i, '').trim();
 
-function logError(message, data = '') {
-  log('✗', message, data);
-}
-
-function logInfo(message, data = '') {
-  log('INFO', message, data);
-}
-
-// ============================================================================
-// JSON PARSING (same as Stage 1)
-// ============================================================================
-
-function cleanMarkdown(text) {
-  return text
-    .replace(/^```(?:json)?\s*\n?/i, '')
-    .replace(/\n?```\s*$/i, '')
-    .trim();
-}
-
-function extractJSON(text) {
   const start = text.indexOf('{');
   const end = text.lastIndexOf('}');
-
   if (start === -1 || end === -1 || start >= end) {
-    throw new ValidationError('No valid JSON object found in response');
+    throw new Error('No JSON object found in response');
   }
+  text = text.substring(start, end + 1);
+  text = text.replace(/,(\s*[}\]])/g, '$1');
 
-  return text.substring(start, end + 1);
-}
-
-function repairJSON(text) {
-  let result = text;
-  result = result.replace(/,(\s*[}\]])/g, '$1');
-  result = result.replace(/(\": \"[^\"]*)\s+([a-zA-Z])/g, '$1 $2');
-  return result;
-}
-
-function parseJSONResponse(text, attempt = 1) {
   try {
-    let cleaned = cleanMarkdown(text);
-    let jsonStr = extractJSON(cleaned);
-    jsonStr = repairJSON(jsonStr);
-    const parsed = JSON.parse(jsonStr);
-    logSuccess('Successfully parsed JSON response');
-    return parsed;
-  } catch (error) {
-    if (attempt < MAX_RETRIES + 1) {
-      logError(`JSON parse attempt ${attempt} failed`, { error: error.message });
-      if (attempt === 1) {
-        try {
-          const aggressive = text.replace(/^```[\s\S]*?\n/, '').replace(/\n?```$/, '');
-          logInfo('Retrying with aggressive markdown cleanup', { length: aggressive.length });
-          return parseJSONResponse(aggressive, attempt + 1);
-        } catch (e) {
-          logError('Aggressive retry failed', { error: e.message });
-          throw error;
-        }
-      }
+    return JSON.parse(text);
+  } catch (firstErr) {
+    info('First parse failed, attempting truncation repair', { error: firstErr.message });
+
+    let repaired = text;
+    // Strip trailing partial entry
+    repaired = repaired.replace(/,\s*"[^"]*"?\s*:?\s*"?[^"]*$/, '');
+    // Count and close open brackets
+    const opens = { '{': 0, '[': 0 };
+    let inStr = false, esc = false;
+    for (const c of repaired) {
+      if (esc) { esc = false; continue; }
+      if (c === '\\') { esc = true; continue; }
+      if (c === '"') { inStr = !inStr; continue; }
+      if (inStr) continue;
+      if (c === '{') opens['{']++;
+      if (c === '}') opens['{']--;
+      if (c === '[') opens['[']++;
+      if (c === ']') opens['[']--;
     }
+    for (let i = 0; i < opens['[']; i++) repaired += ']';
+    for (let i = 0; i < opens['{']; i++) repaired += '}';
+    repaired = repaired.replace(/,(\s*[}\]])/g, '$1');
 
-    throw new ValidationError(
-      `Failed to parse JSON response (attempt ${attempt}): ${error.message}`
-    );
-  }
-}
-
-// ============================================================================
-// HTML SPLICING WITH VALIDATION
-// ============================================================================
-
-/**
- * Splice code into HTML file at specified line numbers
- * Validates bounds and preserves line structure
- */
-function spliceHTML(lines, insertionPoint, code) {
-  // Validate bounds
-  if (insertionPoint < 0 || insertionPoint > lines.length) {
-    throw new ValidationError(
-      `Insertion point ${insertionPoint} out of bounds [0, ${lines.length}]`
-    );
-  }
-
-  // Split code into lines
-  const codeLines = code.split('\n');
-
-  // Insert
-  const newLines = [...lines.slice(0, insertionPoint), ...codeLines, ...lines.slice(insertionPoint)];
-
-  logSuccess('HTML spliced', {
-    insertionPoint,
-    codeLineCount: codeLines.length,
-    totalLines: newLines.length,
-  });
-
-  return newLines;
-}
-
-/**
- * Replace or modify a specific section
- */
-function replaceSection(lines, sectionStartLine, sectionEndLine, newContent) {
-  // Convert from 1-based to 0-based indexing
-  const startIdx = sectionStartLine - 1;
-  const endIdx = sectionEndLine;
-
-  // Validate bounds
-  if (startIdx < 0 || endIdx > lines.length || startIdx > endIdx) {
-    throw new ValidationError(
-      `Invalid section bounds: [${sectionStartLine}, ${sectionEndLine}] ` +
-      `converted to [${startIdx}, ${endIdx}] vs total ${lines.length}`
-    );
-  }
-
-  const newContentLines = newContent.split('\n');
-
-  const newLines = [
-    ...lines.slice(0, startIdx),
-    ...newContentLines,
-    ...lines.slice(endIdx),
-  ];
-
-  logSuccess('Section replaced', {
-    originalLines: sectionEndLine - sectionStartLine + 1,
-    newLines: newContentLines.length,
-    totalLines: newLines.length,
-  });
-
-  return newLines;
-}
-
-// ============================================================================
-// HTML VALIDATION
-// ============================================================================
-
-/**
- * Basic HTML validity check
- * - Matching opening/closing tags count
- * - No severe syntax errors
- */
-function validateHTML(content) {
-  // Count opening tags (excluding self-closing)
-  const openingTags = (content.match(/<[^/>]+>/g) || []).length;
-  const closingTags = (content.match(/<\/[^>]+>/g) || []).length;
-
-  // Self-closing tags that shouldn't be counted
-  const selfClosing = (content.match(/<[^>]+\/>/g) || []).length;
-
-  // Script and style tags can have imbalanced content
-  const inScriptStyle = (content.match(/<script[^>]*>[\s\S]*?<\/script>|<style[^>]*>[\s\S]*?<\/style>/gi) || []);
-
-  logInfo('HTML tag analysis', {
-    openingTags,
-    closingTags,
-    selfClosing,
-    scriptStyleBlocks: inScriptStyle.length,
-  });
-
-  // Very basic check - just ensure we have SOME tags
-  if (openingTags < 5) {
-    throw new ValidationError('HTML contains suspiciously few tags (< 5)');
-  }
-
-  // Check for critical tags
-  if (!/<html/i.test(content) || !/<\/html>/i.test(content)) {
-    logInfo('⚠ Warning: HTML tags missing', { hasHTML: /<html/i.test(content) });
-  }
-
-  if (!/<body/i.test(content) || !/<\/body>/i.test(content)) {
-    throw new ValidationError('HTML missing body tags');
-  }
-
-  logSuccess('HTML structure validation passed');
-  return true;
-}
-
-/**
- * Run HTML validator if available (html-validate, htmlhint, etc.)
- */
-function runHTMLValidator(htmlPath) {
-  try {
-    // Try html-validate if available
-    execSync(`html-validate ${htmlPath}`, { stdio: 'pipe' });
-    logSuccess('HTML validator passed');
-  } catch (error) {
-    if (error.code === 127) {
-      // Tool not installed, skip
-      logInfo('HTML validator not installed (skipped)');
-    } else if (error.status !== 0) {
-      logError('HTML validator reported issues', { code: error.status });
-      // Don't fail on this - just warn
+    try {
+      const result = JSON.parse(repaired);
+      ok('Truncation repair succeeded');
+      return result;
+    } catch (secondErr) {
+      throw new Error(
+        `JSON parse failed after repair: ${secondErr.message}\n` +
+        `First 300 chars: ${raw.substring(0, 300)}`
+      );
     }
   }
 }
 
-// ============================================================================
-// FEATURE GENERATION WITH SONNET
-// ============================================================================
+// ── Anthropic API helper ─────────────────────────────────────────────────────
 
-/**
- * Generate feature implementation using Sonnet
- */
-async function generateFeature(featureDescription, htmlContent, map, targetSectionNames) {
-  if (!ANTHROPIC_API_KEY) {
-    throw new ValidationError('ANTHROPIC_API_KEY environment variable is not set');
-  }
-
-  // Validate requested sections exist
-  const validSections = map.sections.map(s => s.name);
-  const invalidSections = targetSectionNames.filter(n => !validSections.includes(n));
-
-  if (invalidSections.length > 0) {
-    throw new ValidationError(
-      `Requested sections do not exist in map: ${invalidSections.join(', ')}\n` +
-      `Available sections: ${validSections.join(', ')}`
-    );
-  }
-
-  // Get the target sections
-  const targetSections = map.sections.filter(s => targetSectionNames.includes(s.name));
-
-  // Extract relevant code snippets
-  const lines = htmlContent.split('\n');
-  const snippets = targetSections.map(section => {
-    const startIdx = section.startLine - 1;
-    const endIdx = section.endLine;
-    const code = lines.slice(startIdx, endIdx).join('\n');
-    return `=== ${section.name} (lines ${section.startLine}-${section.endLine}) ===\n${code}`;
-  }).join('\n\n');
-
-  const prompt = `You are a frontend developer implementing a feature in an HTML application.
-
-Feature Request: ${featureDescription}
-
-Target Sections to Modify: ${targetSectionNames.join(', ')}
-
-Here are the relevant code sections you can modify:
-
-${snippets}
-
-Your task:
-1. Analyze the feature request
-2. Plan modifications to implement the feature
-3. Generate the modified code sections
-
-Return ONLY valid JSON with this exact structure:
-{
-  "modifications": [
-    {
-      "sectionName": "Name of section to modify",
-      "type": "replace",
-      "newContent": "The complete new code for this section (include opening/closing tags, keep indentation)"
-    },
-    {
-      "sectionName": "Name of section",
-      "type": "insert",
-      "insertAfterLine": 50,
-      "content": "New code to insert"
-    }
-  ],
-  "summary": "Brief description of what was implemented"
-}
-
-CRITICAL REQUIREMENTS:
-- "type" must be either "replace" or "insert"
-- For "replace", provide complete section including all opening/closing tags
-- For "insert", insertAfterLine is relative to the start of that section
-- All line numbers in the original map must be maintained
-- Do NOT introduce syntax errors
-- Do NOT remove critical functionality
-- Preserve all existing code that's not being modified
-- Return ONLY the JSON, no markdown, no explanation`;
-
-  logInfo('Sending request to Sonnet', {
-    model: MODEL,
-    sections: targetSectionNames.length,
-    snippetsLength: snippets.length,
-  });
-
-  const response = await fetch('https://api.anthropic.com/v1/messages', {
+async function callAPI(model, systemPrompt, userPrompt, maxTokens = 16000) {
+  const resp = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -327,186 +88,305 @@ CRITICAL REQUIREMENTS:
       'anthropic-version': '2023-06-01',
     },
     body: JSON.stringify({
-      model: MODEL,
-      max_tokens: 8000,
-      messages: [
-        {
-          role: 'user',
-          content: prompt,
-        },
-      ],
+      model,
+      max_tokens: maxTokens,
+      system: systemPrompt,
+      messages: [{ role: 'user', content: userPrompt }],
     }),
   });
 
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({}));
-    throw new ValidationError(
-      `Sonnet API error (${response.status}): ${error.error?.message || 'Unknown error'}`
-    );
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({}));
+    throw new Error(`API ${resp.status}: ${err.error?.message || resp.statusText}`);
   }
 
-  const data = await response.json();
+  const data = await resp.json();
+  if (data.error) throw new Error(`API error: ${data.error.message}`);
 
-  if (data.error) {
-    throw new ValidationError(`API error: ${data.error.message || JSON.stringify(data.error)}`);
+  if (data.stop_reason === 'max_tokens') {
+    info('Response truncated (hit max_tokens) — will attempt repair');
   }
 
   const text = data.content?.[0]?.text || '';
-  if (!text) {
-    throw new ValidationError('No content returned from Sonnet');
-  }
+  if (!text) throw new Error('API returned empty response');
 
-  logInfo('Received response from Sonnet', { length: text.length });
-
-  // Parse the response
-  const result = parseJSONResponse(text);
-
-  // Validate result structure
-  if (!Array.isArray(result.modifications)) {
-    throw new ValidationError('Response missing "modifications" array');
-  }
-
-  if (result.modifications.length === 0) {
-    throw new ValidationError('No modifications provided');
-  }
-
-  logSuccess('Feature generation completed', { modifications: result.modifications.length });
-  return result;
+  return text;
 }
 
-// ============================================================================
-// MODIFICATION APPLICATION
-// ============================================================================
+// ── Section Auto-Selection (Haiku scout) ─────────────────────────────────────
 
-/**
- * Apply modifications to HTML content
- */
-function applyModifications(htmlContent, modifications, map) {
-  let lines = htmlContent.split('\n');
+async function autoSelectSections(featureDescription, map) {
+  info('Auto-selecting sections with Haiku scout...');
 
-  // Sort modifications by section line number (highest first) to maintain line indices
-  const sortedMods = [...modifications].sort((a, b) => {
-    const sectionA = map.sections.find(s => s.name === a.sectionName);
-    const sectionB = map.sections.find(s => s.name === b.sectionName);
-    return (sectionB?.startLine || 0) - (sectionA?.startLine || 0);
-  });
+  const sectionList = map.sections
+    .map(s => `- "${s.name}" (L${s.startLine}–${s.endLine}): ${s.description}`)
+    .join('\n');
 
-  for (const mod of sortedMods) {
-    const section = map.sections.find(s => s.name === mod.sectionName);
+  const prompt = `Given this feature request and code sections, which sections need to be modified?
 
-    if (!section) {
-      throw new ValidationError(`Section not found: ${mod.sectionName}`);
-    }
+Feature: ${featureDescription}
 
-    if (mod.type === 'replace') {
-      lines = replaceSection(lines, section.startLine, section.endLine, mod.newContent);
-    } else if (mod.type === 'insert') {
-      // Insert is relative to section start
-      const absoluteLine = section.startLine + (mod.insertAfterLine || 0);
-      lines = spliceHTML(lines, absoluteLine, mod.content);
-    } else {
-      throw new ValidationError(`Unknown modification type: ${mod.type}`);
-    }
+Available sections:
+${sectionList}
+
+Return ONLY a JSON array of section names that need modification (2-5 sections max):
+["Section Name 1", "Section Name 2"]
+
+Pick only the sections directly relevant to implementing this feature.`;
+
+  const raw = await callAPI(HAIKU, 'You select which code sections to modify. Return only a JSON array.', prompt, 1000);
+
+  // Parse the array
+  const cleaned = raw.replace(/^```(?:json)?\s*\n?/i, '').replace(/\n?```\s*$/i, '').trim();
+  const arrStart = cleaned.indexOf('[');
+  const arrEnd = cleaned.lastIndexOf(']');
+  if (arrStart === -1 || arrEnd === -1) {
+    throw new Error('Haiku scout did not return a valid JSON array');
   }
 
-  const newContent = lines.join('\n');
+  const selected = JSON.parse(cleaned.substring(arrStart, arrEnd + 1));
 
-  logSuccess('Modifications applied', { finalLines: lines.length });
+  if (!Array.isArray(selected) || selected.length === 0) {
+    throw new Error('Haiku scout returned empty selection');
+  }
 
-  return newContent;
-}
+  // Validate against map — filter to only names that actually exist
+  const validNames = new Set(map.sections.map(s => s.name));
+  const matched = selected.filter(n => validNames.has(n));
 
-// ============================================================================
-// MAIN
-// ============================================================================
+  if (matched.length === 0) {
+    // Haiku hallucinated section names — try fuzzy matching
+    info('No exact matches, trying fuzzy match...');
+    const fuzzy = selected.map(name => {
+      const lower = name.toLowerCase();
+      return map.sections.find(s => s.name.toLowerCase().includes(lower) || lower.includes(s.name.toLowerCase()));
+    }).filter(Boolean);
 
-async function main() {
-  try {
-    // Parse arguments
-    const htmlPath = process.argv[2];
-    const mapPath = process.argv[3];
-    const featureDescription = process.argv[4];
-
-    if (!htmlPath || !mapPath || !featureDescription) {
-      throw new ValidationError(
-        'Usage: node add-feature.js <html-file> <map-file> <feature-description> [section1 section2 ...]'
+    if (fuzzy.length === 0) {
+      throw new Error(
+        `Haiku selected sections that don't exist in the map.\n` +
+        `Selected: ${selected.join(', ')}\n` +
+        `Available: ${[...validNames].join(', ')}`
       );
     }
 
-    const fullHtmlPath = path.resolve(htmlPath);
-    const fullMapPath = path.resolve(mapPath);
-
-    // Read files
-    if (!fs.existsSync(fullHtmlPath)) {
-      throw new ValidationError(`HTML file not found: ${fullHtmlPath}`);
-    }
-
-    if (!fs.existsSync(fullMapPath)) {
-      throw new ValidationError(`Map file not found: ${fullMapPath}`);
-    }
-
-    logInfo('Reading files', { htmlPath: fullHtmlPath, mapPath: fullMapPath });
-    const htmlContent = fs.readFileSync(fullHtmlPath, 'utf-8');
-    const map = JSON.parse(fs.readFileSync(fullMapPath, 'utf-8'));
-    logSuccess('Files read', { htmlSize: htmlContent.length, sections: map.sections.length });
-
-    // Get target sections
-    const targetSections = process.argv.slice(5);
-    if (targetSections.length === 0) {
-      // Default: all sections
-      logInfo('No sections specified, targeting all sections');
-      targetSections.push(...map.sections.map(s => s.name));
-    }
-
-    // Validate initial HTML
-    logInfo('Validating initial HTML...');
-    validateHTML(htmlContent);
-
-    // Generate feature
-    logInfo('Generating feature with Sonnet...');
-    const result = await generateFeature(featureDescription, htmlContent, map, targetSections);
-
-    // Apply modifications
-    logInfo('Applying modifications...');
-    const modifiedContent = applyModifications(htmlContent, result.modifications, map);
-
-    // Validate modified HTML
-    logInfo('Validating modified HTML...');
-    validateHTML(modifiedContent);
-
-    // Write output
-    const outputPath = fullHtmlPath.replace(/\.html$/, '.modified.html');
-    fs.writeFileSync(outputPath, modifiedContent, 'utf-8');
-
-    logSuccess('Feature added successfully', {
-      outputPath,
-      modifications: result.modifications.length,
-      summary: result.summary,
-    });
-
-    // Output result JSON
-    console.log(
-      JSON.stringify({
-        success: true,
-        outputPath,
-        summary: result.summary,
-        modificationsCount: result.modifications.length,
-      }, null, 2)
-    );
-
-  } catch (error) {
-    logError(
-      error.name === 'ValidationError' ? 'Validation failed' : 'Fatal error',
-      { message: error.message }
-    );
-    console.log(
-      JSON.stringify({
-        success: false,
-        error: error.message,
-      }, null, 2)
-    );
-    process.exit(1);
+    ok('Fuzzy matched sections', { count: fuzzy.length, names: fuzzy.map(s => s.name) });
+    return fuzzy.map(s => s.name);
   }
+
+  ok('Sections auto-selected', { count: matched.length, names: matched });
+  return matched;
 }
 
-main();
+// ── Feature Generation (Sonnet) ──────────────────────────────────────────────
+
+async function generateFeature(featureDescription, htmlContent, map, targetSectionNames) {
+  // Extract code snippets for target sections
+  const lines = htmlContent.split('\n');
+  const snippets = targetSectionNames.map(name => {
+    const section = map.sections.find(s => s.name === name);
+    if (!section) return null;
+    const code = lines.slice(section.startLine - 1, section.endLine).join('\n');
+    return `=== ${section.name} (lines ${section.startLine}–${section.endLine}) ===\n${code}`;
+  }).filter(Boolean);
+
+  if (snippets.length === 0) {
+    throw new Error('No valid code snippets to send to Sonnet');
+  }
+
+  const systemPrompt = `You are a senior frontend developer. You implement features in HTML/CSS/JS applications by modifying specific code sections. Return ONLY valid JSON.`;
+
+  const userPrompt = `Implement this feature by modifying the code sections below.
+
+Feature: ${featureDescription}
+
+Sections to modify:
+${snippets.join('\n\n')}
+
+Return ONLY this JSON structure:
+{
+  "modifications": [
+    {
+      "sectionName": "Name of section",
+      "type": "replace",
+      "newContent": "Complete replacement code for this section"
+    }
+  ],
+  "summary": "What was implemented"
+}
+
+Rules:
+- "type" must be "replace" — provide the COMPLETE new code for each section
+- Include ALL original code that isn't being changed
+- Maintain proper indentation
+- Do NOT break existing functionality
+- Do NOT add dependencies not already in the file`;
+
+  info('Calling Sonnet', { model: SONNET, snippetCount: snippets.length });
+  const raw = await callAPI(SONNET, systemPrompt, userPrompt);
+
+  const result = parseJSON(raw);
+
+  if (!Array.isArray(result.modifications) || result.modifications.length === 0) {
+    throw new Error('Sonnet returned no modifications');
+  }
+
+  // Validate all modification section names exist
+  const validNames = new Set(map.sections.map(s => s.name));
+  for (const mod of result.modifications) {
+    if (!validNames.has(mod.sectionName)) {
+      fail('Modification references unknown section', { name: mod.sectionName });
+      // Try to find the closest match
+      const closest = map.sections.find(s =>
+        s.name.toLowerCase().includes(mod.sectionName.toLowerCase()) ||
+        mod.sectionName.toLowerCase().includes(s.name.toLowerCase())
+      );
+      if (closest) {
+        info('Fuzzy-matched to', { name: closest.name });
+        mod.sectionName = closest.name;
+      } else {
+        throw new Error(
+          `Sonnet referenced non-existent section: "${mod.sectionName}"\n` +
+          `Available: ${[...validNames].join(', ')}`
+        );
+      }
+    }
+  }
+
+  ok('Feature generated', { modifications: result.modifications.length, summary: result.summary });
+  return result;
+}
+
+// ── Apply Modifications ──────────────────────────────────────────────────────
+
+function applyModifications(htmlContent, modifications, map) {
+  let lines = htmlContent.split('\n');
+
+  // Sort by startLine descending so splicing doesn't shift later indices
+  const sorted = [...modifications].sort((a, b) => {
+    const sa = map.sections.find(s => s.name === a.sectionName);
+    const sb = map.sections.find(s => s.name === b.sectionName);
+    return (sb?.startLine || 0) - (sa?.startLine || 0);
+  });
+
+  // Check for overlapping sections
+  for (let i = 0; i < sorted.length - 1; i++) {
+    const curr = map.sections.find(s => s.name === sorted[i].sectionName);
+    const next = map.sections.find(s => s.name === sorted[i + 1].sectionName);
+    if (curr && next && curr.startLine <= next.endLine && next.startLine <= curr.endLine) {
+      fail('Overlapping sections detected', { a: curr.name, b: next.name });
+      throw new Error(`Sections "${curr.name}" and "${next.name}" overlap — cannot safely splice both`);
+    }
+  }
+
+  for (const mod of sorted) {
+    const section = map.sections.find(s => s.name === mod.sectionName);
+    if (!section) continue;
+
+    const startIdx = section.startLine - 1;  // 0-based
+    const endIdx = section.endLine;           // exclusive
+
+    // Bounds check
+    if (startIdx < 0 || endIdx > lines.length || startIdx >= endIdx) {
+      throw new Error(
+        `Section "${section.name}" bounds invalid: [${section.startLine}, ${section.endLine}] ` +
+        `vs ${lines.length} total lines`
+      );
+    }
+
+    const newLines = mod.newContent.split('\n');
+
+    info('Replacing section', {
+      name: section.name,
+      originalLines: endIdx - startIdx,
+      newLines: newLines.length,
+    });
+
+    lines = [...lines.slice(0, startIdx), ...newLines, ...lines.slice(endIdx)];
+  }
+
+  ok('All modifications applied', { finalLines: lines.length });
+  return lines.join('\n');
+}
+
+// ── Main ─────────────────────────────────────────────────────────────────────
+
+async function main() {
+  // Read inputs from env vars (workflow) or argv (CLI)
+  const htmlPath = process.env.INPUT_FILENAME || process.argv[2];
+  const featureDescription = process.env.INPUT_FEATURE || process.argv[4];
+  const sectionsInput = process.env.INPUT_SECTIONS || process.argv.slice(5).join(',');
+
+  if (!htmlPath || !featureDescription) {
+    fail('Missing inputs. Set INPUT_FILENAME + INPUT_FEATURE env vars, or: node add-feature.js <file> <map> <feature> [sections...]');
+    process.exit(1);
+  }
+
+  if (!ANTHROPIC_API_KEY) {
+    fail('ANTHROPIC_API_KEY not set');
+    process.exit(1);
+  }
+
+  // Resolve paths
+  const basename = path.basename(htmlPath, '.html');
+  const mapPath = process.env.INPUT_MAP || process.argv[3] || `map-${basename}.json`;
+  const fullHtmlPath = path.resolve(htmlPath);
+  const fullMapPath = path.resolve(mapPath);
+  const outputPath = path.resolve(`${basename}.modified.html`);
+
+  // Read files
+  if (!fs.existsSync(fullHtmlPath)) throw new Error(`HTML file not found: ${fullHtmlPath}`);
+  if (!fs.existsSync(fullMapPath)) throw new Error(`Map file not found: ${fullMapPath}`);
+
+  info('Reading files');
+  const htmlContent = fs.readFileSync(fullHtmlPath, 'utf-8');
+  const map = JSON.parse(fs.readFileSync(fullMapPath, 'utf-8'));
+  ok('Files loaded', { htmlSize: htmlContent.length, sections: map.sections.length });
+
+  // Determine target sections
+  let targetSections = sectionsInput
+    ? sectionsInput.split(',').map(s => s.trim()).filter(Boolean)
+    : [];
+
+  if (targetSections.length === 0) {
+    // Use Haiku scout to auto-select
+    targetSections = await autoSelectSections(featureDescription, map);
+  } else {
+    // Validate manually specified sections
+    const validNames = new Set(map.sections.map(s => s.name));
+    const invalid = targetSections.filter(n => !validNames.has(n));
+    if (invalid.length > 0) {
+      throw new Error(
+        `Unknown sections: ${invalid.join(', ')}\n` +
+        `Available: ${[...validNames].join(', ')}`
+      );
+    }
+  }
+
+  info('Target sections', { count: targetSections.length, names: targetSections });
+
+  // Generate feature
+  const result = await generateFeature(featureDescription, htmlContent, map, targetSections);
+
+  // Apply
+  const modified = applyModifications(htmlContent, result.modifications, map);
+
+  // Write output
+  fs.writeFileSync(outputPath, modified, 'utf-8');
+  ok('Output written', { path: outputPath, size: modified.length });
+
+  // Summary to stdout
+  console.log(JSON.stringify({
+    success: true,
+    output: outputPath,
+    summary: result.summary,
+    modifications: result.modifications.length,
+    sections: targetSections,
+  }, null, 2));
+}
+
+main().catch(err => {
+  fail(err.message);
+  console.log(JSON.stringify({ success: false, error: err.message }, null, 2));
+  process.exit(1);
+});
