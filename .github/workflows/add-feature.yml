@@ -18,7 +18,7 @@ on:
         type: string
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   add-feature:
@@ -112,35 +112,60 @@ jobs:
           echo "Stage 3: Validating $MODIFIED..."
           node scripts/validate-html.js "$MODIFIED"
 
-      - name: Compare original vs modified
+      - name: Stage 4 — Apply changes
         env:
           INPUT_FILENAME: ${{ inputs.filename }}
         run: |
           set -e
           BASENAME="${INPUT_FILENAME%.html}"
-          ORIGINAL="$INPUT_FILENAME"
           MODIFIED="${BASENAME}.modified.html"
 
-          ORIG_LINES=$(wc -l < "$ORIGINAL" | tr -d ' ')
+          ORIG_LINES=$(wc -l < "$INPUT_FILENAME" | tr -d ' ')
           MOD_LINES=$(wc -l < "$MODIFIED" | tr -d ' ')
-          DIFF_LINES=$((MOD_LINES - ORIG_LINES))
-
-          ORIG_SIZE=$(stat -c%s "$ORIGINAL")
+          ORIG_SIZE=$(stat -c%s "$INPUT_FILENAME")
           MOD_SIZE=$(stat -c%s "$MODIFIED")
-          DIFF_SIZE=$((MOD_SIZE - ORIG_SIZE))
+
+          echo "Original: $ORIG_LINES lines, $ORIG_SIZE bytes"
+          echo "Modified: $MOD_LINES lines, $MOD_SIZE bytes"
+
+          cp "$MODIFIED" "$INPUT_FILENAME"
+          echo "Replaced $INPUT_FILENAME with validated $MODIFIED"
+
+      - name: Stage 5 — Commit changes
+        env:
+          INPUT_FILENAME: ${{ inputs.filename }}
+          INPUT_FEATURE: ${{ inputs.feature_description }}
+        run: |
+          set -e
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add "$INPUT_FILENAME"
+          git commit -m "feat: ${INPUT_FEATURE}"
+          git push
+
+      - name: Create summary
+        env:
+          INPUT_FILENAME: ${{ inputs.filename }}
+        run: |
+          set -e
+          BASENAME="${INPUT_FILENAME%.html}"
+          MODIFIED="${BASENAME}.modified.html"
+
+          MOD_LINES=$(wc -l < "$INPUT_FILENAME" | tr -d ' ')
+          MOD_SIZE=$(stat -c%s "$INPUT_FILENAME")
 
           echo "## Feature Added" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**File**: \`$ORIGINAL\` | **Feature**: ${{ inputs.feature_description }}" >> $GITHUB_STEP_SUMMARY
+          echo "**File**: \`$INPUT_FILENAME\` | **Feature**: ${{ inputs.feature_description }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "| Metric | Original | Modified | Delta |" >> $GITHUB_STEP_SUMMARY
-          echo "|--------|----------|----------|-------|" >> $GITHUB_STEP_SUMMARY
-          echo "| Lines | $ORIG_LINES | $MOD_LINES | ${DIFF_LINES:+$DIFF_LINES} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Bytes | $ORIG_SIZE | $MOD_SIZE | ${DIFF_SIZE:+$DIFF_SIZE} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Metric | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Lines | $MOD_LINES |" >> $GITHUB_STEP_SUMMARY
+          echo "| Size | $MOD_SIZE bytes |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "Download \`${BASENAME}.modified.html\` from artifacts below." >> $GITHUB_STEP_SUMMARY
+          echo "Changes have been committed directly to the repository." >> $GITHUB_STEP_SUMMARY
 
-      - name: Upload modified file
+      - name: Upload artifacts (backup)
         uses: actions/upload-artifact@v4
         if: success()
         with:
