@@ -31,24 +31,36 @@ export default function Landing() {
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           {!user ? (
             <>
-              <button className="btnP text-base py-3 px-8 shadow-lg pulse-cta">
+              <button
+                onClick={() => window.location.hash = '#signup'}
+                className="btnP text-base py-3 px-8 shadow-lg pulse-cta"
+              >
                 Get Started Free
               </button>
-              <button className="btnG text-base py-3 px-8">
+              <button
+                onClick={() => window.location.hash = '#login'}
+                className="btnG text-base py-3 px-8"
+              >
                 Log In
               </button>
             </>
           ) : (
             <div className="text-[var(--mu)]">
               <p>Welcome back, {user.email}!</p>
-              <button className="btnP text-base py-3 px-8 mt-4">
+              <button
+                onClick={() => window.location.hash = '#home'}
+                className="btnP text-base py-3 px-8 mt-4"
+              >
                 Go to Dashboard
               </button>
             </div>
           )}
         </div>
 
-        <p className="mt-4 text-sm font-medium underline underline-offset-4 text-[var(--ac)] cursor-pointer hover:opacity-80">
+        <p
+          onClick={() => window.location.hash = '#demo'}
+          className="mt-4 text-sm font-medium underline underline-offset-4 text-[var(--ac)] cursor-pointer hover:opacity-80"
+        >
           Try a demo essay with instant AI feedback →
         </p>
       </div>

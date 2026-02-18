@@ -31,17 +31,18 @@ import { useAuth } from './context/AuthContext'
 
 // Router component that handles navigation
 function Router({ currentRoute, routeParams }) {
-  const { currentUser, userData } = useAuth()
+  const { user, userData } = useAuth()
 
   // Redirect logic
-  if (!currentUser && !['home', 'login', 'signup'].includes(currentRoute)) {
+  if (!user && !['home', 'login', 'signup'].includes(currentRoute)) {
     return <Landing />
   }
 
   const routes = {
-    'home': () => currentUser ? (userData?.role === 'teacher' ? <TeacherDashboard /> : <StudentDashboard />) : <Landing />,
+    'home': () => user ? (userData?.role === 'teacher' ? <TeacherDashboard /> : <StudentDashboard />) : <Landing />,
     'login': () => <Login />,
     'signup': () => <Signup />,
+    'demo': () => <Editor />,
     'teacher-dash': () => <TeacherDashboard />,
     'student-dash': () => <StudentDashboard />,
     'class-manager': () => <ClassManager />,
