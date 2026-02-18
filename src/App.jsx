@@ -2,45 +2,111 @@ import { useState, useEffect } from 'react'
 import { AuthProvider } from './context/AuthContext'
 import { GameProvider } from './context/GameContext'
 import { ThemeProvider } from './context/ThemeContext'
+import Navigation from './components/UI/Navigation'
+import ErrorBoundary from './components/shared/ErrorBoundary'
+import Loading from './components/shared/Loading'
+
+// Import all view components
 import Landing from './components/Landing'
+import Login from './components/Login'
+import Signup from './components/Signup'
+import StudentDashboard from './components/StudentDashboard'
+import TeacherDashboard from './components/TeacherDashboard'
+import Editor from './components/Editor'
+import Results from './components/Results'
+import BlocksSolo from './components/EssayBlocks/BlocksSolo'
+import BlocksLobby from './components/EssayBlocks/BlocksLobby'
+import BlocksPlay from './components/EssayBlocks/BlocksPlay'
+import BlocksReview from './components/EssayBlocks/BlocksReview'
+import ClassManager from './components/Teacher/ClassManager'
+import AssignmentBuilder from './components/Teacher/AssignmentBuilder'
+import Library from './components/Teacher/Library'
+import LessonLab from './components/Teacher/LessonLab'
+import BlockBlast from './components/Games/BlockBlast'
+import TimelineRace from './components/Games/TimelineRace'
+import SourceDetective from './components/Games/SourceDetective'
+import QuizGame from './components/Games/QuizGame'
+import StoryLesson from './components/StoryLessons/StoryLesson'
+import { useAuth } from './context/AuthContext'
+
+// Router component that handles navigation
+function Router({ currentRoute, routeParams }) {
+  const { currentUser, userData } = useAuth()
+
+  // Redirect logic
+  if (!currentUser && !['home', 'login', 'signup'].includes(currentRoute)) {
+    return <Landing />
+  }
+
+  const routes = {
+    'home': () => currentUser ? (userData?.role === 'teacher' ? <TeacherDashboard /> : <StudentDashboard />) : <Landing />,
+    'login': () => <Login />,
+    'signup': () => <Signup />,
+    'teacher-dash': () => <TeacherDashboard />,
+    'student-dash': () => <StudentDashboard />,
+    'class-manager': () => <ClassManager />,
+    'assignment-builder': () => <AssignmentBuilder />,
+    'library': () => <Library />,
+    'lesson-lab': () => <LessonLab />,
+    'editor': () => <Editor />,
+    'results': () => <Results />,
+    'blocks-solo': () => <BlocksSolo />,
+    'blocks-lobby': () => <BlocksLobby />,
+    'blocks-play': () => <BlocksPlay />,
+    'blocks-review': () => <BlocksReview />,
+    'block-blast': () => <BlockBlast />,
+    'timeline-race': () => <TimelineRace />,
+    'source-detective': () => <SourceDetective />,
+    'quiz-game': () => <QuizGame />,
+    'story-lesson': () => <StoryLesson />
+  }
+
+  const ViewComponent = routes[currentRoute] || (() => <Landing />)
+  return <ViewComponent />
+}
 
 export default function App() {
   const [appReady, setAppReady] = useState(false)
+  const [currentRoute, setCurrentRoute] = useState('home')
+  const [routeParams, setRouteParams] = useState({})
 
   useEffect(() => {
     // Initialize Tailwind and Lucide icons after mount
     import('tailwindcss/tailwind.css').catch(() => {})
 
-    // Create root element for Tailwind config
-    const script = document.createElement('script')
-    script.innerHTML = `
-      tailwind.config = {
-        theme: {
-          extend: {
-            colors: {
-              ember: { 400: '#e8794a', 500: '#d4622f', 600: '#b34d1e' },
-              sage: { 400: '#6b9b7a', 500: '#4d8060' },
-              royal: { 400: '#7b8ac4', 500: '#5c6db3' },
-              gold: { 400: '#d4a843', 500: '#c49528' }
-            }
-          }
-        }
-      }
-    `
-    document.head.appendChild(script)
-
     setAppReady(true)
   }, [])
 
-  if (!appReady) return null
+  // Hash-based routing
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash.slice(1) || 'home'
+      const [route, ...rest] = hash.split('/')
+      setCurrentRoute(route)
+      // Parse params if needed
+      setRouteParams({})
+    }
+
+    window.addEventListener('hashchange', handleHashChange)
+    handleHashChange() // Initial route
+
+    return () => window.removeEventListener('hashchange', handleHashChange)
+  }, [])
+
+  if (!appReady) return <Loading fullPage message="Initializing..." />
 
   return (
     <ThemeProvider>
       <AuthProvider>
         <GameProvider>
-          <main id="app-root" className="flex flex-col min-h-screen bg-[var(--bg)] text-[var(--tx)]">
-            <Landing />
-          </main>
+          <ErrorBoundary>
+            <div className="flex flex-col min-h-screen bg-[var(--bg)] text-[var(--tx)]">
+              {currentRoute !== 'login' && currentRoute !== 'signup' && currentRoute !== 'home' && <Navigation />}
+              <main id="app-root" className="flex-1 overflow-auto">
+                <Router currentRoute={currentRoute} routeParams={routeParams} />
+              </main>
+            </div>
+          </ErrorBoundary>
         </GameProvider>
       </AuthProvider>
     </ThemeProvider>

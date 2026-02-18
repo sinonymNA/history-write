@@ -187,7 +187,7 @@ export default function Signup() {
         <p className="mt-4 text-center text-xs text-[var(--mu)]">
           Have an account?{' '}
           <button
-            onClick={() => window.location.hash = '#/login'}
+            onClick={() => window.location.hash = '#login'}
             className="font-bold"
             style={{ color: 'var(--ac)' }}
           >
