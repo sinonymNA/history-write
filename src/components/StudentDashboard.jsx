@@ -3,10 +3,11 @@ import { useAuth } from '../context/AuthContext'
 import { useGame } from '../context/GameContext'
 import { BookOpen, Puzzle, Sprout, Gamepad2, Zap, Clock, Grid3x3, Scale, CheckSquare, Search } from 'lucide-react'
 import { ESSAY_BLOCKS_PROMPTS } from '../lib/constants'
+import SkillGarden from './SkillGarden/SkillGarden'
 
 export default function StudentDashboard() {
   const { userData } = useAuth()
-  const { gameState } = useGame()
+  const { gameState, addXP } = useGame()
   const [activeTab, setActiveTab] = useState('assign')
   const [arcadeTab, setArcadeTab] = useState('chrono')
   const [joinClassOpen, setJoinClassOpen] = useState(false)
@@ -129,23 +130,7 @@ export default function StudentDashboard() {
         {/* Skill Garden tab */}
         {activeTab === 'skills' && (
           <div className="py-2">
-            <div className="garden-summary">
-              <div className="garden-stat"><div className="text-lg font-bold" style={{ color: 'var(--gd)' }}>0</div><div className="text-[10px]" style={{ color: 'var(--mu)' }}>🌳 Mastered</div></div>
-              <div className="garden-stat"><div className="text-lg font-bold" style={{ color: 'var(--sg)' }}>0</div><div className="text-[10px]" style={{ color: 'var(--mu)' }}>🌿 Growing</div></div>
-              <div className="garden-stat"><div className="text-lg font-bold" style={{ color: 'var(--fa)' }}>0</div><div className="text-[10px]" style={{ color: 'var(--mu)' }}>🌱 Seedlings</div></div>
-            </div>
-            <div className="flex items-center gap-3 mb-4 p-3 rounded-xl" style={{ background: 'var(--acs)' }}>
-              <div className="text-2xl">🌱</div>
-              <div>
-                <p className="text-xs font-semibold">Overall Garden Health: 0%</p>
-                <p className="text-[10px]" style={{ color: 'var(--mu)' }}>Complete essays and games to grow your skill garden!</p>
-              </div>
-            </div>
-            <div className="text-center py-8" style={{ border: '2px dashed var(--bd)', borderRadius: '16px' }}>
-              <Sprout className="w-8 h-8 mx-auto mb-2" style={{ color: 'var(--sg)' }} />
-              <p className="text-sm" style={{ color: 'var(--mu)' }}>Your garden is empty</p>
-              <p className="text-xs" style={{ color: 'var(--fa)' }}>Submit essays and play games to plant skills and watch them grow.</p>
-            </div>
+            <SkillGarden onXPGain={(amt) => addXP(amt)} />
           </div>
         )}
 
