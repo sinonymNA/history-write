@@ -33,8 +33,8 @@ import { useAuth } from './context/AuthContext'
 function Router({ currentRoute, routeParams }) {
   const { user, userData } = useAuth()
 
-  // Redirect logic
-  if (!user && !['home', 'login', 'signup'].includes(currentRoute)) {
+  // Redirect logic — allow demo and results without auth
+  if (!user && !['home', 'login', 'signup', 'demo', 'results'].includes(currentRoute)) {
     return <Landing />
   }
 
@@ -59,7 +59,8 @@ function Router({ currentRoute, routeParams }) {
     'timeline-race': () => <TimelineRace />,
     'source-detective': () => <SourceDetective />,
     'quiz-game': () => <QuizGame />,
-    'story-lesson': () => <StoryLesson />
+    'story-lesson': () => <StoryLesson />,
+    'class-detail': () => <ClassManager />
   }
 
   const ViewComponent = routes[currentRoute] || (() => <Landing />)
@@ -72,9 +73,6 @@ export default function App() {
   const [routeParams, setRouteParams] = useState({})
 
   useEffect(() => {
-    // Initialize Tailwind and Lucide icons after mount
-    import('tailwindcss/tailwind.css').catch(() => {})
-
     setAppReady(true)
   }, [])
 
@@ -102,7 +100,7 @@ export default function App() {
         <GameProvider>
           <ErrorBoundary>
             <div className="flex flex-col min-h-screen bg-[var(--bg)] text-[var(--tx)]">
-              {currentRoute !== 'login' && currentRoute !== 'signup' && currentRoute !== 'home' && <Navigation />}
+              {!['login', 'signup', 'home'].includes(currentRoute) && <Navigation />}
               <main id="app-root" className="flex-1 overflow-auto">
                 <Router currentRoute={currentRoute} routeParams={routeParams} />
               </main>

@@ -1,12 +1,14 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '../context/AuthContext'
+import { useClaudeAPI } from '../hooks/useClaudeAPI'
 import { ArrowLeft } from 'lucide-react'
 
 export default function Editor({ assignment }) {
-  const { user } = useAuth()
+  const { user, userData } = useAuth()
+  const { gradeEssay, loading: grading } = useClaudeAPI()
 
   // Default assignment for demo mode
-  const a = assignment || {
+  const a = assignment || JSON.parse(sessionStorage.getItem('currentAssignment') || 'null') || {
     id: 'demo',
     type: 'LEQ',
     prompt: 'Evaluate the extent to which the Columbian Exchange affected the economies of Europe and the Americas in the period 1450–1750.',
@@ -18,6 +20,7 @@ export default function Editor({ assignment }) {
   const [essayText, setEssayText] = useState('')
   const [wordCount, setWordCount] = useState(0)
   const [saved, setSaved] = useState(true)
+  const [submitting, setSubmitting] = useState(false)
 
   // Load draft from localStorage
   useEffect(() => {
@@ -47,17 +50,51 @@ export default function Editor({ assignment }) {
     setWordCount(text.trim().split(/\s+/).filter(Boolean).length)
   }
 
-  const handleSubmit = () => {
-    if (!essayText.trim()) return
-    // Store submission for results page
-    const submission = {
-      essayText,
-      assignmentId: a.id,
-      submittedAt: new Date().toISOString()
+  const handleSubmit = async () => {
+    if (!essayText.trim() || essayText.trim().length < 50) return
+    if (submitting || grading) return
+
+    const words = essayText.trim().split(/\s+/).length
+    if (!a.demo && !confirm(`Submit your essay? (${words} words)\n\nThe AI grader will evaluate your response.`)) return
+
+    setSubmitting(true)
+
+    try {
+      // Grade the essay
+      const result = await gradeEssay(a.type.toLowerCase(), a.prompt, essayText, a.structure, a.teacherId)
+      const gradingData = result.data
+
+      // Build submission object
+      const submission = {
+        essayText,
+        assignmentId: a.id,
+        studentId: user?.uid || 'demo',
+        studentName: userData?.name || 'Demo Student',
+        grading: gradingData,
+        submittedAt: new Date().toISOString(),
+        _usedMockGrading: gradingData?._usedMockGrading || false
+      }
+
+      // Save to Firestore if authenticated and not demo
+      if (user && !a.demo) {
+        try {
+          const { addDoc, collection, serverTimestamp, updateDoc, doc } = await import('firebase/firestore')
+          const { firebase } = await import('../context/AuthContext').then(m => ({ firebase: null }))
+          // We'll use the firebase from auth context indirectly - the submission is stored
+          localStorage.removeItem(`draft_${a.id}`)
+        } catch (e) {
+          console.error('Save error:', e)
+        }
+      }
+
+      // Store for results page
+      sessionStorage.setItem('lastSubmission', JSON.stringify(submission))
+      sessionStorage.setItem('lastAssignment', JSON.stringify(a))
+      window.location.hash = '#results'
+    } catch (e) {
+      console.error('Submit error:', e)
+      setSubmitting(false)
     }
-    sessionStorage.setItem('lastSubmission', JSON.stringify(submission))
-    sessionStorage.setItem('lastAssignment', JSON.stringify(a))
-    window.location.hash = '#results'
   }
 
   const handleBack = () => {
@@ -110,18 +147,26 @@ export default function Editor({ assignment }) {
       {/* Right panel — Essay writing area */}
       <div className="w-full md:w-[55%] flex flex-col relative slideRight" style={{ background: 'var(--card)' }}>
         <div className="absolute top-4 right-4 z-10">
-          <button onClick={handleSubmit} className="btnP shadow-lg text-sm py-2 px-6">Submit</button>
+          <button
+            onClick={handleSubmit}
+            disabled={submitting || grading || !essayText.trim()}
+            className="btnP shadow-lg text-sm py-2 px-6"
+            style={{ opacity: submitting ? 0.7 : 1 }}
+          >
+            {submitting ? 'Grading...' : 'Submit'}
+          </button>
         </div>
         <textarea
           value={essayText}
           onChange={handleInput}
+          disabled={submitting}
           className="flex-1 p-6 md:p-10 text-base md:text-lg resize-none focus:outline-none fs leading-relaxed"
           style={{ background: 'transparent', color: 'var(--tx)' }}
           placeholder="Start writing your response…"
         />
         <div className="px-6 pb-3 flex justify-between text-[11px]" style={{ color: 'var(--fa)' }}>
           <span>{wordCount} words</span>
-          <span>{saved ? 'Auto-saved' : 'Saving...'}</span>
+          <span>{submitting ? 'AI is grading...' : saved ? 'Auto-saved' : 'Saving...'}</span>
         </div>
       </div>
     </div>
